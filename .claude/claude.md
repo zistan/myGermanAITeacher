@@ -25,7 +25,7 @@ An AI-powered German language learning application designed for advanced learner
 - PostgreSQL 12+ (15+ recommended)
 - SQLAlchemy 2.0 (ORM)
 - Alembic (migrations)
-- Anthropic Claude 3.5 Sonnet (AI)
+- Anthropic Claude Sonnet 4.5 (AI - auto-updating)
 
 **Frontend (Planned):**
 - React 18 + TypeScript
@@ -119,16 +119,27 @@ An AI-powered German language learning application designed for advanced learner
 - ⏳ SSL/HTTPS configuration
 - ⏳ Firewall and security hardening
 
-**Production Fixes Applied:**
+**Production Fixes Applied (Phase 6.5):**
+
+**Initial Deployment Issues (Resolved):**
 1. **Python 3.11 Availability** - Added deadsnakes PPA for Python 3.10/3.11 installation on Ubuntu 20.04
-2. **SQLAlchemy Reserved Keywords** - Fixed `metadata` column conflicts in models:
-   - Session.metadata → session_metadata
-   - ConversationTurn.metadata → turn_metadata
-   - GrammarExercise.metadata → exercise_metadata
-   - GrammarSession.metadata → grammar_metadata
-3. **Model Import Issues** - Added missing Achievement model imports (UserAchievement, UserStats, Achievement)
-4. **Duplicate Model Definitions** - Removed duplicate ProgressSnapshot from progress.py (kept version in achievement.py)
+2. **SQLAlchemy Reserved Keywords** - Fixed `metadata` column conflicts in models
+3. **Model Import Issues** - Added missing Achievement model imports
+4. **Duplicate Model Definitions** - Removed duplicate ProgressSnapshot
 5. **PostgreSQL Configuration** - Configured pg_hba.conf for local md5 authentication
+
+**Production Testing Fixes (2026-01-17):**
+6. **bcrypt Compatibility** - Pinned bcrypt==4.2.0 for passlib 1.7.4 compatibility (fixed user registration)
+7. **JWT Specification** - Convert user.id to string in JWT "sub" claim per RFC 7519
+8. **Session History Endpoint** - Added missing GET /api/sessions/history endpoint for listing user sessions
+9. **Claude Model Update** - Upgraded to Claude Sonnet 4.5 (claude-sonnet-4-5) with auto-updating alias
+10. **Grammar Topic Schema** - Removed non-existent updated_at field from GrammarTopicResponse
+11. **Grammar Practice Session** - Store target_level in grammar_metadata JSON field
+12. **GrammarSession Field Names** - Fixed total_attempted → total_exercises, total_correct → exercises_correct
+13. **GrammarExerciseAttempt** - Fixed session_id → grammar_session_id, added user_id field
+14. **SessionWithContext** - Fixed SQLAlchemy metadata conflict using explicit field assignment
+15. **UserGrammarProgress Fields** - Fixed all field names and mastery_level type (float 0.0-1.0)
+16. **Grammar Progress Endpoints** - Fixed field names and mastery level conversions in progress/weak-areas/summary
 
 **Deployment Documentation:**
 - `/docs/DEPLOYMENT_GUIDE.md` - Complete deployment walkthrough
@@ -577,29 +588,39 @@ sudo systemctl restart german-learning
 
 ## Known Issues & Solutions
 
-### Deployment Issues (Resolved)
-1. **Python 3.11 not available on Ubuntu 20.04**
-   - Solution: Use Python 3.10 (fully compatible) or add deadsnakes PPA
+### All Production Issues (Resolved ✅)
 
-2. **SQLAlchemy "metadata" reserved keyword error**
-   - Solution: Renamed model attributes with Column("metadata", ...) syntax
-   - Affects: Session, ConversationTurn, GrammarExercise, GrammarSession models
+All 16 production deployment and testing issues have been identified and fixed during Phase 6.5. The application is now fully functional on the production server.
 
-3. **Missing Achievement model imports**
-   - Solution: Added imports in models/__init__.py
+**Key Fixes:**
+- ✅ Authentication (bcrypt, JWT)
+- ✅ API endpoints (session history, grammar practice)
+- ✅ AI model (upgraded to Claude Sonnet 4.5)
+- ✅ Database field mappings (all models aligned)
+- ✅ Schema validation (metadata conflicts, field types)
+- ✅ Spaced repetition (mastery levels, progress tracking)
 
-4. **Duplicate ProgressSnapshot model**
-   - Solution: Removed from progress.py, kept in achievement.py
+See "Production Fixes Applied" section above for complete list of all 16 fixes.
 
-5. **PostgreSQL authentication failed**
-   - Solution: Configure pg_hba.conf with md5 authentication for localhost
+### Technical Notes
 
-### Python Version Compatibility
+**Python Version:**
 - **Recommended**: Python 3.10 or 3.11
 - **Tested**: Python 3.10 on Ubuntu 20.04 LTS
-- **Not Required**: HOST and PORT in .env file (handled by systemd/uvicorn)
+- **Environment**: HOST and PORT handled by systemd/uvicorn (not in .env)
+
+**Claude AI Model:**
+- **Current**: claude-sonnet-4-5 (auto-updating alias)
+- **Alternative**: claude-sonnet-4-5-20250929 (fixed snapshot)
+- **Pricing**: $3/M input tokens, $15/M output tokens
+
+**Database:**
+- **Reserved Keywords**: All metadata columns use Column("metadata", ...) syntax
+- **Field Naming**: Model attributes use full names (e.g., total_exercises_attempted)
+- **Mastery Levels**: Stored as float 0.0-1.0, converted to strings in schemas
 
 ---
 
 Last Updated: 2026-01-17
-Project Version: 1.0 (Phase 6 Complete - Backend Implemented, Phase 6.5 Deployment In Progress)
+Project Version: 1.0 (Phase 6.5 Complete - Production Deployment & Testing Complete!)
+Next Phase: Phase 7 - Frontend Development
