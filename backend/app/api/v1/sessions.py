@@ -99,9 +99,22 @@ def start_session(
         initial_message = "Guten Tag! Wie kann ich Ihnen heute helfen?"
 
     # Prepare response
-    response_data = SessionResponse.model_validate(new_session)
     return SessionWithContext(
-        **response_data.model_dump(),
+        id=new_session.id,
+        user_id=new_session.user_id,
+        context_id=new_session.context_id,
+        session_type=new_session.session_type,
+        started_at=new_session.started_at,
+        ended_at=new_session.ended_at,
+        duration_minutes=new_session.duration_minutes,
+        total_turns=new_session.total_turns,
+        grammar_errors=new_session.grammar_errors,
+        vocab_score=new_session.vocab_score,
+        fluency_score=new_session.fluency_score,
+        overall_score=new_session.overall_score,
+        ai_model_used=new_session.ai_model_used,
+        session_summary=new_session.session_summary,
+        session_metadata=new_session.session_metadata,
         context={"name": context.name, "description": context.description} if context else None
     )
 
