@@ -21,7 +21,7 @@ class VocabularyAIService:
         """
         self.api_key = api_key or settings.ANTHROPIC_API_KEY
         self.client = Anthropic(api_key=self.api_key)
-        self.model = "claude-sonnet-4.5"  # Latest Sonnet model
+        self.model = "claude-3-5-sonnet-20241022"  # Latest Claude 3.5 Sonnet
 
     def analyze_word(
         self,
