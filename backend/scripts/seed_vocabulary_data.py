@@ -217,7 +217,19 @@ def seed_vocabulary():
 
         created_count = 0
         for word_data in words_data:
-            word = Vocabulary(**word_data)
+            # Map field names from seed script to model column names
+            mapped_data = {
+                'word_de': word_data.get('word'),
+                'word_it': word_data.get('translation_it'),
+                'part_of_speech': word_data.get('part_of_speech'),
+                'gender': word_data.get('gender'),
+                'difficulty_level': word_data.get('difficulty'),
+                'context_category': word_data.get('category'),
+                'example_sentence_de': word_data.get('example_de'),
+                'example_sentence_it': word_data.get('example_it'),
+                'notes': word_data.get('pronunciation')  # Store pronunciation in notes
+            }
+            word = Vocabulary(**mapped_data)
             db.add(word)
             created_count += 1
 
