@@ -8,7 +8,7 @@ from datetime import datetime
 
 # ========== VOCABULARY WORD SCHEMAS ==========
 
-class VocabularyWordBase(BaseModel):
+class VocabularyBase(BaseModel):
     """Base schema for vocabulary words."""
     word: str = Field(..., description="German word with article if noun")
     translation_it: str = Field(..., description="Italian translation")
@@ -22,7 +22,7 @@ class VocabularyWordBase(BaseModel):
     pronunciation: Optional[str] = Field(None, description="Pronunciation guide")
 
 
-class VocabularyWordCreate(VocabularyWordBase):
+class VocabularyCreate(VocabularyBase):
     """Schema for creating a vocabulary word."""
     definition_de: Optional[str] = Field(None, description="Definition in German")
     usage_notes: Optional[str] = Field(None, description="Usage notes")
@@ -33,7 +33,7 @@ class VocabularyWordCreate(VocabularyWordBase):
     is_separable_verb: bool = Field(False)
 
 
-class VocabularyWordResponse(VocabularyWordBase):
+class VocabularyResponse(VocabularyBase):
     """Schema for vocabulary word response."""
     id: int
     definition_de: Optional[str]
@@ -48,7 +48,7 @@ class VocabularyWordResponse(VocabularyWordBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class VocabularyWordWithProgress(VocabularyWordResponse):
+class VocabularyWithProgress(VocabularyResponse):
     """Vocabulary word with user's learning progress."""
     mastery_level: Optional[int] = Field(None, ge=0, le=5, description="0=new, 5=mastered")
     times_reviewed: int = Field(0, description="Number of times reviewed")
@@ -136,7 +136,7 @@ class AddWordToListRequest(BaseModel):
 
 class PersonalVocabularyListWithWords(PersonalVocabularyListResponse):
     """Vocabulary list with all words."""
-    words: List[VocabularyWordWithProgress]
+    words: List[VocabularyWithProgress]
 
 
 # ========== VOCABULARY QUIZ SCHEMAS ==========
@@ -199,7 +199,7 @@ class VocabularyProgressSummary(BaseModel):
 
 class WordMasteryDetail(BaseModel):
     """Detailed mastery info for a specific word."""
-    word: VocabularyWordResponse
+    word: VocabularyResponse
     mastery_level: int = Field(..., ge=0, le=5)
     times_reviewed: int
     times_correct: int
@@ -214,9 +214,9 @@ class VocabularyReviewQueueResponse(BaseModel):
     overdue_count: int
     due_today_count: int
     upcoming_count: int
-    overdue_words: List[VocabularyWordWithProgress]
-    due_today_words: List[VocabularyWordWithProgress]
-    upcoming_words: List[VocabularyWordWithProgress]
+    overdue_words: List[VocabularyWithProgress]
+    due_today_words: List[VocabularyWithProgress]
+    upcoming_words: List[VocabularyWithProgress]
 
 
 # ========== WORD ANALYSIS SCHEMAS ==========
@@ -306,5 +306,5 @@ class WordRecommendationRequest(BaseModel):
 
 class WordRecommendationResponse(BaseModel):
     """Recommended words for learning."""
-    recommended_words: List[VocabularyWordWithProgress]
+    recommended_words: List[VocabularyWithProgress]
     reason: str = Field(..., description="Why these words are recommended")
