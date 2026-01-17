@@ -2,14 +2,17 @@
 Main FastAPI application module.
 Configures the API with middleware, CORS, and routes.
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from sqlalchemy.orm import Session
+from sqlalchemy import text
 import logging
 from logging.handlers import RotatingFileHandler
 import os
 
 from app.config import settings
+from app.database import get_db
 
 # Configure logging
 os.makedirs("logs", exist_ok=True)
@@ -66,13 +69,25 @@ async def root():
 
 
 @app.get("/api/health")
-async def health_check():
+async def health_check(db: Session = Depends(get_db)):
     """Health check endpoint for monitoring."""
+
+    # Check database connection
+    db_status = "disconnected"
+    try:
+        db.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+
+    # Check AI service configuration
+    ai_status = "configured" if settings.ANTHROPIC_API_KEY and settings.ANTHROPIC_API_KEY.startswith("sk-ant-") else "not_configured"
+
     return {
-        "status": "healthy",
+        "status": "healthy" if db_status == "connected" else "degraded",
         "environment": settings.ENVIRONMENT,
-        "database": "not_configured_yet",  # Will update after database setup
-        "ai_service": "not_configured_yet"  # Will update after AI integration
+        "database": db_status,
+        "ai_service": ai_status
     }
 
 
