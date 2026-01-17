@@ -386,7 +386,7 @@ def get_activity_heatmap(
     overall_progress = analytics.get_overall_progress(current_user.id)
 
     # Build heatmap cells
-    from app.models.session import ConversationSession
+    from app.models.session import Session as ConversationSession
     from app.models.grammar import GrammarSession
     from app.models.vocabulary import VocabularyReview
 

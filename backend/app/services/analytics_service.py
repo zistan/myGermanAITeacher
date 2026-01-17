@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Tuple
 from collections import defaultdict
 
 from app.models.user import User
-from app.models.session import ConversationSession, Message
+from app.models.session import Session as ConversationSession, ConversationTurn
 from app.models.grammar import (
     GrammarTopic, UserGrammarProgress, GrammarSession,
     GrammarExerciseAttempt, DiagnosticTest
@@ -74,9 +74,9 @@ class AnalyticsService:
         ).count()
 
         # Total messages
-        total_messages = self.db.query(Message).join(ConversationSession).filter(
+        total_messages = self.db.query(ConversationTurn).join(ConversationSession).filter(
             ConversationSession.user_id == user_id,
-            Message.role == "user"
+            ConversationTurn.role == "user"
         ).count()
 
         # Average session duration

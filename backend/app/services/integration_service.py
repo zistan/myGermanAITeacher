@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Tuple
 from collections import defaultdict
 
 from app.models.user import User
-from app.models.session import ConversationSession, Message
+from app.models.session import Session as ConversationSession, ConversationTurn
 from app.models.context import Context
 from app.models.grammar import (
     GrammarTopic, UserGrammarProgress, GrammarSession,
@@ -54,9 +54,9 @@ class IntegrationService:
             return {"error": "Session not found"}
 
         # Get all messages from session
-        messages = self.db.query(Message).filter(
-            Message.session_id == session_id
-        ).order_by(Message.created_at).all()
+        messages = self.db.query(ConversationTurn).filter(
+            ConversationTurn.session_id == session_id
+        ).order_by(ConversationTurn.created_at).all()
 
         user_messages = [m for m in messages if m.role == "user"]
         ai_messages = [m for m in messages if m.role == "assistant"]
