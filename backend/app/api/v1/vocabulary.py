@@ -137,7 +137,7 @@ def get_vocabulary_word(
         "mastery_level": progress.mastery_level if progress else None,
         "times_reviewed": progress.times_reviewed if progress else 0,
         "last_reviewed": progress.last_reviewed if progress else None,
-        "next_review_due": progress.next_review_due if progress else None,
+        "next_review_due": progress.next_review_date if progress else None,
         "accuracy_rate": (progress.times_correct / progress.times_reviewed * 100) if (progress and progress.times_reviewed > 0) else None
     }
 
@@ -241,10 +241,10 @@ def start_flashcard_session(
                 UserVocabularyProgress.word_id == word.id
             ).first()
 
-            if not progress or progress.next_review_due is None:
+            if not progress or progress.next_review_date is None:
                 priority = 100  # New words get high priority
-            elif progress.next_review_due <= datetime.utcnow():
-                days_overdue = (datetime.utcnow() - progress.next_review_due).days
+            elif progress.next_review_date <= datetime.utcnow():
+                days_overdue = (datetime.utcnow() - progress.next_review_date).days
                 priority = 50 + days_overdue * 10  # Overdue words get priority
             else:
                 priority = 1  # Not due yet
@@ -375,7 +375,7 @@ def submit_flashcard_answer(
             progress.mastery_level -= 1
         interval_days = 1
 
-    progress.next_review_due = datetime.utcnow() + timedelta(days=interval_days)
+    progress.next_review_date = datetime.utcnow() + timedelta(days=interval_days)
     # Note: accuracy_rate is calculated dynamically, not stored in the model
 
     # Record review
@@ -548,7 +548,7 @@ def get_vocabulary_list(
                 "mastery_level": progress.mastery_level if progress else None,
                 "times_reviewed": progress.times_reviewed if progress else 0,
                 "last_reviewed": progress.last_reviewed if progress else None,
-                "next_review_due": progress.next_review_due if progress else None,
+                "next_review_due": progress.next_review_date if progress else None,
                 "accuracy_rate": (progress.times_correct / progress.times_reviewed * 100) if (progress and progress.times_reviewed > 0) else None
             })
 
@@ -825,14 +825,14 @@ def get_vocabulary_progress_summary(
     # Words due today
     words_due_today = db.query(UserVocabularyProgress).filter(
         UserVocabularyProgress.user_id == current_user.id,
-        UserVocabularyProgress.next_review_due <= datetime.utcnow()
+        UserVocabularyProgress.next_review_date <= datetime.utcnow()
     ).count()
 
     # Words due this week
     week_end = datetime.utcnow() + timedelta(days=7)
     words_due_week = db.query(UserVocabularyProgress).filter(
         UserVocabularyProgress.user_id == current_user.id,
-        UserVocabularyProgress.next_review_due <= week_end
+        UserVocabularyProgress.next_review_date <= week_end
     ).count()
 
     return {
@@ -858,23 +858,23 @@ def get_vocabulary_review_queue(
     # Overdue words
     overdue = db.query(UserVocabularyProgress).filter(
         UserVocabularyProgress.user_id == current_user.id,
-        UserVocabularyProgress.next_review_due < now - timedelta(days=1)
+        UserVocabularyProgress.next_review_date < now - timedelta(days=1)
     ).all()
 
     # Due today
     today_end = now.replace(hour=23, minute=59, second=59)
     due_today = db.query(UserVocabularyProgress).filter(
         UserVocabularyProgress.user_id == current_user.id,
-        UserVocabularyProgress.next_review_due >= now - timedelta(days=1),
-        UserVocabularyProgress.next_review_due <= today_end
+        UserVocabularyProgress.next_review_date >= now - timedelta(days=1),
+        UserVocabularyProgress.next_review_date <= today_end
     ).all()
 
     # Upcoming (next 7 days)
     week_end = now + timedelta(days=7)
     upcoming = db.query(UserVocabularyProgress).filter(
         UserVocabularyProgress.user_id == current_user.id,
-        UserVocabularyProgress.next_review_due > today_end,
-        UserVocabularyProgress.next_review_due <= week_end
+        UserVocabularyProgress.next_review_date > today_end,
+        UserVocabularyProgress.next_review_date <= week_end
     ).limit(20).all()
 
     def format_progress(progress_list):
@@ -905,7 +905,7 @@ def get_vocabulary_review_queue(
                     "mastery_level": progress.mastery_level,
                     "times_reviewed": progress.times_reviewed,
                     "last_reviewed": progress.last_reviewed,
-                    "next_review_due": progress.next_review_due,
+                    "next_review_due": progress.next_review_date,
                     "accuracy_rate": (progress.times_correct / progress.times_reviewed * 100) if progress.times_reviewed > 0 else None
                 })
         return result
