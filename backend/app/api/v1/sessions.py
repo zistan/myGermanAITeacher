@@ -99,12 +99,11 @@ def start_session(
         initial_message = "Guten Tag! Wie kann ich Ihnen heute helfen?"
 
     # Prepare response
-    response = SessionWithContext(
-        **new_session.__dict__,
+    response_data = SessionResponse.model_validate(new_session)
+    return SessionWithContext(
+        **response_data.model_dump(),
         context={"name": context.name, "description": context.description} if context else None
     )
-
-    return response
 
 
 @router.post("/{session_id}/message", response_model=MessageResponse)
