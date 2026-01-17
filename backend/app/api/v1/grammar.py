@@ -394,11 +394,13 @@ def end_grammar_session(
 
     session.ended_at = datetime.utcnow()
 
-    # Calculate score
-    if session.total_attempted > 0:
-        session.overall_score = (session.total_correct / session.total_attempted) * 100
+    # Calculate accuracy and completion rates
+    if session.total_exercises > 0:
+        session.accuracy_rate = (session.exercises_correct / session.total_exercises) * 100
+        session.completion_rate = 100.0  # Session was completed
     else:
-        session.overall_score = 0
+        session.accuracy_rate = 0
+        session.completion_rate = 0
 
     db.commit()
 
@@ -408,9 +410,9 @@ def end_grammar_session(
         "session_id": session_id,
         "summary": {
             "total_exercises": session.total_exercises,
-            "completed": session.total_attempted,
-            "correct": session.total_correct,
-            "accuracy": session.overall_score,
+            "completed": session.total_exercises,
+            "correct": session.exercises_correct,
+            "accuracy": session.accuracy_rate,
             "duration_minutes": round(duration, 1)
         }
     }
