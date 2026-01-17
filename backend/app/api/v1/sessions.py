@@ -354,14 +354,40 @@ def end_session(
     )
 
 
+@router.get("/history", response_model=List[SessionResponse])
+def list_session_history(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+    limit: int = 20,
+    offset: int = 0
+):
+    """
+    List user's session history.
+
+    Args:
+        current_user: Authenticated user
+        db: Database session
+        limit: Maximum number of sessions to return
+        offset: Number of sessions to skip
+
+    Returns:
+        List[SessionResponse]: List of user's sessions
+    """
+    sessions = db.query(SessionModel).filter(
+        SessionModel.user_id == current_user.id
+    ).order_by(SessionModel.started_at.desc()).limit(limit).offset(offset).all()
+
+    return [SessionResponse(**session.__dict__) for session in sessions]
+
+
 @router.get("/{session_id}", response_model=SessionHistoryResponse)
-def get_session_history(
+def get_session_detail(
     session_id: int,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """
-    Get session history with all conversation turns.
+    Get session details with all conversation turns.
 
     Args:
         session_id: Session ID
