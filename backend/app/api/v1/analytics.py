@@ -19,7 +19,7 @@ from app.schemas.analytics import (
     WeeklyReport, MonthlyReport, PersonalizedRecommendationsResponse, StudyRecommendation
 )
 from app.services.analytics_service import AnalyticsService
-from app.api.v1.auth import get_current_user
+from app.api.deps import get_current_user
 
 router = APIRouter()
 

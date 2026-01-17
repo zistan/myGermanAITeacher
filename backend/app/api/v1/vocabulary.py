@@ -30,7 +30,7 @@ from app.schemas.vocabulary import (
     VocabularyStatistics, WordRecommendationRequest, WordRecommendationResponse
 )
 from app.services.vocabulary_ai_service import VocabularyAIService
-from app.api.v1.auth import get_current_user
+from app.api.deps import get_current_user
 
 router = APIRouter()
 

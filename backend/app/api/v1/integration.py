@@ -8,7 +8,7 @@ from typing import Dict
 from app.database import get_db
 from app.models.user import User
 from app.services.integration_service import IntegrationService
-from app.api.v1.auth import get_current_user
+from app.api.deps import get_current_user
 
 router = APIRouter()
 
