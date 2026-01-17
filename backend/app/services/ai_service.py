@@ -28,7 +28,7 @@ class ConversationAI:
         """
         self.api_key = api_key or settings.ANTHROPIC_API_KEY
         self.client = Anthropic(api_key=self.api_key)
-        self.model = "claude-3-5-sonnet-20241022"  # Latest Claude 3.5 Sonnet
+        self.model = "claude-sonnet-4-5"  # Latest Claude Sonnet 4.5 (auto-updates)
 
     def generate_response(
         self,
