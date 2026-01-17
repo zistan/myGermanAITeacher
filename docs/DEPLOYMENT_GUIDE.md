@@ -38,17 +38,26 @@ Update system packages:
 sudo apt update && sudo apt upgrade -y
 ```
 
-Install required packages:
+Add deadsnakes PPA for Python 3.11 (required for Ubuntu):
 ```bash
-sudo apt install -y python3.11 python3.11-venv python3-pip postgresql postgresql-contrib nginx git curl
+sudo apt install -y software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt update
+```
+
+Install Python 3.11 and required packages:
+```bash
+sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip postgresql postgresql-contrib nginx git curl
 ```
 
 Verify installations:
 ```bash
 python3.11 --version  # Should be 3.11+
-psql --version        # Should be PostgreSQL 15+
+psql --version        # Should be PostgreSQL 12+ (15+ preferred)
 nginx -v              # Should show nginx version
 ```
+
+**Note**: If PostgreSQL 15 is not available in your Ubuntu version's default repos, you can use PostgreSQL 12+ or add the official PostgreSQL repository.
 
 ### 2. Configure PostgreSQL Database
 

@@ -42,12 +42,21 @@ sudo apt update
 sudo apt upgrade -y
 print_status "System updated"
 
-# Step 2: Install dependencies
+# Step 2: Add Python 3.11 repository
 echo ""
-echo "Step 2: Installing dependencies..."
+echo "Step 2: Adding Python 3.11 repository (deadsnakes PPA)..."
+sudo apt install -y software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt update
+print_status "Python 3.11 repository added"
+
+# Step 3: Install dependencies
+echo ""
+echo "Step 3: Installing dependencies..."
 sudo apt install -y \
     python3.11 \
     python3.11-venv \
+    python3.11-dev \
     python3-pip \
     postgresql \
     postgresql-contrib \
@@ -67,9 +76,9 @@ psql --version
 nginx -v
 print_status "All tools installed successfully"
 
-# Step 3: Configure firewall
+# Step 4: Configure firewall
 echo ""
-echo "Step 3: Configuring firewall..."
+echo "Step 4: Configuring firewall..."
 read -p "Do you want to configure UFW firewall? (y/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -81,17 +90,17 @@ else
     print_warning "Skipping firewall configuration"
 fi
 
-# Step 4: Create application directory
+# Step 5: Create application directory
 echo ""
-echo "Step 4: Creating application directory..."
+echo "Step 5: Creating application directory..."
 APP_DIR="/opt/german-learning-app"
 sudo mkdir -p $APP_DIR
 sudo chown $USER:$USER $APP_DIR
 print_status "Created directory: $APP_DIR"
 
-# Step 5: PostgreSQL setup
+# Step 6: PostgreSQL setup
 echo ""
-echo "Step 5: PostgreSQL database setup..."
+echo "Step 6: PostgreSQL database setup..."
 read -p "Do you want to configure PostgreSQL database now? (y/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -127,14 +136,14 @@ else
     print_warning "Skipping database configuration"
 fi
 
-# Step 6: Generate SECRET_KEY
+# Step 7: Generate SECRET_KEY
 echo ""
-echo "Step 6: Generating SECRET_KEY..."
+echo "Step 7: Generating SECRET_KEY..."
 SECRET_KEY=$(openssl rand -hex 32)
 echo "SECRET_KEY=$SECRET_KEY" > /tmp/secret_key.txt
 print_status "SECRET_KEY generated and saved to /tmp/secret_key.txt"
 
-# Step 7: Summary
+# Step 8: Summary
 echo ""
 echo "=========================================="
 echo "Setup Complete!"

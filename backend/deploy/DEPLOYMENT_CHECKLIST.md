@@ -14,9 +14,15 @@ Use this checklist to ensure all deployment steps are completed correctly.
 
 - [ ] SSH into server: `ssh user@your-server-ip`
 - [ ] Update system: `sudo apt update && sudo apt upgrade -y`
+- [ ] Add Python 3.11 repository (deadsnakes PPA):
+  ```bash
+  sudo apt install -y software-properties-common
+  sudo add-apt-repository ppa:deadsnakes/ppa -y
+  sudo apt update
+  ```
 - [ ] Install dependencies:
   ```bash
-  sudo apt install -y python3.11 python3.11-venv python3-pip postgresql postgresql-contrib nginx git curl
+  sudo apt install -y python3.11 python3.11-venv python3.11-dev python3-pip postgresql postgresql-contrib nginx git curl
   ```
 - [ ] Verify installations:
   - [ ] Python 3.11+: `python3.11 --version`
