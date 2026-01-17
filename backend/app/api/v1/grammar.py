@@ -356,17 +356,18 @@ def submit_exercise_answer(
     )
 
     # Session progress
+    total_attempted = session.exercises_correct + session.exercises_incorrect
     session_progress = {
-        "completed": session.total_attempted,
+        "completed": total_attempted,
         "total": session.total_exercises,
-        "correct": session.total_correct,
-        "accuracy": (session.total_correct / session.total_attempted * 100)
-        if session.total_attempted > 0 else 0
+        "correct": session.exercises_correct,
+        "accuracy": (session.exercises_correct / total_attempted * 100)
+        if total_attempted > 0 else 0
     }
 
     # Get next exercise (if any)
     next_exercise = None
-    if session.total_attempted < session.total_exercises:
+    if total_attempted < session.total_exercises:
         # In production, this would get the next exercise from the session's exercise list
         pass
 
