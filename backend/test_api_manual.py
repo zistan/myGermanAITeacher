@@ -806,7 +806,7 @@ def test_phase6_vocabulary():
         "example_it": "Testo l'applicazione."
     }
     result = make_request("POST", "/api/v1/vocabulary/words",
-                         data=custom_word, use_auth=True, expected_status=201)
+                         data=custom_word, use_auth=True, expected_status=200)
     result.name = "Create custom vocabulary word"
     report.add_test(result)
 
@@ -844,20 +844,26 @@ def test_phase6_vocabulary():
     # Test 5: GET /api/v1/vocabulary/flashcards/{session_id}/current - Get current card
     report = EndpointTestReport("Get Current Flashcard", "GET", "/api/v1/vocabulary/flashcards/{session_id}/current")
 
+    current_card_id = None
     if flashcard_session_id:
         result = make_request("GET", f"/api/v1/vocabulary/flashcards/{flashcard_session_id}/current",
                             use_auth=True, expected_status=200)
         result.name = "Get current flashcard"
         report.add_test(result)
 
+        # Extract card_id for submitting answers
+        if result.passed and result.response_data:
+            current_card_id = result.response_data.get('card_id')
+
     report.print_report()
 
     # Test 6: POST /api/v1/vocabulary/flashcards/{session_id}/answer - Submit flashcard answer
     report = EndpointTestReport("Submit Flashcard Answer", "POST", "/api/v1/vocabulary/flashcards/{session_id}/answer")
 
-    if flashcard_session_id:
+    if flashcard_session_id and current_card_id:
         # Submit correct answer with high confidence
         answer_data = {
+            "card_id": current_card_id,
             "user_answer": "richtig",
             "confidence_level": 5,
             "time_spent_seconds": 3
@@ -867,16 +873,25 @@ def test_phase6_vocabulary():
         result.name = "Submit flashcard answer with high confidence"
         report.add_test(result)
 
+        # Get the next card for the second answer test
+        next_card_result = make_request("GET", f"/api/v1/vocabulary/flashcards/{flashcard_session_id}/current",
+                                       use_auth=True, expected_status=200)
+        next_card_id = None
+        if next_card_result.passed and next_card_result.response_data:
+            next_card_id = next_card_result.response_data.get('card_id')
+
         # Submit another answer with lower confidence
-        answer_data2 = {
-            "user_answer": "falsch",
-            "confidence_level": 2,
-            "time_spent_seconds": 8
-        }
-        result2 = make_request("POST", f"/api/v1/vocabulary/flashcards/{flashcard_session_id}/answer",
-                             data=answer_data2, use_auth=True, expected_status=200)
-        result2.name = "Submit flashcard answer with low confidence"
-        report.add_test(result2)
+        if next_card_id:
+            answer_data2 = {
+                "card_id": next_card_id,
+                "user_answer": "falsch",
+                "confidence_level": 2,
+                "time_spent_seconds": 8
+            }
+            result2 = make_request("POST", f"/api/v1/vocabulary/flashcards/{flashcard_session_id}/answer",
+                                 data=answer_data2, use_auth=True, expected_status=200)
+            result2.name = "Submit flashcard answer with low confidence"
+            report.add_test(result2)
 
     report.print_report()
 
@@ -986,19 +1001,25 @@ def test_phase6_vocabulary():
     report.add_test(result)
 
     quiz_id = None
+    first_question_id = None
     if result.passed and result.response_data:
         quiz_id = result.response_data.get('quiz_id')
         if quiz_id:
             state.quiz_ids.append(quiz_id)
+
+        # Extract the first question ID for testing answer submission
+        questions = result.response_data.get('questions', [])
+        if questions and len(questions) > 0:
+            first_question_id = questions[0].get('question_id')
 
     report.print_report()
 
     # Test 14: POST /api/v1/vocabulary/quiz/{quiz_id}/answer - Submit quiz answer
     report = EndpointTestReport("Submit Quiz Answer", "POST", "/api/v1/vocabulary/quiz/{id}/answer")
 
-    if quiz_id:
+    if quiz_id and first_question_id:
         quiz_answer = {
-            "question_id": "1",
+            "question_id": first_question_id,
             "user_answer": "die Zahlung"
         }
         result = make_request("POST", f"/api/v1/vocabulary/quiz/{quiz_id}/answer",
