@@ -24,8 +24,8 @@ router = APIRouter()
 
 @router.get("", response_model=List[ContextListItem])
 def list_contexts(
-    category: Optional[str] = Query(None, regex="^(business|daily|finance|social|technical|general|all)$"),
-    difficulty: Optional[str] = Query(None, regex="^(A1|A2|B1|B2|C1|C2)$"),
+    category: Optional[str] = Query(None, pattern="^(business|daily|finance|social|technical|general|all)$"),
+    difficulty: Optional[str] = Query(None, pattern="^(A1|A2|B1|B2|C1|C2)$"),
     active_only: bool = True,
     db: Session = Depends(get_db)
 ):
