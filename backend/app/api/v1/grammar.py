@@ -306,37 +306,36 @@ def submit_exercise_answer(
         progress = UserGrammarProgress(
             user_id=current_user.id,
             topic_id=exercise.topic_id,
-            mastery_level="beginner"
+            mastery_level=0.0  # Float from 0.0 to 1.0
         )
         db.add(progress)
 
-    progress.total_attempts += 1
-    progress.correct_attempts += 1 if evaluation["is_correct"] else 0
-    progress.last_practiced_at = datetime.utcnow()
+    # Update progress metrics
+    progress.total_exercises_attempted += 1
+    if evaluation["is_correct"]:
+        progress.total_exercises_correct += 1
+        progress.current_streak += 1
+    else:
+        progress.total_exercises_incorrect += 1
+        progress.current_streak = 0
+
+    progress.last_practiced = datetime.utcnow()
 
     # Update next review date (spaced repetition)
     if evaluation["is_correct"]:
-        # Increase interval if correct
-        progress.consecutive_correct += 1
-        days_interval = min(30, 2 ** progress.consecutive_correct)  # Exponential backoff, max 30 days
+        # Increase interval if correct (exponential backoff)
+        days_interval = min(30, 2 ** progress.current_streak)  # Max 30 days
     else:
-        # Reset interval if incorrect
-        progress.consecutive_correct = 0
+        # Reset to 1 day if incorrect
         days_interval = 1
 
     progress.next_review_date = datetime.utcnow() + timedelta(days=days_interval)
 
-    # Update mastery level
-    if progress.total_attempts >= 5:
-        accuracy = progress.correct_attempts / progress.total_attempts
-        if accuracy >= 0.9:
-            progress.mastery_level = "mastered"
-        elif accuracy >= 0.75:
-            progress.mastery_level = "advanced"
-        elif accuracy >= 0.5:
-            progress.mastery_level = "intermediate"
-        else:
-            progress.mastery_level = "beginner"
+    # Update mastery level (float from 0.0 to 1.0 based on accuracy)
+    if progress.total_exercises_attempted >= 5:
+        accuracy = progress.total_exercises_correct / progress.total_exercises_attempted
+        # Mastery level is a float from 0.0 to 1.0
+        progress.mastery_level = accuracy
 
     db.commit()
 
