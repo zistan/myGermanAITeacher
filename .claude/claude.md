@@ -20,9 +20,9 @@ An AI-powered German language learning application designed for advanced learner
 ### Technology Stack
 
 **Backend:**
-- Python 3.11+
+- Python 3.10+ (3.10 or 3.11+ supported)
 - FastAPI (REST API)
-- PostgreSQL 15+ (database)
+- PostgreSQL 12+ (15+ recommended)
 - SQLAlchemy 2.0 (ORM)
 - Alembic (migrations)
 - Anthropic Claude 3.5 Sonnet (AI)
@@ -40,9 +40,11 @@ An AI-powered German language learning application designed for advanced learner
 - Nginx (reverse proxy, optional)
 
 ### Project Status
-**Current Phase**: ✅ Phase 6 Complete - Backend Fully Implemented!
+**Current Phase**: 🚀 Phase 6.5 - Production Deployment (In Progress)
+**Previous Phase**: ✅ Phase 6 Complete - Backend Fully Implemented!
 **Next Phase**: Phase 7 - Frontend Development
 **Timeline**: 10-week development plan
+**Deployment Target**: Ubuntu 20.04 LTS server
 
 ### Completed Phases
 
@@ -100,6 +102,42 @@ An AI-powered German language learning application designed for advanced learner
 - Quick action recommendations
 - 3 integration API endpoints
 - 11 comprehensive tests
+
+#### 🚀 Phase 6.5: Production Deployment (In Progress)
+**Target Environment:** Ubuntu 20.04 LTS server with Python 3.10
+
+**Deployment Components:**
+- ✅ Comprehensive deployment documentation (DEPLOYMENT_GUIDE.md)
+- ✅ Automated setup script (setup-server.sh)
+- ✅ Systemd service configuration
+- ✅ Nginx reverse proxy configuration
+- ✅ Production environment template (.env.production)
+- ✅ Step-by-step deployment checklist
+- 🔄 Database migration execution
+- 🔄 Initial data seeding
+- ⏳ Service startup and verification
+- ⏳ SSL/HTTPS configuration
+- ⏳ Firewall and security hardening
+
+**Production Fixes Applied:**
+1. **Python 3.11 Availability** - Added deadsnakes PPA for Python 3.10/3.11 installation on Ubuntu 20.04
+2. **SQLAlchemy Reserved Keywords** - Fixed `metadata` column conflicts in models:
+   - Session.metadata → session_metadata
+   - ConversationTurn.metadata → turn_metadata
+   - GrammarExercise.metadata → exercise_metadata
+   - GrammarSession.metadata → grammar_metadata
+3. **Model Import Issues** - Added missing Achievement model imports (UserAchievement, UserStats, Achievement)
+4. **Duplicate Model Definitions** - Removed duplicate ProgressSnapshot from progress.py (kept version in achievement.py)
+5. **PostgreSQL Configuration** - Configured pg_hba.conf for local md5 authentication
+
+**Deployment Documentation:**
+- `/docs/DEPLOYMENT_GUIDE.md` - Complete deployment walkthrough
+- `/backend/deploy/DEPLOYMENT_CHECKLIST.md` - Step-by-step checklist
+- `/backend/deploy/README.md` - Deploy directory overview
+- `/backend/deploy/setup-server.sh` - Automated server setup
+- `/backend/deploy/german-learning.service` - Systemd service file
+- `/backend/deploy/nginx-german-learning.conf` - Nginx configuration
+- `/backend/deploy/.env.production` - Production environment template
 
 ### API Structure (74 Total Endpoints)
 
@@ -302,6 +340,8 @@ myGermanAITeacher/
 - Quick actions for immediate engagement
 
 ### Environment Variables (.env)
+
+**Development:**
 ```bash
 # Database
 DATABASE_URL=postgresql://user:password@localhost/german_learning
@@ -320,6 +360,33 @@ DEBUG=True
 ENVIRONMENT=development
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173
 ```
+
+**Production:**
+```bash
+# Database
+DATABASE_URL=postgresql://german_app_user:strong_password@localhost/german_learning
+
+# AI Services
+ANTHROPIC_API_KEY=sk-ant-your-production-key
+
+# Security (generate with: openssl rand -hex 32)
+SECRET_KEY=generated-secure-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Application
+APP_NAME=German Learning App
+DEBUG=False
+ENVIRONMENT=production
+CORS_ORIGINS=http://your-server-ip,https://your-domain.com
+```
+
+**Important Notes:**
+- `HOST` and `PORT` are NOT included in .env (not defined in Settings class)
+- Uvicorn will use default `--host 0.0.0.0 --port 8000` from systemd service or command line
+- Generate SECRET_KEY with: `openssl rand -hex 32`
+- Set DEBUG=False in production
+- Update CORS_ORIGINS with actual server IP/domain
 
 ### Development Commands
 
@@ -347,6 +414,85 @@ cd backend && pytest tests/ -v
 **API Documentation:**
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
+
+### Production Deployment Commands
+
+**Quick Deployment (Ubuntu 20.04):**
+```bash
+# 1. Transfer deployment files to server
+scp -r backend/deploy/* user@server-ip:~/deploy/
+
+# 2. Run automated setup script
+ssh user@server-ip
+cd ~/deploy
+chmod +x setup-server.sh
+./setup-server.sh
+
+# 3. Transfer application code
+cd /opt/german-learning-app
+git clone https://github.com/zistan/myGermanAITeacher.git .
+
+# 4. Setup Python environment (Python 3.10)
+cd backend
+python3.10 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 5. Configure environment
+cp deploy/.env.production .env
+nano .env  # Update with actual values
+chmod 600 .env
+
+# 6. Run migrations and seed data
+alembic upgrade head
+python scripts/seed_contexts.py
+python scripts/seed_grammar_data.py
+python scripts/seed_vocabulary_data.py
+python scripts/seed_achievements.py
+
+# 7. Setup systemd service
+sudo cp deploy/german-learning.service /etc/systemd/system/
+sudo nano /etc/systemd/system/german-learning.service  # Update username
+sudo systemctl daemon-reload
+sudo systemctl enable german-learning
+sudo systemctl start german-learning
+
+# 8. Setup Nginx
+sudo cp deploy/nginx-german-learning.conf /etc/nginx/sites-available/german-learning
+sudo nano /etc/nginx/sites-available/german-learning  # Update domain
+sudo ln -s /etc/nginx/sites-available/german-learning /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+
+# 9. Configure firewall
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
+sudo ufw enable
+```
+
+**Service Management:**
+```bash
+# Check status
+sudo systemctl status german-learning
+
+# View logs
+sudo journalctl -u german-learning -f
+
+# Restart service
+sudo systemctl restart german-learning
+
+# Update application
+cd /opt/german-learning-app/backend
+git pull origin master
+source venv/bin/activate
+pip install -r requirements.txt
+alembic upgrade head
+sudo systemctl restart german-learning
+```
+
+**Deployment Documentation:**
+- Full guide: `/docs/DEPLOYMENT_GUIDE.md`
+- Checklist: `/backend/deploy/DEPLOYMENT_CHECKLIST.md`
+- Deploy README: `/backend/deploy/README.md`
 
 ### Testing Coverage
 - **Total Tests**: 104 comprehensive tests
@@ -423,10 +569,37 @@ cd backend && pytest tests/ -v
 
 **Current Status:**
 - ✅ **Backend**: Fully implemented with 74 endpoints, 104 tests, all core features
+- 🚀 **Deployment**: In progress on Ubuntu 20.04 server with Python 3.10
 - 🔄 **Frontend**: Not started (Phase 7)
-- 📊 **Progress**: 6/10 phases complete (backend complete, frontend pending)
+- 📊 **Progress**: 6/10 phases complete (backend complete, deployment in progress, frontend pending)
+
+---
+
+## Known Issues & Solutions
+
+### Deployment Issues (Resolved)
+1. **Python 3.11 not available on Ubuntu 20.04**
+   - Solution: Use Python 3.10 (fully compatible) or add deadsnakes PPA
+
+2. **SQLAlchemy "metadata" reserved keyword error**
+   - Solution: Renamed model attributes with Column("metadata", ...) syntax
+   - Affects: Session, ConversationTurn, GrammarExercise, GrammarSession models
+
+3. **Missing Achievement model imports**
+   - Solution: Added imports in models/__init__.py
+
+4. **Duplicate ProgressSnapshot model**
+   - Solution: Removed from progress.py, kept in achievement.py
+
+5. **PostgreSQL authentication failed**
+   - Solution: Configure pg_hba.conf with md5 authentication for localhost
+
+### Python Version Compatibility
+- **Recommended**: Python 3.10 or 3.11
+- **Tested**: Python 3.10 on Ubuntu 20.04 LTS
+- **Not Required**: HOST and PORT in .env file (handled by systemd/uvicorn)
 
 ---
 
 Last Updated: 2026-01-17
-Project Version: 1.0 (Phase 6 Complete - Backend Fully Implemented)
+Project Version: 1.0 (Phase 6 Complete - Backend Implemented, Phase 6.5 Deployment In Progress)
