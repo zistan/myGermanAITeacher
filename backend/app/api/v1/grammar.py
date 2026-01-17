@@ -280,18 +280,21 @@ def submit_exercise_answer(
 
     # Record attempt
     attempt = GrammarExerciseAttempt(
-        session_id=session_id,
+        grammar_session_id=session_id,
+        user_id=current_user.id,
         exercise_id=request.exercise_id,
         user_answer=request.user_answer,
         is_correct=evaluation["is_correct"],
-        time_spent_seconds=request.time_spent_seconds,
-        points_earned=points
+        time_spent_seconds=request.time_spent_seconds
     )
     db.add(attempt)
 
     # Update session stats
-    session.total_correct += 1 if evaluation["is_correct"] else 0
-    session.total_attempted += 1
+    if evaluation["is_correct"]:
+        session.exercises_correct += 1
+    else:
+        session.exercises_incorrect += 1
+    session.total_exercises += 1
 
     # Update user progress on topic
     progress = db.query(UserGrammarProgress).filter(
