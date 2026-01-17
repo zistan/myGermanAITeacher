@@ -2,7 +2,7 @@
 Pydantic schemas for vocabulary learning endpoints.
 """
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 
@@ -247,8 +247,10 @@ class WordAnalysisResponse(BaseModel):
     compound_parts: Optional[List[str]]
     is_separable: bool
     separable_prefix: Optional[str]
-    register: str = Field(..., description="formal, informal, or neutral")
+    language_register: str = Field(..., description="formal, informal, or neutral", alias="register")
     frequency: str = Field(..., description="very_common, common, uncommon, rare")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class DetectVocabularyRequest(BaseModel):
@@ -283,8 +285,8 @@ class VocabularyStatistics(BaseModel):
     user_words_learned: int
     learning_rate_words_per_week: float
     average_mastery_level: float
-    strongest_categories: List[Dict[str, any]]
-    weakest_categories: List[Dict[str, any]]
+    strongest_categories: List[Dict[str, Any]]
+    weakest_categories: List[Dict[str, Any]]
     retention_rate: float = Field(..., ge=0, le=100, description="Percentage retained")
     review_accuracy: float = Field(..., ge=0, le=100)
     estimated_vocabulary_size: int = Field(..., description="Estimated active vocabulary")
