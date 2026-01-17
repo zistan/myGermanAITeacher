@@ -140,6 +140,8 @@ An AI-powered German language learning application designed for advanced learner
 14. **SessionWithContext** - Fixed SQLAlchemy metadata conflict using explicit field assignment
 15. **UserGrammarProgress Fields** - Fixed all field names and mastery_level type (float 0.0-1.0)
 16. **Grammar Progress Endpoints** - Fixed field names and mastery level conversions in progress/weak-areas/summary
+17. **Vocabulary Model/Schema Alignment** - Fixed 550 validation errors by aligning Vocabulary model field names with schemas
+18. **Vocabulary Database Migration** - Created comprehensive migration (001_update_vocabulary_schema) to update existing database schema
 
 **Deployment Documentation:**
 - `/docs/DEPLOYMENT_GUIDE.md` - Complete deployment walkthrough
@@ -149,6 +151,41 @@ An AI-powered German language learning application designed for advanced learner
 - `/backend/deploy/german-learning.service` - Systemd service file
 - `/backend/deploy/nginx-german-learning.conf` - Nginx configuration
 - `/backend/deploy/.env.production` - Production environment template
+
+**Vocabulary Module Database Migration (Fix #17-18):**
+
+The Vocabulary module required extensive database schema updates to align with the SQLAlchemy models. Migration `001_update_vocabulary_schema.py` performs:
+
+**Vocabulary Table Updates:**
+- Renamed columns: word_de→word, word_it→translation_it, difficulty_level→difficulty, context_category→category
+- Renamed columns: example_sentence_de→example_de, example_sentence_it→example_it, notes→usage_notes
+- Added columns: definition_de, pronunciation, synonyms, antonyms, is_idiom, is_compound, is_separable_verb
+
+**User Vocabulary Progress Table Transformation:**
+- Renamed table: user_vocabulary → user_vocabulary_progress
+- Renamed columns: vocabulary_id→word_id, familiarity_score→confidence_score, times_encountered→times_reviewed
+- Renamed columns: last_encountered→last_reviewed, first_encountered→first_reviewed, notes→personal_note
+- Added columns: mastery_level, current_streak, ease_factor, interval_days
+
+**New Tables Created:**
+- `user_vocabulary_lists` - Personal vocabulary lists with is_public field
+- `vocabulary_list_words` - Many-to-many association for list membership
+- `vocabulary_reviews` - Review history tracking with confidence ratings
+
+**API Fixes (backend/app/api/v1/vocabulary.py):**
+- Fixed all 8 word dictionary constructions to convert integer booleans (0/1) to Python booleans
+- Calculate accuracy_rate dynamically: `(times_correct / times_reviewed * 100)`
+- Initialize all UserVocabularyProgress fields explicitly (times_incorrect, current_streak, confidence_score)
+- Track streaks correctly (increment on correct, reset on incorrect)
+- Fixed VocabularyReview field: confidence_level→confidence_rating
+- Convert boolean to integer for was_correct field
+
+**Migration Command:**
+```bash
+alembic upgrade 001_update_vocabulary_schema
+```
+
+This migration preserves all existing vocabulary and user progress data while updating the schema to match the models.
 
 ### API Structure (74 Total Endpoints)
 
