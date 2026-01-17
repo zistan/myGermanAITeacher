@@ -77,12 +77,13 @@ async def health_check():
 
 
 # API routes
-from app.api.v1 import auth, sessions, contexts, grammar
+from app.api.v1 import auth, sessions, contexts, grammar, vocabulary
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
 app.include_router(contexts.router, prefix="/api/contexts", tags=["contexts"])
 app.include_router(grammar.router, prefix="/api", tags=["grammar"])
+app.include_router(vocabulary.router, prefix="/api", tags=["vocabulary"])
 
 
 if __name__ == "__main__":
