@@ -28,9 +28,9 @@ class SessionResponse(BaseModel):
     overall_score: Optional[float] = None
     ai_model_used: Optional[str] = None
     session_summary: Optional[str] = None
-    metadata: Dict[str, Any] = {}
+    session_metadata: Dict[str, Any] = Field(default={}, alias="metadata")
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class SessionWithContext(SessionResponse):

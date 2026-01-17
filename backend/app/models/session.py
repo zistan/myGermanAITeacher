@@ -38,7 +38,7 @@ class Session(Base):
 
     # Summary and metadata
     session_summary = Column(Text, nullable=True)
-    metadata = Column(JSON, default={}, nullable=False)
+    session_metadata = Column("metadata", JSON, default={}, nullable=False)
 
     def __repr__(self) -> str:
         return f"<Session(id={self.id}, user_id={self.user_id}, type='{self.session_type}')>"
@@ -71,7 +71,7 @@ class ConversationTurn(Base):
     ai_evaluation = Column(JSON, nullable=True)  # AI's assessment of the turn
 
     # Metadata
-    metadata = Column(JSON, default={}, nullable=False)
+    turn_metadata = Column("metadata", JSON, default={}, nullable=False)
 
     def __repr__(self) -> str:
         return f"<ConversationTurn(id={self.id}, session_id={self.session_id}, turn={self.turn_number}, speaker='{self.speaker}')>"
