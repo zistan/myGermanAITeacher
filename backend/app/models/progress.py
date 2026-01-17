@@ -4,62 +4,11 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    Float,
-    Date,
     TIMESTAMP,
-    ForeignKey,
-    JSON,
-    UniqueConstraint,
-    Index
+    ForeignKey
 )
 from sqlalchemy.sql import func
 from app.database import Base
-
-
-class ProgressSnapshot(Base):
-    """
-    Daily/periodic snapshots of user progress.
-    Tracks metrics across all learning modules.
-    """
-
-    __tablename__ = "progress_snapshots"
-    __table_args__ = (
-        UniqueConstraint("user_id", "snapshot_date", name="uq_user_snapshot_date"),
-    )
-
-    id = Column(Integer, primary_key=True, index=True)
-
-    # Foreign key
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-
-    # Snapshot date
-    snapshot_date = Column(Date, server_default=func.current_date(), nullable=False, index=True)
-
-    # Session metrics
-    total_sessions = Column(Integer, default=0, nullable=False)
-    total_practice_minutes = Column(Integer, default=0, nullable=False)
-
-    # Vocabulary metrics
-    vocabulary_learned = Column(Integer, default=0, nullable=False)
-    vocabulary_mastered = Column(Integer, default=0, nullable=False)  # familiarity_score > 0.8
-
-    # Grammar metrics
-    grammar_topics_mastered = Column(Integer, default=0, nullable=False)  # mastery_level > 0.8
-    grammar_topics_learning = Column(Integer, default=0, nullable=False)
-    grammar_drill_sessions = Column(Integer, default=0, nullable=False)
-
-    # Accuracy metrics
-    avg_grammar_accuracy = Column(Float, nullable=True)
-    avg_fluency_score = Column(Float, nullable=True)
-
-    # Common errors (stored as JSON)
-    common_errors = Column(JSON, nullable=True)  # Top grammar errors this period
-
-    # Achievements
-    achievements = Column(JSON, nullable=True)  # Milestones reached
-
-    def __repr__(self) -> str:
-        return f"<ProgressSnapshot(user_id={self.user_id}, date={self.snapshot_date})>"
 
 
 class GrammarCorrection(Base):
