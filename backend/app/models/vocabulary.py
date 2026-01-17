@@ -26,23 +26,32 @@ class Vocabulary(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Translations
-    word_de = Column(String(255), nullable=False, index=True)
-    word_it = Column(String(255), nullable=False)
-    word_en = Column(String(255), nullable=True)
+    word = Column(String(255), nullable=False, index=True)  # German word with article if noun
+    translation_it = Column(String(255), nullable=False)
+    word_en = Column(String(255), nullable=True)  # Keep English translation
 
     # Grammatical information
     part_of_speech = Column(String(50), nullable=True)  # noun, verb, adjective, etc.
-    gender = Column(String(10), nullable=True)  # der, die, das
+    gender = Column(String(10), nullable=True)  # masculine, feminine, neuter
     plural_form = Column(String(255), nullable=True)
 
     # Categorization
-    difficulty_level = Column(String(10), nullable=True, index=True)  # B1, B2, C1, C2
-    context_category = Column(String(50), nullable=True, index=True)  # business, daily, finance
+    difficulty = Column(String(10), nullable=True, index=True)  # A1, A2, B1, B2, C1, C2
+    category = Column(String(50), nullable=True, index=True)  # business, daily, finance, verbs, etc.
 
-    # Examples and notes
-    example_sentence_de = Column(Text, nullable=True)
-    example_sentence_it = Column(Text, nullable=True)
-    notes = Column(Text, nullable=True)
+    # Examples and definitions
+    example_de = Column(Text, nullable=True)  # Example sentence in German
+    example_it = Column(Text, nullable=True)  # Example sentence in Italian
+    definition_de = Column(Text, nullable=True)  # Definition in German
+    usage_notes = Column(Text, nullable=True)  # Usage notes
+    pronunciation = Column(String(255), nullable=True)  # Pronunciation guide
+
+    # Word properties (stored as JSON arrays or boolean flags)
+    synonyms = Column(Text, nullable=True)  # JSON array of synonyms
+    antonyms = Column(Text, nullable=True)  # JSON array of antonyms
+    is_idiom = Column(Integer, default=0, nullable=False)  # Boolean: 0=false, 1=true
+    is_compound = Column(Integer, default=0, nullable=False)  # Boolean: compound word
+    is_separable_verb = Column(Integer, default=0, nullable=False)  # Boolean: separable verb
 
     # Tracking
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
@@ -50,7 +59,7 @@ class Vocabulary(Base):
     review_count = Column(Integer, default=0, nullable=False)
 
     def __repr__(self) -> str:
-        return f"<Vocabulary(id={self.id}, word_de='{self.word_de}', level='{self.difficulty_level}')>"
+        return f"<Vocabulary(id={self.id}, word='{self.word}', level='{self.difficulty}')>"
 
 
 class UserVocabularyProgress(Base):
@@ -107,6 +116,7 @@ class UserVocabularyList(Base):
     # List details
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
+    is_public = Column(Integer, default=0, nullable=False)  # Boolean: 0=private, 1=public
     color = Column(String(50), nullable=True)  # For UI organization
 
     # Tracking

@@ -66,7 +66,34 @@ def get_vocabulary_words(
         )
 
     words = query.offset(skip).limit(limit).all()
-    return words
+
+    # Convert booleans from integer to boolean for schema validation
+    result = []
+    for word in words:
+        word_dict = {
+            "id": word.id,
+            "word": word.word,
+            "translation_it": word.translation_it,
+            "part_of_speech": word.part_of_speech,
+            "gender": word.gender,
+            "plural_form": word.plural_form,
+            "difficulty": word.difficulty,
+            "category": word.category,
+            "example_de": word.example_de,
+            "example_it": word.example_it,
+            "pronunciation": word.pronunciation,
+            "definition_de": word.definition_de,
+            "usage_notes": word.usage_notes,
+            "synonyms": [],  # TODO: Parse JSON from synonyms column
+            "antonyms": [],  # TODO: Parse JSON from antonyms column
+            "is_idiom": bool(word.is_idiom),
+            "is_compound": bool(word.is_compound),
+            "is_separable_verb": bool(word.is_separable_verb),
+            "created_at": word.created_at
+        }
+        result.append(word_dict)
+
+    return result
 
 
 @router.get("/v1/vocabulary/words/{word_id}", response_model=VocabularyWithProgress)
@@ -101,17 +128,17 @@ def get_vocabulary_word(
         "pronunciation": word.pronunciation,
         "definition_de": word.definition_de,
         "usage_notes": word.usage_notes,
-        "synonyms": word.synonyms or [],
-        "antonyms": word.antonyms or [],
-        "is_idiom": word.is_idiom,
-        "is_compound": word.is_compound,
-        "is_separable_verb": word.is_separable_verb,
+        "synonyms": [],  # TODO: Parse JSON from synonyms column
+        "antonyms": [],  # TODO: Parse JSON from antonyms column
+        "is_idiom": bool(word.is_idiom),
+        "is_compound": bool(word.is_compound),
+        "is_separable_verb": bool(word.is_separable_verb),
         "created_at": word.created_at,
         "mastery_level": progress.mastery_level if progress else None,
         "times_reviewed": progress.times_reviewed if progress else 0,
         "last_reviewed": progress.last_reviewed if progress else None,
         "next_review_due": progress.next_review_due if progress else None,
-        "accuracy_rate": progress.accuracy_rate if progress else None
+        "accuracy_rate": (progress.times_correct / progress.times_reviewed * 100) if (progress and progress.times_reviewed > 0) else None
     }
 
     return word_dict
@@ -142,17 +169,39 @@ def create_vocabulary_word(
         pronunciation=word_data.pronunciation,
         definition_de=word_data.definition_de,
         usage_notes=word_data.usage_notes,
-        synonyms=word_data.synonyms,
-        antonyms=word_data.antonyms,
-        is_idiom=word_data.is_idiom,
-        is_compound=word_data.is_compound,
-        is_separable_verb=word_data.is_separable_verb
+        synonyms=None,  # TODO: Convert list to JSON string
+        antonyms=None,  # TODO: Convert list to JSON string
+        is_idiom=1 if word_data.is_idiom else 0,
+        is_compound=1 if word_data.is_compound else 0,
+        is_separable_verb=1 if word_data.is_separable_verb else 0
     )
 
     db.add(word)
     db.commit()
     db.refresh(word)
-    return word
+
+    # Build response with boolean conversion
+    return {
+        "id": word.id,
+        "word": word.word,
+        "translation_it": word.translation_it,
+        "part_of_speech": word.part_of_speech,
+        "gender": word.gender,
+        "plural_form": word.plural_form,
+        "difficulty": word.difficulty,
+        "category": word.category,
+        "example_de": word.example_de,
+        "example_it": word.example_it,
+        "pronunciation": word.pronunciation,
+        "definition_de": word.definition_de,
+        "usage_notes": word.usage_notes,
+        "synonyms": [],
+        "antonyms": [],
+        "is_idiom": bool(word.is_idiom),
+        "is_compound": bool(word.is_compound),
+        "is_separable_verb": bool(word.is_separable_verb),
+        "created_at": word.created_at
+    }
 
 
 # ========== FLASHCARD ENDPOINTS ==========
@@ -296,7 +345,10 @@ def submit_flashcard_answer(
             word_id=card["word_id"],
             mastery_level=0,
             times_reviewed=0,
-            times_correct=0
+            times_correct=0,
+            times_incorrect=0,
+            current_streak=0,
+            confidence_score=0.0
         )
         db.add(progress)
 
@@ -305,6 +357,7 @@ def submit_flashcard_answer(
 
     if is_correct:
         progress.times_correct += 1
+        progress.current_streak += 1
 
         # Spaced repetition algorithm (SM-2 inspired)
         if progress.mastery_level < 5:
@@ -316,21 +369,23 @@ def submit_flashcard_answer(
         interval_days = int(base_interval * confidence_multiplier)
     else:
         # Reset on failure
+        progress.times_incorrect += 1
+        progress.current_streak = 0
         if progress.mastery_level > 0:
             progress.mastery_level -= 1
         interval_days = 1
 
     progress.next_review_due = datetime.utcnow() + timedelta(days=interval_days)
-    progress.accuracy_rate = (progress.times_correct / progress.times_reviewed) * 100
+    # Note: accuracy_rate is calculated dynamically, not stored in the model
 
     # Record review
     review = VocabularyReview(
         user_id=current_user.id,
         word_id=card["word_id"],
         review_type="flashcard",
-        was_correct=is_correct,
+        was_correct=1 if is_correct else 0,
         time_spent_seconds=request.time_spent_seconds,
-        confidence_level=request.confidence_level
+        confidence_rating=request.confidence_level
     )
     db.add(review)
     db.commit()
@@ -392,7 +447,7 @@ def create_vocabulary_list(
         user_id=current_user.id,
         name=list_data.name,
         description=list_data.description,
-        is_public=list_data.is_public
+        is_public=1 if list_data.is_public else 0
     )
 
     db.add(vocab_list)
@@ -403,7 +458,7 @@ def create_vocabulary_list(
         "id": vocab_list.id,
         "name": vocab_list.name,
         "description": vocab_list.description,
-        "is_public": vocab_list.is_public,
+        "is_public": bool(vocab_list.is_public),
         "word_count": 0,
         "created_at": vocab_list.created_at,
         "updated_at": vocab_list.updated_at
@@ -430,7 +485,7 @@ def get_vocabulary_lists(
             "id": vocab_list.id,
             "name": vocab_list.name,
             "description": vocab_list.description,
-            "is_public": vocab_list.is_public,
+            "is_public": bool(vocab_list.is_public),
             "word_count": word_count,
             "created_at": vocab_list.created_at,
             "updated_at": vocab_list.updated_at
@@ -484,24 +539,24 @@ def get_vocabulary_list(
                 "pronunciation": word.pronunciation,
                 "definition_de": word.definition_de,
                 "usage_notes": word.usage_notes,
-                "synonyms": word.synonyms or [],
-                "antonyms": word.antonyms or [],
-                "is_idiom": word.is_idiom,
-                "is_compound": word.is_compound,
-                "is_separable_verb": word.is_separable_verb,
+                "synonyms": [],  # TODO: Parse JSON
+                "antonyms": [],  # TODO: Parse JSON
+                "is_idiom": bool(word.is_idiom),
+                "is_compound": bool(word.is_compound),
+                "is_separable_verb": bool(word.is_separable_verb),
                 "created_at": word.created_at,
                 "mastery_level": progress.mastery_level if progress else None,
                 "times_reviewed": progress.times_reviewed if progress else 0,
                 "last_reviewed": progress.last_reviewed if progress else None,
                 "next_review_due": progress.next_review_due if progress else None,
-                "accuracy_rate": progress.accuracy_rate if progress else None
+                "accuracy_rate": (progress.times_correct / progress.times_reviewed * 100) if (progress and progress.times_reviewed > 0) else None
             })
 
     return {
         "id": vocab_list.id,
         "name": vocab_list.name,
         "description": vocab_list.description,
-        "is_public": vocab_list.is_public,
+        "is_public": bool(vocab_list.is_public),
         "word_count": len(words),
         "created_at": vocab_list.created_at,
         "updated_at": vocab_list.updated_at,
@@ -841,17 +896,17 @@ def get_vocabulary_review_queue(
                     "pronunciation": word.pronunciation,
                     "definition_de": word.definition_de,
                     "usage_notes": word.usage_notes,
-                    "synonyms": word.synonyms or [],
-                    "antonyms": word.antonyms or [],
-                    "is_idiom": word.is_idiom,
-                    "is_compound": word.is_compound,
-                    "is_separable_verb": word.is_separable_verb,
+                    "synonyms": [],  # TODO: Parse JSON
+                    "antonyms": [],  # TODO: Parse JSON
+                    "is_idiom": bool(word.is_idiom),
+                    "is_compound": bool(word.is_compound),
+                    "is_separable_verb": bool(word.is_separable_verb),
                     "created_at": word.created_at,
                     "mastery_level": progress.mastery_level,
                     "times_reviewed": progress.times_reviewed,
                     "last_reviewed": progress.last_reviewed,
                     "next_review_due": progress.next_review_due,
-                    "accuracy_rate": progress.accuracy_rate
+                    "accuracy_rate": (progress.times_correct / progress.times_reviewed * 100) if progress.times_reviewed > 0 else None
                 })
         return result
 
@@ -952,11 +1007,11 @@ def get_word_recommendations(
             "pronunciation": word.pronunciation,
             "definition_de": word.definition_de,
             "usage_notes": word.usage_notes,
-            "synonyms": word.synonyms or [],
-            "antonyms": word.antonyms or [],
-            "is_idiom": word.is_idiom,
-            "is_compound": word.is_compound,
-            "is_separable_verb": word.is_separable_verb,
+            "synonyms": [],  # TODO: Parse JSON
+            "antonyms": [],  # TODO: Parse JSON
+            "is_idiom": bool(word.is_idiom),
+            "is_compound": bool(word.is_compound),
+            "is_separable_verb": bool(word.is_separable_verb),
             "created_at": word.created_at,
             "mastery_level": None,
             "times_reviewed": 0,
