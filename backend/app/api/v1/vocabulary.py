@@ -13,11 +13,11 @@ import hashlib
 from app.database import get_db
 from app.models.user import User
 from app.models.vocabulary import (
-    VocabularyWord, UserVocabularyProgress, UserVocabularyList,
+    Vocabulary, UserVocabularyProgress, UserVocabularyList,
     VocabularyListWord, VocabularyReview
 )
 from app.schemas.vocabulary import (
-    VocabularyWordResponse, VocabularyWordWithProgress, VocabularyWordCreate,
+    VocabularyResponse, VocabularyWithProgress, VocabularyCreate,
     FlashcardResponse, FlashcardSessionResponse, StartFlashcardSessionRequest,
     SubmitFlashcardAnswerRequest, SubmitFlashcardAnswerResponse,
     PersonalVocabularyListCreate, PersonalVocabularyListResponse,
@@ -37,7 +37,7 @@ router = APIRouter()
 
 # ========== VOCABULARY WORD ENDPOINTS ==========
 
-@router.get("/v1/vocabulary/words", response_model=List[VocabularyWordResponse])
+@router.get("/v1/vocabulary/words", response_model=List[VocabularyResponse])
 def get_vocabulary_words(
     category: Optional[str] = None,
     difficulty: Optional[str] = None,
@@ -49,19 +49,19 @@ def get_vocabulary_words(
     current_user: User = Depends(get_current_user)
 ):
     """Get vocabulary words with optional filters."""
-    query = db.query(VocabularyWord)
+    query = db.query(Vocabulary)
 
     if category:
-        query = query.filter(VocabularyWord.category == category)
+        query = query.filter(Vocabulary.category == category)
     if difficulty:
-        query = query.filter(VocabularyWord.difficulty == difficulty)
+        query = query.filter(Vocabulary.difficulty == difficulty)
     if part_of_speech:
-        query = query.filter(VocabularyWord.part_of_speech == part_of_speech)
+        query = query.filter(Vocabulary.part_of_speech == part_of_speech)
     if search:
         query = query.filter(
             or_(
-                VocabularyWord.word.ilike(f"%{search}%"),
-                VocabularyWord.translation_it.ilike(f"%{search}%")
+                Vocabulary.word.ilike(f"%{search}%"),
+                Vocabulary.translation_it.ilike(f"%{search}%")
             )
         )
 
@@ -69,14 +69,14 @@ def get_vocabulary_words(
     return words
 
 
-@router.get("/v1/vocabulary/words/{word_id}", response_model=VocabularyWordWithProgress)
+@router.get("/v1/vocabulary/words/{word_id}", response_model=VocabularyWithProgress)
 def get_vocabulary_word(
     word_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get a single vocabulary word with user's progress."""
-    word = db.query(VocabularyWord).filter(VocabularyWord.id == word_id).first()
+    word = db.query(Vocabulary).filter(Vocabulary.id == word_id).first()
     if not word:
         raise HTTPException(status_code=404, detail="Word not found")
 
@@ -117,19 +117,19 @@ def get_vocabulary_word(
     return word_dict
 
 
-@router.post("/v1/vocabulary/words", response_model=VocabularyWordResponse)
+@router.post("/v1/vocabulary/words", response_model=VocabularyResponse)
 def create_vocabulary_word(
-    word_data: VocabularyWordCreate,
+    word_data: VocabularyCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Create a new vocabulary word (admin only for now)."""
     # Check if word already exists
-    existing = db.query(VocabularyWord).filter(VocabularyWord.word == word_data.word).first()
+    existing = db.query(Vocabulary).filter(Vocabulary.word == word_data.word).first()
     if existing:
         raise HTTPException(status_code=400, detail="Word already exists")
 
-    word = VocabularyWord(
+    word = Vocabulary(
         word=word_data.word,
         translation_it=word_data.translation_it,
         part_of_speech=word_data.part_of_speech,
@@ -168,15 +168,15 @@ def start_flashcard_session(
     current_user: User = Depends(get_current_user)
 ):
     """Start a new flashcard practice session."""
-    query = db.query(VocabularyWord)
+    query = db.query(Vocabulary)
 
     # Filter words
     if request.word_ids:
-        query = query.filter(VocabularyWord.id.in_(request.word_ids))
+        query = query.filter(Vocabulary.id.in_(request.word_ids))
     if request.category:
-        query = query.filter(VocabularyWord.category == request.category)
+        query = query.filter(Vocabulary.category == request.category)
     if request.difficulty:
-        query = query.filter(VocabularyWord.difficulty == request.difficulty)
+        query = query.filter(Vocabulary.difficulty == request.difficulty)
 
     # Get words
     available_words = query.all()
@@ -463,7 +463,7 @@ def get_vocabulary_list(
 
     words = []
     for list_word in list_words:
-        word = db.query(VocabularyWord).filter(VocabularyWord.id == list_word.word_id).first()
+        word = db.query(Vocabulary).filter(Vocabulary.id == list_word.word_id).first()
         if word:
             progress = db.query(UserVocabularyProgress).filter(
                 UserVocabularyProgress.user_id == current_user.id,
@@ -526,7 +526,7 @@ def add_word_to_list(
         raise HTTPException(status_code=404, detail="List not found")
 
     # Check if word exists
-    word = db.query(VocabularyWord).filter(VocabularyWord.id == request.word_id).first()
+    word = db.query(Vocabulary).filter(Vocabulary.id == request.word_id).first()
     if not word:
         raise HTTPException(status_code=404, detail="Word not found")
 
@@ -617,15 +617,15 @@ def generate_vocabulary_quiz(
     current_user: User = Depends(get_current_user)
 ):
     """Generate a vocabulary quiz."""
-    query = db.query(VocabularyWord)
+    query = db.query(Vocabulary)
 
     # Filter words
     if request.word_ids:
-        query = query.filter(VocabularyWord.id.in_(request.word_ids))
+        query = query.filter(Vocabulary.id.in_(request.word_ids))
     if request.category:
-        query = query.filter(VocabularyWord.category == request.category)
+        query = query.filter(Vocabulary.category == request.category)
     if request.difficulty:
-        query = query.filter(VocabularyWord.difficulty == request.difficulty)
+        query = query.filter(Vocabulary.difficulty == request.difficulty)
 
     words = query.limit(request.question_count).all()
 
@@ -730,7 +730,7 @@ def get_vocabulary_progress_summary(
     # Words by level
     words_by_level = {}
     for progress in all_progress:
-        word = db.query(VocabularyWord).filter(VocabularyWord.id == progress.word_id).first()
+        word = db.query(Vocabulary).filter(Vocabulary.id == progress.word_id).first()
         if word:
             level = word.difficulty
             words_by_level[level] = words_by_level.get(level, 0) + 1
@@ -738,7 +738,7 @@ def get_vocabulary_progress_summary(
     # Words by category
     words_by_category = {}
     for progress in all_progress:
-        word = db.query(VocabularyWord).filter(VocabularyWord.id == progress.word_id).first()
+        word = db.query(Vocabulary).filter(Vocabulary.id == progress.word_id).first()
         if word:
             category = word.category
             words_by_category[category] = words_by_category.get(category, 0) + 1
@@ -825,7 +825,7 @@ def get_vocabulary_review_queue(
     def format_progress(progress_list):
         result = []
         for progress in progress_list:
-            word = db.query(VocabularyWord).filter(VocabularyWord.id == progress.word_id).first()
+            word = db.query(Vocabulary).filter(Vocabulary.id == progress.word_id).first()
             if word:
                 result.append({
                     "id": word.id,
@@ -916,13 +916,13 @@ def get_word_recommendations(
     current_user: User = Depends(get_current_user)
 ):
     """Get personalized word recommendations."""
-    query = db.query(VocabularyWord)
+    query = db.query(Vocabulary)
 
     # Filter by category and difficulty
     if request.category:
-        query = query.filter(VocabularyWord.category == request.category)
+        query = query.filter(Vocabulary.category == request.category)
     if request.difficulty:
-        query = query.filter(VocabularyWord.difficulty == request.difficulty)
+        query = query.filter(Vocabulary.difficulty == request.difficulty)
 
     # Get words user hasn't learned yet
     learned_word_ids = db.query(UserVocabularyProgress.word_id).filter(
@@ -931,7 +931,7 @@ def get_word_recommendations(
     learned_ids = [w[0] for w in learned_word_ids]
 
     if learned_ids:
-        query = query.filter(~VocabularyWord.id.in_(learned_ids))
+        query = query.filter(~Vocabulary.id.in_(learned_ids))
 
     words = query.limit(request.count).all()
 
