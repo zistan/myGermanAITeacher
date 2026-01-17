@@ -23,7 +23,7 @@ class TestConversationAI:
         service = ConversationAI(api_key="test-key")
 
         assert service.api_key == "test-key"
-        assert service.model == "claude-3-5-sonnet-20241022"
+        assert service.model == "claude-sonnet-4.5"
         mock_anthropic.assert_called_once_with(api_key="test-key")
 
     @patch('app.services.ai_service.Anthropic')

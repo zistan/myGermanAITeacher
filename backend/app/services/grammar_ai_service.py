@@ -21,7 +21,7 @@ class GrammarAIService:
         """
         self.api_key = api_key or settings.ANTHROPIC_API_KEY
         self.client = Anthropic(api_key=self.api_key)
-        self.model = "claude-3-5-sonnet-20241022"
+        self.model = "claude-sonnet-4.5"  # Latest Sonnet model
 
     def generate_exercises(
         self,

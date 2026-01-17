@@ -64,7 +64,7 @@ def start_session(
         user_id=current_user.id,
         context_id=session_data.context_id,
         session_type=session_data.session_type,
-        ai_model_used="claude-3-5-sonnet-20241022"
+        ai_model_used="claude-sonnet-4.5"
     )
 
     db.add(new_session)
