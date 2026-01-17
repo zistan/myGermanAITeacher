@@ -280,13 +280,17 @@ def start_flashcard_session(
 
         card_id = hashlib.md5(f"{word.id}_{card_type}_{datetime.utcnow().timestamp()}".encode()).hexdigest()
 
+        # Ensure required fields have default values if AI service fails
+        front = card_content.get("front") or f"What does '{word.word}' mean?"
+        back = card_content.get("back") or word.translation_it or "Translation not available"
+
         cards.append({
             "card_id": card_id,
             "word_id": word.id,
             "word": word.word,
             "card_type": card_type,
-            "front": card_content["front"],
-            "back": card_content["back"],
+            "front": front,
+            "back": back,
             "hint": card_content.get("hint", ""),
             "difficulty": word.difficulty
         })
