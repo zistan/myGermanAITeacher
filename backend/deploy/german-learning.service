@@ -1,0 +1,32 @@
+[Unit]
+Description=German Learning Application - FastAPI Backend
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=notify
+User=REPLACE_WITH_YOUR_USERNAME
+Group=REPLACE_WITH_YOUR_USERNAME
+WorkingDirectory=/opt/german-learning-app/backend
+Environment="PATH=/opt/german-learning-app/backend/venv/bin"
+ExecStart=/opt/german-learning-app/backend/venv/bin/uvicorn app.main:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --workers 4 \
+    --log-level info \
+    --access-log
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
