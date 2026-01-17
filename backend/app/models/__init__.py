@@ -1,6 +1,12 @@
 """Database models package."""
 from app.models.user import User
-from app.models.vocabulary import Vocabulary, UserVocabulary
+from app.models.vocabulary import (
+    Vocabulary,
+    UserVocabularyProgress,
+    UserVocabularyList,
+    VocabularyListWord,
+    VocabularyReview
+)
 from app.models.context import Context
 from app.models.session import Session, ConversationTurn
 from app.models.grammar import (
@@ -22,7 +28,10 @@ from app.models.progress import GrammarCorrection
 __all__ = [
     "User",
     "Vocabulary",
-    "UserVocabulary",
+    "UserVocabularyProgress",
+    "UserVocabularyList",
+    "VocabularyListWord",
+    "VocabularyReview",
     "Context",
     "Session",
     "ConversationTurn",

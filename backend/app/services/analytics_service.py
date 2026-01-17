@@ -15,7 +15,7 @@ from app.models.grammar import (
     GrammarExerciseAttempt, DiagnosticTest
 )
 from app.models.vocabulary import (
-    VocabularyWord, UserVocabularyProgress, VocabularyReview,
+    Vocabulary, UserVocabularyProgress, VocabularyReview,
     UserVocabularyList
 )
 
