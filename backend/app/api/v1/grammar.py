@@ -433,8 +433,9 @@ def get_grammar_progress_summary(
         UserGrammarProgress.user_id == current_user.id
     ).all()
 
-    topics_mastered = sum(1 for p in progress_records if p.mastery_level == "mastered")
-    topics_in_progress = sum(1 for p in progress_records if p.mastery_level in ["beginner", "intermediate", "advanced"])
+    # mastery_level is a float from 0.0 to 1.0
+    topics_mastered = sum(1 for p in progress_records if p.mastery_level >= 0.90)
+    topics_in_progress = sum(1 for p in progress_records if p.mastery_level < 0.90)
 
     total_topics = db.query(GrammarTopic).count()
     topics_not_started = total_topics - len(progress_records)
@@ -479,7 +480,7 @@ def get_grammar_progress_summary(
             ),
             "mastered": sum(
                 1 for p in progress_records
-                if p.mastery_level == "mastered" and db.query(GrammarTopic).filter(
+                if p.mastery_level >= 0.90 and db.query(GrammarTopic).filter(
                     GrammarTopic.id == p.topic_id,
                     GrammarTopic.difficulty_level == level
                 ).first()
@@ -506,6 +507,18 @@ def get_topic_progress_detail(
     current_user: User = Depends(get_current_active_user)
 ):
     """Get detailed progress for a specific topic."""
+
+    # Helper function to convert mastery level float to string
+    def get_mastery_level_str(level: float) -> str:
+        if level < 0.25:
+            return "beginner"
+        elif level < 0.60:
+            return "intermediate"
+        elif level < 0.90:
+            return "advanced"
+        else:
+            return "mastered"
+
     topic = db.query(GrammarTopic).filter(GrammarTopic.id == topic_id).first()
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
@@ -521,18 +534,20 @@ def get_topic_progress_detail(
 
     if not progress:
         return TopicProgressDetail(
-            topic=topic,
+            topic=GrammarTopicResponse.model_validate(topic),
             total_attempts=0,
             correct_attempts=0,
-            accuracy=0,
-            mastery_level="not_started",
+            accuracy=0.0,
+            mastery_level="beginner",
             last_practiced=None,
             next_review_due=None,
             exercises_available=exercises_available,
             exercises_completed=0
         )
 
-    accuracy = (progress.correct_attempts / progress.total_attempts * 100) if progress.total_attempts > 0 else 0
+    total_attempts = progress.total_exercises_attempted
+    correct_attempts = progress.total_exercises_correct
+    accuracy = (correct_attempts / total_attempts * 100) if total_attempts > 0 else 0.0
 
     # Count unique exercises attempted
     exercises_completed = db.query(GrammarExerciseAttempt).join(GrammarSession).filter(
@@ -543,11 +558,11 @@ def get_topic_progress_detail(
     ).distinct(GrammarExerciseAttempt.exercise_id).count()
 
     return TopicProgressDetail(
-        topic=topic,
-        total_attempts=progress.total_attempts,
-        correct_attempts=progress.correct_attempts,
+        topic=GrammarTopicResponse.model_validate(topic),
+        total_attempts=total_attempts,
+        correct_attempts=correct_attempts,
         accuracy=accuracy,
-        mastery_level=progress.mastery_level,
+        mastery_level=get_mastery_level_str(progress.mastery_level),
         last_practiced=progress.last_practiced_at,
         next_review_due=progress.next_review_date,
         exercises_available=exercises_available,
@@ -561,24 +576,39 @@ def get_weak_areas(
     current_user: User = Depends(get_current_active_user)
 ):
     """Get user's weak areas and personalized recommendations."""
+
+    # Helper function to convert mastery level float to string
+    def get_mastery_level_str(level: float) -> str:
+        if level < 0.25:
+            return "beginner"
+        elif level < 0.60:
+            return "intermediate"
+        elif level < 0.90:
+            return "advanced"
+        else:
+            return "mastered"
+
     # Get topics with low accuracy
     progress_records = db.query(UserGrammarProgress).filter(
         UserGrammarProgress.user_id == current_user.id,
-        UserGrammarProgress.total_attempts >= 3  # Only consider topics with enough attempts
+        UserGrammarProgress.total_exercises_attempted >= 3  # Only consider topics with enough attempts
     ).all()
 
     weak_topics = []
     for progress in progress_records:
-        accuracy = (progress.correct_attempts / progress.total_attempts * 100) if progress.total_attempts > 0 else 0
+        total_attempts = progress.total_exercises_attempted
+        correct_attempts = progress.total_exercises_correct
+        accuracy = (correct_attempts / total_attempts * 100) if total_attempts > 0 else 0
+
         if accuracy < 70:  # Less than 70% accuracy
             topic = db.query(GrammarTopic).filter(GrammarTopic.id == progress.topic_id).first()
             if topic:
                 weak_topics.append(TopicProgressDetail(
-                    topic=topic,
-                    total_attempts=progress.total_attempts,
-                    correct_attempts=progress.correct_attempts,
+                    topic=GrammarTopicResponse.model_validate(topic),
+                    total_attempts=total_attempts,
+                    correct_attempts=correct_attempts,
                     accuracy=accuracy,
-                    mastery_level=progress.mastery_level,
+                    mastery_level=get_mastery_level_str(progress.mastery_level),
                     last_practiced=progress.last_practiced_at,
                     next_review_due=progress.next_review_date,
                     exercises_available=db.query(GrammarExercise).filter(
@@ -603,8 +633,8 @@ def get_weak_areas(
         })
 
     # Estimate time to improvement
-    total_exercises_needed = sum(p["recommended_exercises"] for p in practice_plan)
-    estimated_days = (total_exercises_needed // 10) + 1  # Assuming 10 exercises per day
+    total_exercises_needed = sum(p["recommended_exercises"] for p in practice_plan) if practice_plan else 0
+    estimated_days = (total_exercises_needed // 10) + 1 if total_exercises_needed > 0 else 0
 
     return WeakAreasResponse(
         weak_topics=weak_topics[:10],
