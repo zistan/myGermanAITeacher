@@ -16,7 +16,7 @@ from app.models.grammar import (
     GrammarExerciseAttempt, GrammarExercise
 )
 from app.models.vocabulary import (
-    VocabularyWord, UserVocabularyProgress, VocabularyReview
+    Vocabulary, UserVocabularyProgress, VocabularyReview
 )
 from app.services.analytics_service import AnalyticsService
 
@@ -157,8 +157,8 @@ class IntegrationService:
 
         for word in detected_words[:10]:  # Top 10
             # Find word
-            vocab_word = self.db.query(VocabularyWord).filter(
-                VocabularyWord.word.ilike(f"%{word}%")
+            vocab_word = self.db.query(Vocabulary).filter(
+                Vocabulary.word.ilike(f"%{word}%")
             ).first()
 
             if not vocab_word:
@@ -540,8 +540,8 @@ class IntegrationService:
         ).limit(10).all()
 
         # Vocabulary words due
-        vocabulary_due = self.db.query(UserVocabularyProgress, VocabularyWord).join(
-            VocabularyWord
+        vocabulary_due = self.db.query(UserVocabularyProgress, Vocabulary).join(
+            Vocabulary
         ).filter(
             UserVocabularyProgress.user_id == user_id,
             UserVocabularyProgress.next_review_due <= now

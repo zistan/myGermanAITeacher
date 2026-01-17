@@ -223,8 +223,8 @@ class AnalyticsService:
         ).all()
 
         for progress in progress_list:
-            word = self.db.query(VocabularyWord).filter(
-                VocabularyWord.id == progress.word_id
+            word = self.db.query(Vocabulary).filter(
+                Vocabulary.id == progress.word_id
             ).first()
             if word:
                 level = word.difficulty
