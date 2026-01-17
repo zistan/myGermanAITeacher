@@ -87,7 +87,7 @@ class GrammarExercise(Base):
 
     # Tracking
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    metadata = Column(JSON, default={}, nullable=False)
+    exercise_metadata = Column("metadata", JSON, default={}, nullable=False)
 
     def __repr__(self) -> str:
         return f"<GrammarExercise(id={self.id}, topic_id={self.topic_id}, type='{self.exercise_type}')>"
@@ -162,7 +162,7 @@ class GrammarSession(Base):
 
     # Summary
     session_summary = Column(JSON, nullable=True)
-    metadata = Column(JSON, default={}, nullable=False)
+    grammar_metadata = Column("metadata", JSON, default={}, nullable=False)
 
     def __repr__(self) -> str:
         return f"<GrammarSession(id={self.id}, user_id={self.user_id}, type='{self.session_type}')>"
