@@ -795,14 +795,15 @@ def test_phase6_vocabulary():
     report = EndpointTestReport("Create Custom Word", "POST", "/api/v1/vocabulary/words")
 
     custom_word = {
-        "german_word": "testen",
-        "english_translation": "to test",
-        "word_type": "verb",
+        "word": "testen",
+        "translation_it": "testare",
+        "translation_en": "to test",
+        "part_of_speech": "verb",
         "gender": None,
-        "difficulty_level": "A2",
+        "difficulty": "A2",
         "category": "general",
-        "example_sentence_de": "Ich teste die Anwendung.",
-        "example_sentence_en": "I test the application."
+        "example_de": "Ich teste die Anwendung.",
+        "example_it": "Testo l'applicazione."
     }
     result = make_request("POST", "/api/v1/vocabulary/words",
                          data=custom_word, use_auth=True, expected_status=201)
@@ -827,7 +828,7 @@ def test_phase6_vocabulary():
         "use_spaced_repetition": True
     }
     result = make_request("POST", "/api/v1/vocabulary/flashcards/start",
-                         data=flashcard_request, use_auth=True, expected_status=201)
+                         data=flashcard_request, use_auth=True, expected_status=200)
     result.name = "Start flashcard session with spaced repetition"
     report.add_test(result)
 
@@ -887,7 +888,7 @@ def test_phase6_vocabulary():
         "description": "Key vocabulary for payment processing"
     }
     result = make_request("POST", "/api/v1/vocabulary/lists",
-                         data=list_data, use_auth=True, expected_status=201)
+                         data=list_data, use_auth=True, expected_status=200)
     result.name = "Create personal vocabulary list"
     report.add_test(result)
 
@@ -997,7 +998,7 @@ def test_phase6_vocabulary():
 
     if quiz_id:
         quiz_answer = {
-            "question_id": 1,
+            "question_id": "1",
             "user_answer": "die Zahlung"
         }
         result = make_request("POST", f"/api/v1/vocabulary/quiz/{quiz_id}/answer",
@@ -1031,13 +1032,13 @@ def test_phase6_vocabulary():
     report = EndpointTestReport("AI Word Analysis", "POST", "/api/v1/vocabulary/analyze")
 
     analyze_data = {
-        "german_word": "Zahlungsabwicklung",
+        "word": "Zahlungsabwicklung",
         "include_examples": True,
-        "include_collocations": True
+        "include_synonyms": True
     }
     result = make_request("POST", "/api/v1/vocabulary/analyze",
                          data=analyze_data, use_auth=True, expected_status=200)
-    result.name = "Analyze word with AI (examples + collocations)"
+    result.name = "Analyze word with AI (examples + synonyms)"
     report.add_test(result)
 
     report.print_report()
