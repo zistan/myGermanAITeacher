@@ -46,6 +46,8 @@ def upgrade() -> None:
     op.alter_column('user_vocabulary_progress', 'times_encountered', new_column_name='times_reviewed')
     op.alter_column('user_vocabulary_progress', 'last_encountered', new_column_name='last_reviewed')
     op.alter_column('user_vocabulary_progress', 'notes', new_column_name='personal_note')
+    # Rename first_encountered to first_reviewed (already exists in old schema)
+    op.alter_column('user_vocabulary_progress', 'first_encountered', new_column_name='first_reviewed')
 
     # Add new columns
     op.add_column('user_vocabulary_progress', sa.Column('mastery_level', sa.Integer(), nullable=False, server_default='0'))
@@ -127,6 +129,7 @@ def downgrade() -> None:
     op.drop_column('user_vocabulary_progress', 'mastery_level')
 
     # Rename columns back in user_vocabulary_progress
+    op.alter_column('user_vocabulary_progress', 'first_reviewed', new_column_name='first_encountered')
     op.alter_column('user_vocabulary_progress', 'personal_note', new_column_name='notes')
     op.alter_column('user_vocabulary_progress', 'last_reviewed', new_column_name='last_encountered')
     op.alter_column('user_vocabulary_progress', 'times_reviewed', new_column_name='times_encountered')
