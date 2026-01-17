@@ -197,11 +197,16 @@ def start_grammar_practice(
         )
 
     # Create session
+    target_level = request.difficulty_level or current_user.proficiency_level
     session = GrammarSession(
         user_id=current_user.id,
         session_type="practice",
-        target_level=request.difficulty_level or current_user.proficiency_level,
-        total_exercises=len(selected)
+        total_exercises=len(selected),
+        grammar_metadata={
+            "target_level": target_level,
+            "topic_ids": request.topic_ids or [],
+            "use_spaced_repetition": request.use_spaced_repetition
+        }
     )
     db.add(session)
     db.commit()
