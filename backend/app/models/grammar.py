@@ -67,7 +67,7 @@ class GrammarExercise(Base):
 
     # Exercise content
     question_text = Column(Text, nullable=False)
-    question_data = Column(JSON, nullable=False)  # Exercise-specific data (options, blanks, etc.)
+    question_data = Column(JSON, default={}, nullable=False)  # Exercise-specific data (options, blanks, etc.)
 
     # Answers
     correct_answer = Column(Text, nullable=False)
