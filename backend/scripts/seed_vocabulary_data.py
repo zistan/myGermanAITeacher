@@ -8,7 +8,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.database import SessionLocal
-from app.models.vocabulary import VocabularyWord
+from app.models.vocabulary import Vocabulary
 
 
 def create_vocabulary_words():
@@ -206,7 +206,7 @@ def seed_vocabulary():
     db = SessionLocal()
     try:
         # Check if vocabulary already exists
-        existing = db.query(VocabularyWord).first()
+        existing = db.query(Vocabulary).first()
         if existing:
             print("⚠️  Vocabulary already exists. Skipping seed.")
             print("   To re-seed, delete existing vocabulary data first.")
@@ -217,7 +217,7 @@ def seed_vocabulary():
 
         created_count = 0
         for word_data in words_data:
-            word = VocabularyWord(**word_data)
+            word = Vocabulary(**word_data)
             db.add(word)
             created_count += 1
 
