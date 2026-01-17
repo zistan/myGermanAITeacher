@@ -83,14 +83,14 @@ def get_grammar_topic(
 
     # Calculate stats
     if progress:
-        total = progress.total_attempts
-        correct = progress.correct_attempts
+        total = progress.total_exercises_attempted
+        correct = progress.total_exercises_correct
         accuracy = (correct / total * 100) if total > 0 else 0
         return GrammarTopicWithStats(
             **topic.__dict__,
             user_accuracy=accuracy,
             total_attempts=total,
-            last_practiced=progress.last_practiced_at
+            last_practiced=progress.last_practiced
         )
     else:
         return GrammarTopicWithStats(
@@ -577,7 +577,7 @@ def get_topic_progress_detail(
         correct_attempts=correct_attempts,
         accuracy=accuracy,
         mastery_level=get_mastery_level_str(progress.mastery_level),
-        last_practiced=progress.last_practiced_at,
+        last_practiced=progress.last_practiced,
         next_review_due=progress.next_review_date,
         exercises_available=exercises_available,
         exercises_completed=exercises_completed
@@ -623,7 +623,7 @@ def get_weak_areas(
                     correct_attempts=correct_attempts,
                     accuracy=accuracy,
                     mastery_level=get_mastery_level_str(progress.mastery_level),
-                    last_practiced=progress.last_practiced_at,
+                    last_practiced=progress.last_practiced,
                     next_review_due=progress.next_review_date,
                     exercises_available=db.query(GrammarExercise).filter(
                         GrammarExercise.topic_id == topic.id
