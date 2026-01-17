@@ -426,8 +426,8 @@ def get_grammar_progress_summary(
         GrammarSession.user_id == current_user.id
     ).all()
 
-    total_exercises = sum(s.total_attempted for s in sessions)
-    total_correct = sum(s.total_correct for s in sessions)
+    total_exercises = sum(s.total_exercises for s in sessions)
+    total_correct = sum(s.exercises_correct for s in sessions)
     total_time = sum(
         (s.ended_at - s.started_at).total_seconds() / 60
         for s in sessions if s.ended_at
@@ -466,8 +466,8 @@ def get_grammar_progress_summary(
     recent_activity = [
         {
             "date": s.started_at.isoformat(),
-            "exercises_completed": s.total_attempted,
-            "accuracy": (s.total_correct / s.total_attempted * 100) if s.total_attempted > 0 else 0
+            "exercises_completed": s.total_exercises,
+            "accuracy": (s.exercises_correct / s.total_exercises * 100) if s.total_exercises > 0 else 0
         }
         for s in recent_sessions[:7]
     ]
