@@ -325,6 +325,51 @@ When working on this project:
 8. Ensure grammar topics are properly mapped to conversation errors
 9. Validate spaced repetition calculations (both vocab and grammar)
 
+**CRITICAL REQUIREMENTS:**
+
+1. **Testing is MANDATORY**
+   - **Write tests for ALL code you create**
+   - Tests must be written alongside the implementation, not after
+   - Every service function MUST have corresponding unit tests
+   - Every API endpoint MUST have integration tests
+   - Test both success and failure cases
+   - Mock external dependencies (AI API, database in unit tests)
+   - Use pytest for backend, React Testing Library for frontend
+   - Aim for >80% code coverage minimum
+   - Run tests before considering any task complete
+
+2. **Git Commits are MANDATORY**
+   - **Commit ALL changes to the Git repository**
+   - Commit after completing each logical unit of work
+   - Write clear, descriptive commit messages in present tense
+   - Format: `Add user authentication endpoints` or `Fix grammar exercise validation`
+   - Commit frequently (multiple times per session)
+   - Include both implementation AND test files in commits
+   - Never leave uncommitted code
+   - Use meaningful commit messages that explain WHAT and WHY
+
+**Development Workflow (MANDATORY):**
+1. Write code for feature/function
+2. Write tests for the code (unit + integration as applicable)
+3. Run tests and ensure they pass
+4. Commit code + tests to Git with descriptive message
+5. Move to next task
+
+**Example Commit Flow:**
+```bash
+# After implementing user model
+git add backend/app/models/user.py backend/tests/test_user_model.py
+git commit -m "Add User model with authentication fields and validation tests"
+
+# After implementing auth endpoints
+git add backend/app/api/v1/auth.py backend/tests/test_auth_endpoints.py
+git commit -m "Implement user registration and login endpoints with JWT tests"
+
+# After implementing grammar service
+git add backend/app/services/grammar_ai_service.py backend/tests/test_grammar_ai_service.py
+git commit -m "Add grammar exercise generation service with AI integration tests"
+```
+
 **Phase 1 Priority Tasks:**
 - Database setup with all tables including 6 grammar tables
 - SQLAlchemy models (user, vocabulary, session, context, grammar, progress)
