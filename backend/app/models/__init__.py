@@ -11,7 +11,13 @@ from app.models.grammar import (
     GrammarExerciseAttempt,
     DiagnosticTest
 )
-from app.models.progress import ProgressSnapshot, GrammarCorrection
+from app.models.achievement import (
+    Achievement,
+    UserAchievement,
+    UserStats,
+    ProgressSnapshot
+)
+from app.models.progress import GrammarCorrection
 
 __all__ = [
     "User",
@@ -26,6 +32,9 @@ __all__ = [
     "GrammarSession",
     "GrammarExerciseAttempt",
     "DiagnosticTest",
+    "Achievement",
+    "UserAchievement",
+    "UserStats",
     "ProgressSnapshot",
     "GrammarCorrection",
 ]
