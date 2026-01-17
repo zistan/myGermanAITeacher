@@ -306,7 +306,11 @@ def submit_exercise_answer(
         progress = UserGrammarProgress(
             user_id=current_user.id,
             topic_id=exercise.topic_id,
-            mastery_level=0.0  # Float from 0.0 to 1.0
+            mastery_level=0.0,  # Float from 0.0 to 1.0
+            total_exercises_attempted=0,
+            total_exercises_correct=0,
+            total_exercises_incorrect=0,
+            current_streak=0
         )
         db.add(progress)
 
