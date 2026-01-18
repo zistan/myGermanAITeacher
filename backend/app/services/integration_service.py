@@ -563,7 +563,7 @@ class IntegrationService:
                     "word": word.word,
                     "translation_it": word.translation_it,
                     "mastery_level": progress.mastery_level,
-                    "days_overdue": (now - progress.next_review_due).days if progress.next_review_due else 0
+                    "days_overdue": (now - progress.next_review_date).days if progress.next_review_date else 0
                 }
                 for progress, word in vocabulary_due
             ],
