@@ -4,7 +4,7 @@ import { Button, Card } from '../../components/common';
 import { useAuthStore } from '../../store/authStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import authService from '../../api/services/authService';
-import { validateEmail, validatePassword } from '../../utils/validators';
+import { validatePassword, validateRequired } from '../../utils/validators';
 import type { ApiError } from '../../api/types/common.types';
 
 export function LoginPage() {
@@ -13,12 +13,12 @@ export function LoginPage() {
   const addToast = useNotificationStore((state) => state.addToast);
 
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
   });
 
   const [errors, setErrors] = useState({
-    email: '',
+    username: '',
     password: '',
   });
 
@@ -34,12 +34,12 @@ export function LoginPage() {
 
   const validate = (): boolean => {
     const newErrors = {
-      email: validateEmail(formData.email) || '',
+      username: validateRequired(formData.username, 'Username') || '',
       password: validatePassword(formData.password) || '',
     };
 
     setErrors(newErrors);
-    return !newErrors.email && !newErrors.password;
+    return !newErrors.username && !newErrors.password;
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -75,22 +75,22 @@ export function LoginPage() {
         <Card>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                Username
               </label>
               <input
-                id="email"
-                type="email"
-                autoComplete="email"
+                id="username"
+                type="text"
+                autoComplete="username"
                 required
-                value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
+                value={formData.username}
+                onChange={(e) => handleChange('username', e.target.value)}
                 className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
+                  errors.username ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="you@example.com"
+                placeholder="johndoe"
               />
-              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+              {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
             </div>
 
             <div>

@@ -6,41 +6,53 @@ class AuthService {
    * POST /api/v1/auth/login
    * Authenticate user and receive JWT token
    */
-  async login(credentials: LoginRequest): Promise<AuthResponse> {
+  async login(credentials: LoginRequest): Promise<{ user: User }> {
     // Backend expects form data for OAuth2 password flow
     const formData = new URLSearchParams();
-    formData.append('username', credentials.email); // OAuth2 uses 'username' field
+    formData.append('username', credentials.username);
     formData.append('password', credentials.password);
 
-    const response = await apiClient.post<AuthResponse>('/api/v1/auth/login', formData, {
+    // Step 1: Get the token
+    const tokenResponse = await apiClient.post<AuthResponse>('/api/v1/auth/login', formData, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+
+    // Store token
+    localStorage.setItem('access_token', tokenResponse.data.access_token);
+
+    // Step 2: Fetch user data with the token
+    const user = await this.getCurrentUser();
+
+    return { user };
+  }
+
+  /**
+   * POST /api/v1/auth/register
+   * Register a new user, then auto-login
+   */
+  async register(userData: RegisterRequest): Promise<{ user: User }> {
+    // Step 1: Register the user (backend returns User object, no token)
+    const registerResponse = await apiClient.post<User>('/api/v1/auth/register', userData);
+    const user = registerResponse.data;
+
+    // Step 2: Auto-login to get the token
+    const formData = new URLSearchParams();
+    formData.append('username', userData.username);
+    formData.append('password', userData.password);
+
+    const loginResponse = await apiClient.post<AuthResponse>('/api/v1/auth/login', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
 
     // Store token and user in localStorage
-    if (response.data.access_token) {
-      localStorage.setItem('access_token', response.data.access_token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-    }
+    localStorage.setItem('access_token', loginResponse.data.access_token);
+    localStorage.setItem('user', JSON.stringify(user));
 
-    return response.data;
-  }
-
-  /**
-   * POST /api/v1/auth/register
-   * Register a new user
-   */
-  async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/api/v1/auth/register', userData);
-
-    // Store token and user in localStorage
-    if (response.data.access_token) {
-      localStorage.setItem('access_token', response.data.access_token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-    }
-
-    return response.data;
+    return { user };
   }
 
   /**

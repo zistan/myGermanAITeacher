@@ -11,7 +11,7 @@ export interface User {
 }
 
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -27,7 +27,14 @@ export interface RegisterRequest {
 export interface AuthResponse {
   access_token: string;
   token_type: string;
-  user: User;
+}
+
+export interface LoginResponse extends AuthResponse {
+  // Login returns just token, need to fetch user separately
+}
+
+export interface RegisterResponse extends User {
+  // Register returns the user object directly
 }
 
 export interface TokenPayload {
