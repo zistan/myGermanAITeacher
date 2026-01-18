@@ -29,15 +29,18 @@ When a bug report is provided:
    - Ensure alignment with database schema and models
    - Update tests if needed
 
-3. **Test the fix**
-   - Run relevant tests to verify the fix
-   - Test both success and failure cases
-   - Ensure no regressions
+3. **Review the fix**
+   - Verify code logic is correct
+   - Ensure alignment with existing patterns
+   - Check for potential edge cases
+   - Review database schema compatibility
+   - Note: Testing will be performed on the remote server by the user
 
 4. **Commit and push**
    - **MANDATORY**: Commit ALL changes to Git
    - Write clear, descriptive commit messages
    - Push to remote repository immediately after committing
+   - User will deploy and test on remote server
 
 ### 3. Git Commit Requirements
 
@@ -50,11 +53,16 @@ When a bug report is provided:
   - Any related files modified
 - Always push after committing
 
-### 4. Testing Requirements
+### 4. Testing Approach
 
-- All fixes must include or update tests
-- Run tests before committing: `cd backend && pytest tests/ -v`
-- Ensure >80% code coverage maintained
+**IMPORTANT**: The application runs on a remote server that you don't have access to.
+
+- Focus on thorough code review and logic verification
+- Ensure fixes align with existing patterns and schemas
+- Update test files if needed, but tests will be run on the remote server
+- User will deploy changes to the remote server and execute tests there
+- Provide clear explanation of what was changed and why
+- Highlight any areas that need specific testing attention
 
 ## Project Context
 
@@ -84,8 +92,9 @@ When a bug report is provided:
 
 ## Success Criteria
 
-- Bug is completely resolved
-- Tests pass (relevant existing tests + any new tests)
-- Code follows project conventions
+- Bug fix is implemented with correct logic
+- Code follows project conventions and patterns
 - Changes are committed and pushed to git
-- No regressions introduced
+- Clear explanation provided for the user to test on remote server
+- Potential edge cases and testing areas are highlighted
+- User confirms tests pass on remote server after deployment
