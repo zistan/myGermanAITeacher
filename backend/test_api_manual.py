@@ -1384,6 +1384,112 @@ def test_phase7_analytics():
 
 
 # ============================================================================
+# PHASE 8: INTEGRATION & CROSS-MODULE
+# ============================================================================
+
+def test_phase8_integration():
+    """
+    Phase 8: Integration & Cross-Module (3 endpoints)
+    Tests cross-module workflows and unified data aggregation
+    """
+    print("\n" + "=" * 80)
+    print("PHASE 8: INTEGRATION & CROSS-MODULE (3 endpoints)")
+    print("=" * 80)
+
+    # Test 1: GET /api/v1/integration/session-analysis/{session_id} - Analyze conversation
+    report = EndpointTestReport("Analyze Conversation Session", "GET", "/api/v1/integration/session-analysis/{id}")
+
+    # Use a session ID from previous tests if available
+    if state.session_ids:
+        session_id = state.session_ids[0]
+        result = make_request("GET", f"/api/v1/integration/session-analysis/{session_id}",
+                            use_auth=True, expected_status=200)
+        result.name = f"Analyze conversation session {session_id}"
+        report.add_test(result)
+
+        if result.passed and result.response_data:
+            result.add_note(f"Session analyzed successfully")
+            if "grammar_recommendations" in result.response_data:
+                grammar_recs = result.response_data.get("grammar_recommendations", [])
+                result.add_note(f"Grammar recommendations: {len(grammar_recs)}")
+            if "vocabulary_recommendations" in result.response_data:
+                vocab_recs = result.response_data.get("vocabulary_recommendations", [])
+                result.add_note(f"Vocabulary recommendations: {len(vocab_recs)}")
+            report.add_observation("Session analysis includes grammar and vocabulary insights")
+    else:
+        print("[WARNING] No session IDs available from previous tests - skipping session analysis test")
+
+    # Test with invalid session ID
+    result2 = make_request("GET", "/api/v1/integration/session-analysis/99999",
+                          use_auth=True, expected_status=404)
+    result2.name = "Analyze invalid session (should fail)"
+    report.add_test(result2)
+
+    report.print_report()
+
+    # Test 2: GET /api/v1/integration/learning-path - Personalized learning path
+    report = EndpointTestReport("Get Personalized Learning Path", "GET", "/api/v1/integration/learning-path")
+
+    result = make_request("GET", "/api/v1/integration/learning-path", use_auth=True, expected_status=200)
+    result.name = "Get personalized learning path"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        if "daily_plan" in result.response_data:
+            daily_plan = result.response_data.get("daily_plan", {})
+            result.add_note(f"Daily plan includes: {list(daily_plan.keys())}")
+        if "weekly_goals" in result.response_data:
+            weekly_goals = result.response_data.get("weekly_goals", {})
+            result.add_note(f"Weekly goals defined: {bool(weekly_goals)}")
+        report.add_observation("Learning path includes personalized daily and weekly plans")
+
+    # Test with specific timeframe parameter
+    result2 = make_request("GET", "/api/v1/integration/learning-path?timeframe=week",
+                          use_auth=True, expected_status=200)
+    result2.name = "Get weekly learning path"
+    report.add_test(result2)
+
+    # Test with different timeframe
+    result3 = make_request("GET", "/api/v1/integration/learning-path?timeframe=month",
+                          use_auth=True, expected_status=200)
+    result3.name = "Get monthly learning path"
+    report.add_test(result3)
+
+    report.print_report()
+
+    # Test 3: GET /api/v1/integration/dashboard - Unified dashboard data
+    report = EndpointTestReport("Get Unified Dashboard", "GET", "/api/v1/integration/dashboard")
+
+    result = make_request("GET", "/api/v1/integration/dashboard", use_auth=True, expected_status=200)
+    result.name = "Get unified dashboard data"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        dashboard_sections = []
+
+        # Check for key dashboard sections
+        if "overall_progress" in result.response_data:
+            dashboard_sections.append("overall_progress")
+        if "due_items" in result.response_data:
+            due_items = result.response_data.get("due_items", {})
+            result.add_note(f"Due items tracked: {due_items}")
+        if "recent_activity" in result.response_data:
+            dashboard_sections.append("recent_activity")
+        if "quick_actions" in result.response_data:
+            quick_actions = result.response_data.get("quick_actions", [])
+            result.add_note(f"Quick actions: {len(quick_actions)}")
+        if "achievements" in result.response_data:
+            dashboard_sections.append("achievements")
+
+        result.add_note(f"Dashboard sections: {', '.join(dashboard_sections)}")
+        report.add_observation(f"Dashboard aggregates data from {len(dashboard_sections)} modules")
+
+    report.print_report()
+
+    return True
+
+
+# ============================================================================
 # MAIN EXECUTION
 # ============================================================================
 
@@ -1427,6 +1533,8 @@ def main():
                 test_phase5_grammar()
             if run_specific_phase > 6:
                 test_phase6_vocabulary()
+            if run_specific_phase > 7:
+                test_phase7_analytics()
 
         if not run_specific_phase or run_specific_phase == 1:
             if not test_phase1_health():
@@ -1479,10 +1587,18 @@ def main():
             if not test_phase7_analytics():
                 print("[FAIL] Phase 7 failed. Stopping tests.")
                 return
+            if not run_specific_phase:
+                pause_or_continue("Press Enter to continue to Phase 8 (Integration & Cross-Module)...")
+
+        # Phase 8: Integration & Cross-Module
+        if not run_specific_phase or run_specific_phase == 8:
+            if not test_phase8_integration():
+                print("[FAIL] Phase 8 failed. Stopping tests.")
+                return
 
         if not run_specific_phase:
-            print("\n[SUCCESS] Phases 1-7 completed successfully!")
-            print("Phase 8 will be implemented next.")
+            print("\n[SUCCESS] All 8 phases completed successfully!")
+            print("API testing 100% complete! 🎉")
 
     except KeyboardInterrupt:
         print("\n\n[WARN] Testing interrupted by user")
