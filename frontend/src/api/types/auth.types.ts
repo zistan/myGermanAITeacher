@@ -1,12 +1,13 @@
 export interface User {
   id: number;
+  username: string;
   email: string;
-  full_name: string;
   native_language: string;
-  target_level: string;
-  occupation?: string;
-  is_active: boolean;
+  target_language: string;
+  proficiency_level: string;
   created_at: string;
+  last_login?: string;
+  settings?: Record<string, any>;
 }
 
 export interface LoginRequest {
@@ -15,12 +16,12 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
+  username: string;
   email: string;
   password: string;
-  full_name: string;
-  native_language: string;
-  target_level: string;
-  occupation?: string;
+  native_language?: string;
+  target_language?: string;
+  proficiency_level?: string;
 }
 
 export interface AuthResponse {

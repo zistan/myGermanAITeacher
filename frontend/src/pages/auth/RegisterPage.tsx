@@ -18,20 +18,20 @@ export function RegisterPage() {
   const addToast = useNotificationStore((state) => state.addToast);
 
   const [formData, setFormData] = useState({
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    full_name: '',
-    native_language: 'Italian',
-    target_level: 'B2' as DifficultyLevel,
-    occupation: '',
+    native_language: 'it',
+    target_language: 'de',
+    proficiency_level: 'B2' as DifficultyLevel,
   });
 
   const [errors, setErrors] = useState({
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    full_name: '',
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -46,10 +46,10 @@ export function RegisterPage() {
 
   const validate = (): boolean => {
     const newErrors = {
+      username: validateRequired(formData.username, 'Username') || '',
       email: validateEmail(formData.email) || '',
       password: validatePassword(formData.password) || '',
       confirmPassword: validatePasswordMatch(formData.password, formData.confirmPassword) || '',
-      full_name: validateRequired(formData.full_name, 'Full name') || '',
     };
 
     setErrors(newErrors);
@@ -71,7 +71,7 @@ export function RegisterPage() {
 
       const response = await authService.register(registerData);
       setUser(response.user);
-      addToast('success', 'Registration successful', `Welcome, ${response.user.full_name}!`);
+      addToast('success', 'Registration successful', `Welcome, ${response.user.username}!`);
       navigate('/dashboard');
     } catch (error) {
       const apiError = error as ApiError;
@@ -93,21 +93,22 @@ export function RegisterPage() {
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                Username
               </label>
               <input
-                id="full_name"
+                id="username"
                 type="text"
                 required
-                value={formData.full_name}
-                onChange={(e) => handleChange('full_name', e.target.value)}
+                value={formData.username}
+                onChange={(e) => handleChange('username', e.target.value)}
                 className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                  errors.full_name ? 'border-red-500' : 'border-gray-300'
+                  errors.username ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="John Doe"
+                placeholder="johndoe"
               />
-              {errors.full_name && <p className="mt-1 text-sm text-red-600">{errors.full_name}</p>}
+              {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
+              <p className="mt-1 text-xs text-gray-500">3-50 characters, letters and numbers</p>
             </div>
 
             <div>
@@ -174,15 +175,15 @@ export function RegisterPage() {
 
             <div>
               <label
-                htmlFor="target_level"
+                htmlFor="proficiency_level"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Target Level
+                Proficiency Level
               </label>
               <select
-                id="target_level"
-                value={formData.target_level}
-                onChange={(e) => handleChange('target_level', e.target.value)}
+                id="proficiency_level"
+                value={formData.proficiency_level}
+                onChange={(e) => handleChange('proficiency_level', e.target.value)}
                 className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
               >
                 <option value="A1">A1 - Beginner</option>
@@ -192,20 +193,6 @@ export function RegisterPage() {
                 <option value="C1">C1 - Advanced</option>
                 <option value="C2">C2 - Proficient</option>
               </select>
-            </div>
-
-            <div>
-              <label htmlFor="occupation" className="block text-sm font-medium text-gray-700 mb-1">
-                Occupation (Optional)
-              </label>
-              <input
-                id="occupation"
-                type="text"
-                value={formData.occupation}
-                onChange={(e) => handleChange('occupation', e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                placeholder="e.g., Payments Specialist"
-              />
             </div>
 
             <Button type="submit" fullWidth isLoading={isLoading} disabled={isLoading}>

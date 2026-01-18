@@ -54,7 +54,7 @@ export function LoginPage() {
     try {
       const response = await authService.login(formData);
       setUser(response.user);
-      addToast('success', 'Login successful', `Welcome back, ${response.user.full_name}!`);
+      addToast('success', 'Login successful', `Welcome back, ${response.user.username}!`);
       navigate('/dashboard');
     } catch (error) {
       const apiError = error as ApiError;
