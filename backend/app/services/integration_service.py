@@ -56,10 +56,10 @@ class IntegrationService:
         # Get all messages from session
         messages = self.db.query(ConversationTurn).filter(
             ConversationTurn.session_id == session_id
-        ).order_by(ConversationTurn.created_at).all()
+        ).order_by(ConversationTurn.timestamp).all()
 
-        user_messages = [m for m in messages if m.role == "user"]
-        ai_messages = [m for m in messages if m.role == "assistant"]
+        user_messages = [m for m in messages if m.speaker == "user"]
+        ai_messages = [m for m in messages if m.speaker == "ai"]
 
         # Analyze session
         duration = None
@@ -544,7 +544,7 @@ class IntegrationService:
             Vocabulary
         ).filter(
             UserVocabularyProgress.user_id == user_id,
-            UserVocabularyProgress.next_review_due <= now
+            UserVocabularyProgress.next_review_date <= now
         ).limit(20).all()
 
         return {
