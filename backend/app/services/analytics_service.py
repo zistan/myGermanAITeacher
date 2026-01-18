@@ -76,7 +76,7 @@ class AnalyticsService:
         # Total messages
         total_messages = self.db.query(ConversationTurn).join(ConversationSession).filter(
             ConversationSession.user_id == user_id,
-            ConversationTurn.role == "user"
+            ConversationTurn.speaker == "user"
         ).count()
 
         # Average session duration
