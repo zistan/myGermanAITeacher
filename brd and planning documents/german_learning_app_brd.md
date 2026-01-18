@@ -1,10 +1,50 @@
 # Business Requirements Document: German Learning Application
 
-**Version:** 1.0  
-**Date:** 2026-01-16  
-**Target User:** Igor - B2/C1 German learner, business context focus  
-**Development Tool:** Claude Code  
+**Version:** 1.2
+**Date:** 2026-01-18
+**Target User:** Igor - B2/C1 German learner, business context focus
+**Development Tool:** Claude Code
+**Current Phase:** Phase 6.5 (Production Deployment) → Phase 7 (Frontend Development)
+**Backend Status:** ✅ Complete (74 endpoints, 18 tables, 104 tests)
 **Primary Developer Context:** Python expertise, systematic approach, cloud infrastructure experience
+
+---
+
+## What's New in v1.2 (2026-01-18)
+
+**Major Update: Frontend Implementation Specifications Added**
+
+This version adds comprehensive frontend specifications to prepare for Phase 7 development:
+
+**✅ Backend Implementation Status:**
+- All 74 REST API endpoints implemented and tested
+- 18 database tables with complete schemas
+- 104 comprehensive tests (>80% coverage)
+- Production deployment on Ubuntu 20.04 LTS
+- Claude Sonnet 4.5 AI integration complete
+
+**📋 New Frontend Specifications (Section 6.4 - 900+ lines):**
+1. **Application Architecture:** Complete component hierarchy with all 74 endpoints mapped
+2. **State Management Strategy:** Zustand for global state, React Query for server state
+3. **API Integration Layer:** TypeScript service classes with example implementations
+4. **Module-by-Module UI Specs:** Detailed specifications for all 7 modules:
+   - Authentication (login, register, protected routes)
+   - Dashboard (unified view with due items, quick actions)
+   - Conversation Practice (context selection, chat interface, session analysis)
+   - Grammar Learning (topic browser, practice sessions, 5 exercise types, progress tracking)
+   - Vocabulary (word browser, flashcards, personal lists, quizzes)
+   - Analytics & Progress (achievements, heatmaps, leaderboards, error analysis)
+   - Learning Path (personalized daily/weekly plans)
+5. **UI/UX Design Principles:** Visual design, interaction patterns, accessibility (WCAG 2.1 AA)
+6. **Error Handling:** Network errors, validation, authentication, edge cases
+7. **Testing Requirements:** Unit, component, integration, and E2E test specifications
+
+**Updated Sections:**
+- Technical Architecture (Section 2): Reflects actual implementation with deployment details
+- Technology Stack: Updated to match production environment
+- AI Integration: Claude Sonnet 4.5 specifics
+
+**Ready for:** Phase 7 Frontend Development kickoff
 
 ---
 
@@ -37,33 +77,46 @@ Interactive web-based application for advanced German language learning (B2-C1 l
 
 ### 2.1 Technology Stack
 
-**Backend:**
-- **Primary Framework:** FastAPI (main API server)
-- **Secondary Framework:** Flask (optional admin dashboard)
-- **Language:** Python 3.11+
-- **Database:** PostgreSQL 15+
+**Backend:** ✅ **IMPLEMENTED & DEPLOYED**
+- **Primary Framework:** FastAPI (74 REST API endpoints)
+- **Language:** Python 3.10/3.11 (tested on both)
+- **Database:** PostgreSQL 12+ (15+ recommended)
 - **ORM:** SQLAlchemy 2.0
-- **Migration Tool:** Alembic
-- **Task Queue:** Celery (for async operations if needed)
+- **Migration Tool:** Alembic (1 migration completed)
+- **AI Service:** Anthropic Claude Sonnet 4.5 (auto-updating model)
+- **Authentication:** JWT with bcrypt password hashing
+- **Testing:** pytest (104 comprehensive tests, >80% coverage)
+- **Deployment:** Ubuntu 20.04 LTS with systemd service
 
-**Frontend:**
-- **Framework:** React 18+ with TypeScript (recommended) OR vanilla JavaScript
+**Frontend:** 📋 **PLANNED (Phase 7)**
+- **Framework:** React 18 with TypeScript
 - **Build Tool:** Vite
 - **Styling:** Tailwind CSS
-- **State Management:** React Context API or Zustand
+- **State Management:** Zustand (recommended) + React Query for server state
 - **HTTP Client:** Axios
+- **UI Components:** Headless UI or Radix UI (for accessibility)
+- **Icons:** Heroicons or Lucide React
 
-**AI Integration:**
-- **Primary LLM:** Anthropic Claude (Claude 3.5 Sonnet via API)
-- **Fallback LLM:** OpenAI GPT-4 (optional)
-- **Text-to-Speech:** (Phase 2) - TBD
-- **Speech-to-Text:** (Phase 2) - TBD
+**AI Integration:** ✅ **IMPLEMENTED**
+- **Primary LLM:** Anthropic Claude Sonnet 4.5 (claude-sonnet-4-5)
+  - Auto-updating model alias for latest version
+  - Fixed snapshot available: claude-sonnet-4-5-20250929
+  - Pricing: $3/M input tokens, $15/M output tokens
+- **Services Implemented:**
+  - ConversationAI (app/services/ai_service.py)
+  - GrammarAIService (app/services/grammar_ai_service.py)
+  - VocabularyAIService (app/services/vocabulary_ai_service.py)
+  - AnalyticsService (app/services/analytics_service.py)
+  - IntegrationService (app/services/integration_service.py)
+- **Future:** Text-to-Speech, Speech-to-Text (Phase 8+)
 
-**Deployment:**
-- **Environment:** Ubuntu Server (local) or development notebook
-- **Web Server:** Uvicorn (for FastAPI)
-- **Reverse Proxy:** Nginx (optional, for production-like setup)
-- **Process Manager:** systemd or supervisord
+**Deployment:** ✅ **PRODUCTION READY**
+- **Environment:** Ubuntu 20.04 LTS server
+- **Web Server:** Uvicorn (ASGI server for FastAPI)
+- **Reverse Proxy:** Nginx (configured)
+- **Process Manager:** systemd (german-learning.service)
+- **Database Server:** PostgreSQL with md5 authentication
+- **Firewall:** ufw configured (SSH, Nginx Full)
 
 ### 2.2 System Architecture Diagram
 
@@ -2005,6 +2058,903 @@ class ConversationAI:
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### 6.4 Frontend Implementation Specifications (Phase 7)
+
+This section provides comprehensive specifications for implementing the React frontend based on the completed backend (74 endpoints, 18 database models).
+
+#### 6.4.1 Application Architecture
+
+**Component Hierarchy:**
+```
+App
+├── AuthProvider (JWT context, token management)
+├── Router (React Router v6)
+│   ├── PublicRoutes
+│   │   ├── Landing (optional marketing page)
+│   │   ├── Login (POST /api/v1/auth/login)
+│   │   └── Register (POST /api/v1/auth/register)
+│   └── ProtectedRoutes
+│       ├── DashboardLayout
+│       │   ├── Sidebar Navigation
+│       │   ├── Header (user profile, settings)
+│       │   └── MainContent
+│       ├── Dashboard (GET /api/v1/integration/dashboard)
+│       ├── ConversationModule
+│       │   ├── ContextSelection (GET /api/contexts)
+│       │   ├── ChatInterface (POST /api/sessions/start, /message)
+│       │   ├── SessionHistory (GET /api/sessions/history)
+│       │   └── SessionAnalysis (GET /api/v1/integration/session-analysis/{id})
+│       ├── GrammarModule
+│       │   ├── TopicBrowser (GET /api/grammar/topics)
+│       │   ├── TopicDetail (GET /api/grammar/topics/{id})
+│       │   ├── PracticeSession (POST /api/grammar/practice/start)
+│       │   ├── ProgressDashboard (GET /api/grammar/progress)
+│       │   └── ReviewQueue (GET /api/grammar/review-queue)
+│       ├── VocabularyModule
+│       │   ├── WordBrowser (GET /api/v1/vocabulary/words)
+│       │   ├── WordDetail (GET /api/v1/vocabulary/words/{id})
+│       │   ├── FlashcardSession (POST /api/v1/vocabulary/flashcards/start)
+│       │   ├── PersonalLists (GET/POST /api/v1/vocabulary/lists)
+│       │   ├── QuizInterface (POST /api/v1/vocabulary/quiz/generate)
+│       │   └── ProgressSummary (GET /api/v1/vocabulary/progress/summary)
+│       ├── AnalyticsModule
+│       │   ├── ProgressOverview (GET /api/v1/analytics/progress)
+│       │   ├── AchievementGallery (GET /api/v1/analytics/achievements)
+│       │   ├── ErrorAnalysis (GET /api/v1/analytics/errors)
+│       │   ├── Heatmaps (GET /api/v1/analytics/heatmap/{type})
+│       │   └── Leaderboards (GET /api/v1/analytics/leaderboard/{type})
+│       └── LearningPath (GET /api/v1/integration/learning-path)
+```
+
+**State Management Strategy:**
+
+1. **Global State (Zustand):**
+```typescript
+interface AppState {
+  // Authentication
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  login: (credentials: LoginRequest) => Promise<void>;
+  logout: () => void;
+
+  // UI State
+  sidebarOpen: boolean;
+  theme: 'light' | 'dark';
+
+  // Notifications
+  notifications: Notification[];
+  addNotification: (notification: Notification) => void;
+}
+```
+
+2. **Server State (React Query):**
+- API data caching with automatic refetching
+- Optimistic updates for better UX
+- Loading and error state management
+- Recommended query keys structure:
+  - `['grammar-topics', filters]`
+  - `['vocabulary-words', filters]`
+  - `['session-history', userId]`
+  - `['analytics-progress', timeframe]`
+
+3. **Local Component State (useState/useReducer):**
+- Form inputs
+- Modal visibility
+- UI toggles
+
+#### 6.4.2 API Integration Layer
+
+**Service Architecture:**
+```typescript
+// Base API client
+class ApiClient {
+  private baseURL = '/api/v1';
+  private axios: AxiosInstance;
+
+  constructor() {
+    this.axios = axios.create({
+      baseURL: this.baseURL,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    // Request interceptor: Add JWT token
+    this.axios.interceptors.request.use(config => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
+
+    // Response interceptor: Handle 401 errors
+    this.axios.interceptors.response.use(
+      response => response,
+      error => {
+        if (error.response?.status === 401) {
+          // Redirect to login
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+}
+
+// Authentication Service
+class AuthService extends ApiClient {
+  async login(credentials: LoginRequest): Promise<LoginResponse> {
+    const response = await this.axios.post('/auth/login', credentials);
+    return response.data;
+  }
+
+  async register(data: RegisterRequest): Promise<User> {
+    const response = await this.axios.post('/auth/register', data);
+    return response.data;
+  }
+
+  async getCurrentUser(): Promise<User> {
+    const response = await this.axios.get('/auth/me');
+    return response.data;
+  }
+}
+
+// Grammar Service
+class GrammarService extends ApiClient {
+  async getTopics(filters?: TopicFilters): Promise<GrammarTopic[]> {
+    const response = await this.axios.get('/grammar/topics', { params: filters });
+    return response.data;
+  }
+
+  async startPracticeSession(request: StartPracticeRequest): Promise<GrammarSession> {
+    const response = await this.axios.post('/grammar/practice/start', request);
+    return response.data;
+  }
+
+  async getNextExercise(sessionId: number): Promise<GrammarExercise> {
+    const response = await this.axios.get(`/grammar/practice/${sessionId}/next`);
+    return response.data;
+  }
+
+  async submitAnswer(sessionId: number, answer: AnswerSubmission): Promise<ExerciseFeedback> {
+    const response = await this.axios.post(`/grammar/practice/${sessionId}/answer`, answer);
+    return response.data;
+  }
+
+  async getProgress(): Promise<GrammarProgress> {
+    const response = await this.axios.get('/grammar/progress');
+    return response.data;
+  }
+}
+
+// Similar services for Vocabulary, Conversation, Analytics, Integration
+```
+
+**React Query Hooks:**
+```typescript
+// Custom hooks for API integration
+function useGrammarTopics(filters?: TopicFilters) {
+  return useQuery(
+    ['grammar-topics', filters],
+    () => grammarService.getTopics(filters),
+    {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+    }
+  );
+}
+
+function useStartPracticeSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    (request: StartPracticeRequest) => grammarService.startPracticeSession(request),
+    {
+      onSuccess: () => {
+        // Invalidate and refetch
+        queryClient.invalidateQueries(['grammar-progress']);
+        queryClient.invalidateQueries(['grammar-review-queue']);
+      },
+    }
+  );
+}
+```
+
+#### 6.4.3 Module-by-Module UI Specifications
+
+**A. Authentication Module**
+
+*Login Screen:*
+- Fields: Email/username, password (with visibility toggle)
+- Validation: Client-side validation before API call
+- Error handling: Display backend error messages
+- Success: Store JWT token, redirect to dashboard
+- "Remember me" option (optional)
+- API: `POST /api/v1/auth/login`
+
+*Registration Screen:*
+- Fields: Username, email, password, confirm password
+- Password strength indicator (visual)
+- Validation: Email format, password requirements (min 8 chars)
+- Success: Auto-login after registration
+- API: `POST /api/v1/auth/register`
+
+*Protected Route HOC:*
+- Check for valid JWT token
+- Redirect to login if missing/expired
+- Verify token with backend on app load: `GET /api/v1/auth/me`
+
+**B. Dashboard (Unified View)**
+
+*API: `GET /api/v1/integration/dashboard`*
+
+*Layout:*
+```
+┌─────────────────────────────────────────────────────┐
+│  Welcome back, Igor! 👋                             │
+│  Current Streak: 🔥 12 days                         │
+├─────────────────────────────────────────────────────┤
+│  DUE TODAY                    QUICK ACTIONS         │
+│  ┌──────────┐ ┌──────────┐  ┌─────────────────┐   │
+│  │ 5 Grammar│ │ 12 Vocab │  │ Start Conversation│   │
+│  │  Topics  │ │  Words   │  └─────────────────┘   │
+│  └──────────┘ └──────────┘  ┌─────────────────┐   │
+│                               │ Practice Grammar│   │
+│  RECENT ACTIVITY              └─────────────────┘   │
+│  • 10m ago: Finished vocab    ┌─────────────────┐   │
+│  • 2h ago: Grammar session    │ Review Vocab    │   │
+│  • Yesterday: Conversation    └─────────────────┘   │
+├─────────────────────────────────────────────────────┤
+│  PROGRESS OVERVIEW                                  │
+│  Overall: ████████░░ 82%                           │
+│  Grammar: ███████░░░ 75%  Vocabulary: █████████░ 90%│
+└─────────────────────────────────────────────────────┘
+```
+
+*Data Display:*
+- Due items count (grammar topics + vocabulary words)
+- Recent activity timeline (last 10 activities)
+- Quick action buttons (smart recommendations)
+- Progress score (0-100)
+- Current streak with fire emoji
+- Next achievement progress
+
+**C. Conversation Practice Module**
+
+*Context Selection Screen:*
+- API: `GET /api/contexts`
+- Grid layout: 3-4 contexts per row
+- Each card shows:
+  - Context name and emoji/icon
+  - Difficulty level badge (B1, B2, C1)
+  - Category tag (Business, Daily Life)
+  - Times practiced count
+  - "Start" button
+- Filters: Category dropdown, difficulty level
+- Search bar
+- Recommended contexts highlighted (least practiced)
+
+*Chat Interface:*
+- API: `POST /api/sessions/start` → `POST /api/sessions/{id}/message`
+- Components:
+  - Message list (scrollable, auto-scroll to bottom)
+  - Message bubbles (user: right-aligned blue, AI: left-aligned gray)
+  - Typing indicator when AI is responding
+  - Input textarea with:
+    - German keyboard support (shortcuts for ä, ö, ü, ß)
+    - Send button (enabled only when text present)
+    - Character count
+  - Session info bar:
+    - Timer (elapsed time)
+    - Message count
+    - "End Session" button (with confirmation)
+- Real-time features:
+  - Highlight detected vocabulary words (green underline)
+  - Grammar detection badges (info icon, click for details)
+
+*Session History:*
+- API: `GET /api/sessions/history`
+- Table/list view:
+  - Columns: Date, Context, Duration, Messages, Performance
+  - Row actions: View/replay, See analysis
+  - Filters: Date range, context
+  - Pagination (20 per page)
+- Click row → Session detail modal
+
+*Session Analysis:*
+- API: `GET /api/v1/integration/session-analysis/{session_id}`
+- Display:
+  - Performance summary (words spoken, grammar accuracy estimate)
+  - Grammar mistakes identified (list with explanations)
+  - Vocabulary recommendations (new words to learn)
+  - Suggested next steps (practice specific grammar topics)
+  - "Start Grammar Practice" button (pre-filled with detected topics)
+
+**D. Grammar Learning Module**
+
+*Topic Browser:*
+- API: `GET /api/grammar/topics`
+- Views: Grid or list toggle
+- Each topic card:
+  - Topic name (in German)
+  - Difficulty level (A1-C2) badge
+  - Category (e.g., "Verbs", "Cases")
+  - Mastery level progress bar (0.0-1.0 mapped to %)
+  - Last practiced date
+  - "Practice" button
+- Filters:
+  - Category dropdown (9 categories)
+  - Difficulty multi-select
+  - Mastery level slider (show only <50%)
+- Sort options: Mastery (asc/desc), difficulty, last practiced
+- Search by topic name
+- Color coding:
+  - Red: Mastery <30%
+  - Yellow: 30-70%
+  - Green: >70%
+
+*Topic Detail View:*
+- API: `GET /api/grammar/topics/{id}`
+- Content:
+  - Topic title and difficulty
+  - Full explanation in German (markdown rendering)
+  - Example sentences (3-5, formatted nicely)
+  - User's progress stats:
+    - Mastery level: X%
+    - Times practiced: N
+    - Last practiced: Date
+    - Accuracy: X% (correct/total)
+  - Available exercises: Manual (count), AI-generated (∞)
+  - "Start Practice Session" button
+  - Related topics (clickable links)
+
+*Practice Session:*
+- API: `POST /api/grammar/practice/start` → `GET /api/grammar/practice/{session_id}/next`
+
+*Session Configuration Screen:*
+- Select target level (current level pre-selected)
+- Exercise count (10, 15, 20 options)
+- Include AI-generated exercises toggle
+- "Start" button
+
+*Exercise Interface:*
+- Progress: "Exercise 3 of 15"
+- Exercise display (varies by type):
+  1. **Fill in the Blank:**
+     - Sentence with blank: "Ich ___ gestern ins Kino gegangen."
+     - Text input for answer
+  2. **Multiple Choice:**
+     - Question text
+     - 3-4 radio button options
+  3. **Translation:**
+     - Source sentence (IT or EN)
+     - Text input for German translation
+  4. **Error Correction:**
+     - Sentence with error: "Ich habe gestern ins Kino gegehen."
+     - Text input for corrected sentence
+  5. **Sentence Building:**
+     - Shuffled words as draggable chips
+     - Drop zone for arranging words
+     - Alternative: Text input with word hints
+- Buttons:
+  - "Hint" (progressive: first hint free, subsequent cost?)
+  - "Skip" (counts as incorrect)
+  - "Submit Answer"
+- Timer (optional, for tracking time spent)
+
+*Answer Feedback:*
+- API: `POST /api/grammar/practice/{session_id}/answer`
+- Immediate display:
+  - ✓ or ✗ icon (large, animated)
+  - "Correct!" or "Not quite..."
+  - User's answer (if incorrect, show strikethrough)
+  - Correct answer (highlighted in green)
+  - Detailed explanation in German
+  - Grammar rule reference (link to topic)
+  - Similar examples (2-3)
+  - "Next Exercise" button (auto-focus, Enter key works)
+- Optionally: Show mastery level change (+0.1, etc.)
+
+*Session End Summary:*
+- API: `POST /api/grammar/practice/{session_id}/end`
+- Display:
+  - Completion celebration (confetti animation?)
+  - Statistics:
+    - Exercises: 15 completed
+    - Accuracy: 80% (12/15 correct)
+    - Time spent: 18 minutes
+    - Mastery gained: +0.3 points
+  - Topic mastery update (before/after visual)
+  - Incorrect answers review section (expandable)
+  - Achievements earned (if any)
+  - Next steps:
+    - "Review Incorrect Answers"
+    - "Practice Another Topic"
+    - "Return to Dashboard"
+
+*Progress Dashboard:*
+- API: `GET /api/grammar/progress`
+- Overall mastery: Large percentage (e.g., 68%)
+- Category breakdown (9 categories):
+  - Bar chart or radial progress for each
+  - Click category → See topics in that category
+- Weak areas section:
+  - API: `GET /api/grammar/progress/weak-areas`
+  - List of topics with mastery <50%
+  - Quick "Practice" button for each
+- Progress over time chart (line chart, last 30 days)
+- Grammar mastery heatmap:
+  - API: `GET /api/v1/analytics/heatmap/grammar`
+  - Visual grid showing category performance
+
+*Review Queue:*
+- API: `GET /api/grammar/review-queue`
+- List of topics due for review (spaced repetition)
+- Sorted by urgency (overdue first)
+- Batch actions: "Review All" button
+- Each item shows: Topic name, last reviewed, next review date
+
+**E. Vocabulary Module**
+
+*Word Browser:*
+- API: `GET /api/v1/vocabulary/words`
+- Table or card view toggle
+- Columns (table view):
+  - German word (with gender/article for nouns)
+  - Italian translation
+  - Difficulty
+  - Category
+  - Mastery level (0-5 stars)
+  - Last reviewed
+  - Actions (View, Add to list)
+- Card view: Compact cards with key info
+- Filters:
+  - Difficulty (A1-C2)
+  - Category (business, daily, finance, etc.)
+  - Mastery level (0-5 slider)
+  - Part of speech (noun, verb, adjective, etc.)
+- Search: German or Italian text
+- Sort: Alphabetical, difficulty, mastery, last reviewed
+- Pagination: 50 words per page
+- Bulk actions: Add selected to list
+
+*Word Detail View:*
+- API: `GET /api/v1/vocabulary/words/{id}`
+- Card layout:
+  - **Header:**
+    - German word (large, bold)
+    - Pronunciation (IPA if available)
+    - Part of speech badge
+    - Gender/article (for nouns)
+    - Difficulty level badge
+  - **Translations:**
+    - Italian: [translation]
+    - English: [translation]
+  - **Definition:** (in German)
+  - **Example Sentences:**
+    - German sentence (with word highlighted)
+    - Italian translation
+    - (2-3 examples)
+  - **Additional Info:**
+    - Plural form (for nouns)
+    - Synonyms (clickable links to other words)
+    - Antonyms
+    - Usage notes
+  - **User Progress:**
+    - Mastery level: ★★★☆☆ (3/5)
+    - Times reviewed: 12
+    - Accuracy: 85%
+    - Last reviewed: 2 days ago
+    - Next review: in 3 days
+  - **Actions:**
+    - "Add to Flashcard Session"
+    - "Add to Personal List" (dropdown to select list)
+    - "Mark as Mastered"
+
+*Flashcard Session:*
+- API: `POST /api/v1/vocabulary/flashcards/start` → `GET /api/v1/vocabulary/flashcards/{session_id}/current`
+
+*Session Setup:*
+- Word selection:
+  - All due words (recommended)
+  - Specific list
+  - Custom filter (category, difficulty)
+- Card types: All types or specific (definition, translation, etc.)
+- Card count: 10, 20, 30, all
+- "Start" button
+
+*Flashcard Interface:*
+- Card display (3D flip animation):
+  - **Front:** Question/prompt
+    - Type: DEFINITION, TRANSLATION, USAGE, etc. (badge)
+    - Prompt text (e.g., "What does 'die Rechnung' mean?")
+  - **Back:** Answer
+    - German word (if applicable)
+    - Translation/definition
+    - Example sentence
+- Card counter: "Card 5 of 20"
+- Flip button (or tap/click card to flip)
+- Self-rating buttons (after flip):
+  - "Again" (didn't know) - Red
+  - "Hard" (struggled) - Orange
+  - "Good" (knew it) - Yellow
+  - "Easy" (very confident) - Green
+  - Each affects spaced repetition interval
+- Navigation:
+  - Previous card button (disabled on first card)
+  - Next card button (appears after rating)
+- Progress bar
+- "End Session" button
+
+*Session Summary:*
+- Statistics:
+  - Cards reviewed: 20
+  - Time spent: 12 minutes
+  - Breakdown: Again (3), Hard (5), Good (8), Easy (4)
+  - Mastery gained (estimated)
+- Next review dates updated
+- Achievement check
+- "Review Difficult Cards" button (Again + Hard cards)
+- "Start Another Session" or "Return to Vocabulary"
+
+*Personal Lists:*
+- API: `GET /api/v1/vocabulary/lists`, `POST /api/v1/vocabulary/lists`
+- List view:
+  - User's lists with word counts
+  - Default lists: "Favorites", "Learning", "Mastered"
+  - Custom lists
+- Create list button → Modal with name, description, is_public
+- List detail view:
+  - API: `GET /api/v1/vocabulary/lists/{id}`
+  - List name and description (editable)
+  - Word count
+  - Actions: Practice (flashcards), Delete list
+  - Word table (same as word browser, within list)
+  - Add word button → Search and add modal
+  - Remove word from list button
+- Sharing (if is_public=true): Share link
+
+*Quiz Interface:*
+- API: `POST /api/v1/vocabulary/quiz/generate`
+
+*Quiz Setup:*
+- Quiz type: Multiple choice, fill blank, matching
+- Number of questions: 5, 10, 15, 20
+- Difficulty filter
+- Category filter
+- Timed/untimed toggle
+- "Generate Quiz" button
+
+*Quiz Taking:*
+- Question display (varies by type):
+  1. **Multiple Choice:**
+     - Question: "What is the German word for 'invoice'?"
+     - 4 options (radio buttons)
+  2. **Fill in the Blank:**
+     - Sentence with blank
+     - Text input
+  3. **Matching:**
+     - Two columns (German | Italian)
+     - Drag-and-drop or dropdown selection
+- Progress: "Question 3 of 10"
+- Timer (if timed mode)
+- "Submit Answer" button
+- Immediate feedback or at end (configurable)
+- "Next Question" button
+
+*Quiz Results:*
+- Score: 8/10 (80%)
+- Time taken (if timed)
+- Question-by-question review:
+  - Question, your answer, correct answer
+  - ✓ or ✗ indicator
+  - Explanation
+- "Retake Quiz" or "Create New Quiz"
+
+*Progress Summary:*
+- API: `GET /api/v1/vocabulary/progress/summary`
+- Overall statistics:
+  - Total words: 150
+  - Mastery distribution chart (0-5 levels)
+  - Average mastery level: 3.2/5
+  - Words learned this week: 12
+- Review queue:
+  - API: `GET /api/v1/vocabulary/progress/review-queue`
+  - Words due today: 15
+  - Words due this week: 47
+  - "Start Review Session" button
+- Learning streaks
+- Recent activity timeline
+
+**F. Analytics & Progress Module**
+
+*Progress Overview:*
+- API: `GET /api/v1/analytics/progress`
+- Time period selector: Last 7 days, 30 days, 90 days, all time
+- Key metrics cards:
+  - Overall progress score: 82/100
+  - Current streak: 12 days 🔥
+  - Total sessions: 145
+  - Total time: 87 hours
+  - Words learned: 150
+  - Grammar topics mastered: 35/50
+- Module breakdown:
+  - Conversation: Progress, sessions, time
+  - Grammar: Mastery %, topics practiced, accuracy
+  - Vocabulary: Words learned, mastery level, accuracy
+- Charts:
+  - Progress over time (line chart)
+  - Module distribution (pie chart)
+  - Activity trend (bar chart by day)
+
+*Achievement Gallery:*
+- API: `GET /api/v1/analytics/achievements`, `GET /api/v1/analytics/achievements/earned`
+- Layout: Grid of achievement cards
+- Tier tabs: All, Bronze, Silver, Gold, Platinum
+- Category filters: Conversation, Grammar, Vocabulary, Activity
+- Each achievement card:
+  - Icon/badge (grayed out if not earned)
+  - Name
+  - Description
+  - Tier (bronze/silver/gold/platinum)
+  - Points
+  - Progress bar (if in progress)
+  - Earned date (if earned)
+  - "Showcase" toggle (highlight on profile)
+- Total points: 2450/5825
+- Progress to next tier
+
+*Error Analysis:*
+- API: `GET /api/v1/analytics/errors`
+- Recurring grammar mistakes section:
+  - Table: Error pattern, frequency, last occurrence
+  - "Practice" button (links to relevant grammar topic)
+- Error type distribution:
+  - Pie chart: Cases, verb conjugation, word order, etc.
+- Vocabulary gaps:
+  - Words frequently incorrect
+  - Recommended for review
+- Improvement recommendations:
+  - AI-generated suggestions
+  - Quick action buttons
+
+*Heatmaps:*
+1. **Activity Heatmap:**
+   - API: `GET /api/v1/analytics/heatmap/activity`
+   - GitHub-style contribution graph (365 days)
+   - Color intensity: 0 (gray), 1-4 (green shades)
+   - Tooltip on hover: Date, sessions count, time spent
+   - Streak highlighting
+
+2. **Grammar Mastery Heatmap:**
+   - API: `GET /api/v1/analytics/heatmap/grammar`
+   - Grid: Categories (rows) × Time periods (columns)
+   - Color intensity based on mastery level
+   - Click cell → Drill down to topics
+
+*Leaderboards:*
+- API: `GET /api/v1/analytics/leaderboard/{type}`
+- Leaderboard types (tabs):
+  - Overall (progress score)
+  - Grammar mastery
+  - Vocabulary mastery
+  - Current streak
+- Table display:
+  - Rank, username, score/value
+  - User's own row highlighted
+  - Top 100 or friends only (toggle)
+- User's rank card at top
+
+*Statistics:*
+- API: `GET /api/v1/analytics/stats`
+- Detailed statistics page:
+  - Conversation stats: Sessions, messages sent, contexts practiced
+  - Grammar stats: Topics practiced, exercises completed, accuracy
+  - Vocabulary stats: Words learned, flashcards reviewed, quiz scores
+  - Time stats: Total time, average session length, most active time
+  - Streaks: Current, longest, perfect weeks
+  - Achievements: Total earned, points, completion %
+- "Refresh Stats" button (cache invalidation)
+
+**G. Learning Path Module**
+
+*Personalized Learning Path:*
+- API: `GET /api/v1/integration/learning-path?type=daily`
+- Daily plan (75 minutes):
+  - Vocabulary Review: 15 min → "Start" button
+  - Grammar Practice: 30 min → "Start" button
+  - Conversation: 30 min → "Start" button
+  - Progress: 0/3 completed
+- Weekly goals:
+  - API: `GET /api/v1/integration/learning-path?type=weekly`
+  - Target: 5+ sessions
+  - Current: 3/5 sessions
+  - Module distribution targets
+  - Progress visualization
+- Customization (optional):
+  - Adjust time allocation
+  - Set focus area (grammar-heavy, vocab-heavy, etc.)
+  - Skip modules
+- "Start Daily Plan" button (one-click to begin)
+- Plan history (last 7 days)
+
+#### 6.4.4 UI/UX Design Principles
+
+**Visual Design:**
+- **Color Palette:**
+  - Primary: German flag colors as accents (black #000000, red #DD0000, gold #FFCC00)
+  - Background: Light #F9FAFB, Dark #1F2937 (optional dark mode)
+  - Success: Green #10B981
+  - Error: Red #EF4444
+  - Warning: Yellow #F59E0B
+  - Info: Blue #3B82F6
+- **Typography:**
+  - Headings: Inter or system-ui (font-semibold)
+  - Body: Inter or system-ui (font-normal)
+  - German text: Same fonts (support ä, ö, ü, ß)
+  - Monospace: JetBrains Mono for code/technical content
+- **Spacing:**
+  - Follow Tailwind spacing scale (4px base)
+  - Consistent padding/margins throughout
+- **Shadows:**
+  - Subtle shadows for cards (shadow-sm, shadow-md)
+  - No shadows for flat components
+
+**Interaction Patterns:**
+- **Loading States:**
+  - Skeleton screens for initial loads (topic browser, word list)
+  - Spinners for actions (submit answer, start session)
+  - Progress bars for long operations (>2s expected)
+  - Optimistic updates for immediate feedback (add to list)
+- **Error Handling:**
+  - Toast notifications for temporary errors (network issue)
+  - Inline validation for forms (email format, password strength)
+  - Error boundaries for critical failures (component crash)
+  - Retry button for failed requests
+  - Graceful degradation
+- **Feedback:**
+  - Button state changes (loading, disabled)
+  - Success animations (checkmark, confetti)
+  - Hover effects (scale, background change)
+  - Focus indicators (keyboard navigation)
+  - Form validation indicators (✓ or ✗ icon)
+- **Transitions:**
+  - Smooth transitions (200-300ms)
+  - Fade in/out for modals
+  - Slide for sidebars
+  - Flip for flashcards
+
+**Accessibility (WCAG 2.1 AA):**
+- **Keyboard Navigation:**
+  - All interactive elements focusable
+  - Logical tab order
+  - Skip to main content link
+  - Keyboard shortcuts for common actions (Enter to submit, Esc to close modal)
+- **Screen Reader Support:**
+  - ARIA labels for all interactive elements
+  - ARIA live regions for dynamic content
+  - Semantic HTML (nav, main, article, etc.)
+  - Alt text for images
+- **Visual:**
+  - Color contrast ratios: 4.5:1 for text, 3:1 for UI components
+  - Focus indicators (outline or ring)
+  - No information conveyed by color alone
+  - Resizable text (supports 200% zoom)
+- **Motor:**
+  - Large click targets (min 44×44px)
+  - No hover-only content
+  - Generous spacing between interactive elements
+
+**Responsive Design:**
+- **Breakpoints (Tailwind):**
+  - Mobile: <640px (sm)
+  - Tablet: 640-1024px (md, lg)
+  - Desktop: >1024px (xl, 2xl)
+- **Mobile-first approach:**
+  - Design for mobile first, enhance for larger screens
+  - Collapsible sidebar on mobile (hamburger menu)
+  - Stack cards vertically on mobile
+  - Responsive tables (horizontal scroll or stack)
+- **Touch optimization:**
+  - Larger buttons on mobile
+  - Swipe gestures for flashcards
+  - Pull-to-refresh (optional)
+
+**Performance Optimization:**
+- **Code Splitting:**
+  - Route-based code splitting (React.lazy)
+  - Lazy load heavy components (charts, editors)
+- **Image Optimization:**
+  - WebP format with fallbacks
+  - Lazy loading images
+  - Responsive images (srcset)
+  - Icon fonts or SVG sprites
+- **Caching:**
+  - Service worker for offline support (optional PWA)
+  - LocalStorage for user preferences
+  - React Query caching for API data
+- **Bundle Size:**
+  - Tree shaking
+  - Remove unused dependencies
+  - Analyze bundle with webpack-bundle-analyzer
+  - Target: <500KB initial JS bundle
+- **Runtime Performance:**
+  - Virtualize long lists (react-window)
+  - Debounce search inputs (300ms)
+  - Memoize expensive calculations (useMemo, React.memo)
+  - Avoid unnecessary re-renders
+
+#### 6.4.5 Error Handling & Edge Cases
+
+**Network Errors:**
+- No connection: Show offline indicator, queue requests
+- Timeout: Show retry button with countdown
+- 5xx errors: Generic error message, report to error tracking
+
+**Validation Errors (400):**
+- Display field-specific error messages
+- Highlight invalid fields
+- Scroll to first error
+- Preserve user input
+
+**Authentication Errors (401):**
+- Redirect to login page
+- Preserve intended destination (return URL)
+- Show "Session expired" message
+- Clear token from storage
+
+**Not Found (404):**
+- Friendly 404 page
+- Search functionality
+- Suggest similar pages
+- Back to home button
+
+**Permission Errors (403):**
+- Show "Access denied" message
+- Explain why (if known)
+- Suggest alternatives
+
+**Edge Cases:**
+- **Empty States:**
+  - No data: Friendly illustration + CTA (e.g., "No words in list yet. Add your first word!")
+  - No search results: "No results found. Try different keywords."
+  - No sessions: "Start your first conversation!"
+- **Loading States:**
+  - First load: Full skeleton
+  - Pagination: Append skeleton to existing content
+  - Infinite scroll: Loading indicator at bottom
+- **Slow Connections:**
+  - Show loading indicators after 500ms
+  - Cancel stale requests
+  - Warn user if taking too long (>10s)
+
+#### 6.4.6 Testing Requirements
+
+**Unit Tests:**
+- Test all utility functions
+- Test custom hooks
+- Test service classes
+- Coverage: >80%
+
+**Component Tests (React Testing Library):**
+- Render tests (components render without errors)
+- Interaction tests (button clicks, form submissions)
+- Accessibility tests (aria labels, keyboard navigation)
+- Snapshot tests for static components
+
+**Integration Tests:**
+- User flows (login → dashboard → start session)
+- Form submissions with API mocking
+- Error scenario handling
+
+**E2E Tests (Cypress/Playwright):**
+- Critical user paths:
+  - Register → Login → Start conversation
+  - Grammar practice session (complete 5 exercises)
+  - Flashcard session (review 10 cards)
+  - View progress dashboard
+- Run on CI/CD pipeline
+
 ---
 
 ## 7. Development Roadmap
@@ -2832,8 +3782,23 @@ async def health_check():
 ## Document Control
 
 **Version History:**
-- v1.0 (2026-01-16): Initial comprehensive BRD
-- v1.1 (2026-01-17): Added comprehensive Grammar Learning Module
+- **v1.2** (2026-01-18): **Phase 6.5 Complete - Frontend Specifications Added**
+  - Updated for Phase 6.5 (Production Deployment complete)
+  - Backend status: ✅ 74 endpoints, 18 database tables, 104 tests
+  - Added comprehensive Section 6.4: Frontend Implementation Specifications
+  - Complete UI specifications for all 7 modules (900+ lines)
+  - Component architecture and state management strategy
+  - API integration layer with TypeScript examples
+  - Module-by-module UI specifications with all 74 endpoints mapped
+  - UI/UX design principles (visual design, interactions, accessibility)
+  - Error handling patterns and edge cases
+  - Testing requirements (unit, component, integration, E2E)
+  - Updated technology stack to reflect actual implementation
+  - Documented Claude Sonnet 4.5 AI integration
+  - Production deployment details (Ubuntu 20.04, systemd, Nginx)
+  - Ready for Phase 7 (Frontend Development)
+
+- **v1.1** (2026-01-17): Added comprehensive Grammar Learning Module
   - 6 new database tables for grammar system
   - Diagnostic assessment system
   - Exercise generation with AI
@@ -2843,12 +3808,19 @@ async def health_check():
   - Grammar spaced repetition
   - Extended roadmap to 10 weeks
 
+- **v1.0** (2026-01-16): Initial comprehensive BRD
+  - Complete project vision and requirements
+  - Database schema design
+  - Backend architecture planning
+  - Initial roadmap
+
 **Approval:**
 - Created for: Igor (User & Developer)
 - Created by: Claude (Anthropic)
 - Purpose: Development guide for Claude Code
 
-**Next Review:** After Phase 3 completion (Grammar Module)
+**Current Phase:** Phase 6.5 (Production Deployment) → Phase 7 (Frontend Development)
+**Next Review:** Before Phase 7 frontend development kickoff
 
 ---
 
