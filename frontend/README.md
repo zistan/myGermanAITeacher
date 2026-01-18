@@ -2,6 +2,54 @@
 
 React + TypeScript frontend for the German Learning Application.
 
+## Repository Structure
+
+**Important:** This is a **monorepo** containing both backend and frontend:
+
+```
+myGermanAITeacher/              # <-- Git repository root
+├── backend/                    # Python FastAPI backend
+├── frontend/                   # React TypeScript frontend (you are here)
+├── docs/
+├── .git/
+└── README.md
+```
+
+## Getting the Code
+
+### First Time Setup (Clone Repository)
+
+```bash
+# Clone the entire repository (backend + frontend)
+cd /opt  # or your preferred directory
+git clone https://github.com/zistan/myGermanAITeacher.git
+cd myGermanAITeacher
+
+# You should now see both backend/ and frontend/ directories
+ls -la
+```
+
+### Updating Code (Pull Latest Changes)
+
+```bash
+# IMPORTANT: Run git pull from the repository ROOT, not inside frontend/
+cd /opt/myGermanAITeacher  # or wherever you cloned the repo
+git pull origin master
+
+# This will update BOTH backend and frontend code
+```
+
+**⚠️ Common Mistake:**
+```bash
+# ❌ WRONG - Don't run git pull from inside frontend/
+cd /opt/myGermanAITeacher/frontend
+git pull  # This won't work correctly!
+
+# ✅ CORRECT - Always pull from repository root
+cd /opt/myGermanAITeacher
+git pull origin master
+```
+
 ## Prerequisites
 
 ### Ubuntu/Linux
@@ -23,10 +71,24 @@ React + TypeScript frontend for the German Learning Application.
 
 ## Installation
 
+### 0. Ensure You Have the Latest Code
+
+```bash
+# Navigate to repository ROOT (not frontend/)
+cd /opt/myGermanAITeacher  # or your actual path
+
+# Pull latest changes (updates both backend and frontend)
+git pull origin master
+```
+
 ### 1. Navigate to Frontend Directory
 
 ```bash
-cd /path/to/myGermanAITeacher/frontend
+# From repository root, navigate to frontend
+cd frontend
+
+# Or use absolute path
+cd /opt/myGermanAITeacher/frontend
 ```
 
 ### 2. Install Dependencies
@@ -50,6 +112,9 @@ This will install all dependencies including:
 ### 3. Configure Environment Variables
 
 ```bash
+# Make sure you're in frontend/ directory
+pwd  # Should show: /opt/myGermanAITeacher/frontend
+
 # Copy example environment file
 cp .env.example .env
 
@@ -106,12 +171,25 @@ This will expose the dev server on all network interfaces.
 
 The frontend requires the backend API to be running on `http://localhost:8000`.
 
-**Start backend:**
+**Start backend (in a separate terminal):**
 ```bash
-# In a separate terminal
-cd /path/to/myGermanAITeacher/backend
+# Terminal 1: Backend
+# Navigate to repository root, then to backend
+cd /opt/myGermanAITeacher  # or your actual repository path
+cd backend
+
+# Activate virtual environment
 source venv/bin/activate
+
+# Start backend server
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Verify backend is running:**
+```bash
+# In another terminal or browser
+curl http://localhost:8000/api/health
+# Should return: {"status":"healthy"}
 ```
 
 ### Test Login Flow

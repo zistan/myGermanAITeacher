@@ -2,6 +2,56 @@
 
 Complete step-by-step guide to run the German Learning App frontend on Ubuntu 20.04+.
 
+## Important: Repository Structure
+
+This is a **monorepo** containing both backend and frontend:
+```
+myGermanAITeacher/              # <-- Git repository ROOT
+├── backend/                    # Python FastAPI backend
+├── frontend/                   # React TypeScript frontend
+├── docs/
+└── .git/
+```
+
+**⚠️ Always run git commands from the repository ROOT, not from inside frontend/ or backend/!**
+
+## Step 0: Get the Code
+
+### First Time (Clone Repository)
+
+```bash
+# Clone the entire repository
+cd /opt  # or your preferred directory
+git clone https://github.com/zistan/myGermanAITeacher.git
+cd myGermanAITeacher
+
+# Verify both directories exist
+ls -la  # Should show: backend/ frontend/ docs/ etc.
+```
+
+### Already Cloned (Pull Latest Changes)
+
+```bash
+# CRITICAL: Navigate to repository ROOT first
+cd /opt/myGermanAITeacher  # or your actual path
+
+# Pull latest code (updates BOTH backend and frontend)
+git pull origin master
+
+# You should see updates to both backend/ and frontend/ if there are changes
+```
+
+**Common Mistake:**
+```bash
+# ❌ WRONG - Don't run git from inside frontend/
+cd /opt/myGermanAITeacher/frontend
+git pull  # This won't work!
+
+# ✅ CORRECT - Always from repository root
+cd /opt/myGermanAITeacher
+git pull origin master
+```
+
 ## Step 1: Install Node.js 20 LTS
 
 ```bash
@@ -26,11 +76,12 @@ v20.18.1
 ## Step 2: Navigate to Frontend Directory
 
 ```bash
-# Assuming your project is in /opt/german-learning-app
-cd /opt/german-learning-app/frontend
+# From repository root, navigate to frontend
+cd /opt/myGermanAITeacher/frontend
 
-# Or use your actual path
-cd /path/to/myGermanAITeacher/frontend
+# Verify you're in the right place
+pwd  # Should show: /opt/myGermanAITeacher/frontend
+ls   # Should show: package.json, src/, public/, etc.
 ```
 
 ## Step 3: Install Dependencies
@@ -79,8 +130,17 @@ The frontend needs the backend running. Open a **new terminal** and start the ba
 
 ```bash
 # Terminal 1 - Backend
-cd /path/to/myGermanAITeacher/backend
+# Navigate to repository root, then to backend
+cd /opt/myGermanAITeacher
+cd backend
+
+# Verify you're in backend directory
+pwd  # Should show: /opt/myGermanAITeacher/backend
+
+# Activate virtual environment
 source venv/bin/activate
+
+# Start backend server
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -106,7 +166,14 @@ In your **second terminal**, start the frontend:
 
 ```bash
 # Terminal 2 - Frontend
-cd /path/to/myGermanAITeacher/frontend
+# Navigate to repository root, then to frontend
+cd /opt/myGermanAITeacher
+cd frontend
+
+# Verify you're in frontend directory
+pwd  # Should show: /opt/myGermanAITeacher/frontend
+
+# Start dev server
 npm run dev
 ```
 
@@ -349,12 +416,26 @@ lsof -i :5173            # Check what's using port 5173
 
 ```bash
 # Terminal 1: Backend
-cd backend && source venv/bin/activate && uvicorn app.main:app --reload
+cd /opt/myGermanAITeacher/backend
+source venv/bin/activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # Terminal 2: Frontend
-cd frontend && npm run dev
+cd /opt/myGermanAITeacher/frontend
+npm run dev
 
-# Terminal 3: Git operations, testing, etc.
+# Terminal 3: Git operations (always from repository root!)
+cd /opt/myGermanAITeacher
+git status
+git pull origin master
+```
+
+**Directory Structure Reminder:**
+```
+/opt/myGermanAITeacher/         # <-- Always run git commands here
+├── backend/                    # <-- Terminal 1: Backend server
+├── frontend/                   # <-- Terminal 2: Frontend dev server
+└── .git/                       # Git repository
 ```
 
 **Hot reload is enabled:**
