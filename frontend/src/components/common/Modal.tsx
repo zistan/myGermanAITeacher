@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
