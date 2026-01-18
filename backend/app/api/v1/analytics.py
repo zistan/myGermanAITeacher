@@ -98,7 +98,7 @@ def create_progress_snapshot(
         overall_score=snapshot_data["overall_progress"]["overall_score"],
         total_sessions=(
             snapshot_data["overall_progress"]["conversation"]["total_sessions"] +
-            snapshot_data["overall_progress"]["grammar"].get("total_sessions", 0)
+            snapshot_data["overall_progress"]["grammar"].get("topics_practiced", 0)
         )
     )
 
