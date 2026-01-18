@@ -12,9 +12,9 @@
 
 ## What's New in v1.2 (2026-01-18)
 
-**Major Update: Frontend Implementation Specifications Added**
+**Major Update: Frontend Implementation Specifications + Exercise Cycle UX Improvements**
 
-This version adds comprehensive frontend specifications to prepare for Phase 7 development:
+This version adds comprehensive frontend specifications and UX enhancements to prepare for Phase 7 development:
 
 **✅ Backend Implementation Status:**
 - All 74 REST API endpoints implemented and tested
@@ -23,7 +23,7 @@ This version adds comprehensive frontend specifications to prepare for Phase 7 d
 - Production deployment on Ubuntu 20.04 LTS
 - Claude Sonnet 4.5 AI integration complete
 
-**📋 New Frontend Specifications (Section 6.4 - 900+ lines):**
+**📋 New Frontend Specifications (Section 6.4 - 1000+ lines):**
 1. **Application Architecture:** Complete component hierarchy with all 74 endpoints mapped
 2. **State Management Strategy:** Zustand for global state, React Query for server state
 3. **API Integration Layer:** TypeScript service classes with example implementations
@@ -38,13 +38,28 @@ This version adds comprehensive frontend specifications to prepare for Phase 7 d
 5. **UI/UX Design Principles:** Visual design, interaction patterns, accessibility (WCAG 2.1 AA)
 6. **Error Handling:** Network errors, validation, authentication, edge cases
 7. **Testing Requirements:** Unit, component, integration, and E2E test specifications
+8. **🆕 Exercise Cycle UX Improvements (Section 6.4.7):** 23 frontend-only enhancements
+   - Grammar Practice: 12 improvements (keyboard shortcuts, state persistence, streaks, diff visualization)
+   - Vocabulary Flashcards: 11 improvements (gestures, undo, card stack, pronunciation)
+   - See `/docs/EXERCISE_CYCLE_REVIEW.md` for detailed analysis
+
+**📊 Exercise Cycle Improvements:**
+- **23 UX enhancements** identified and documented
+- **All frontend-only** (no backend changes required)
+- **40-50% efficiency gains** for power users
+- Comprehensive keyboard navigation + mobile swipe gestures
+- Gamification (streaks, live stats)
+- Learning effectiveness (pronunciation, diff visualization, self-assessment)
+- User confidence (undo, pause/resume, state persistence)
 
 **Updated Sections:**
 - Technical Architecture (Section 2): Reflects actual implementation with deployment details
 - Technology Stack: Updated to match production environment
 - AI Integration: Claude Sonnet 4.5 specifics
+- Grammar & Vocabulary UI specs: Integrated 23 UX improvements
+- New comprehensive review document: `/docs/EXERCISE_CYCLE_REVIEW.md`
 
-**Ready for:** Phase 7 Frontend Development kickoff
+**Ready for:** Phase 7 Frontend Development kickoff with enhanced UX specifications
 
 ---
 
@@ -2418,14 +2433,19 @@ function useStartPracticeSession() {
 - "Start" button
 
 *Exercise Interface:*
-- Progress: "Exercise 3 of 15"
+- Progress: "Exercise 3 of 15" with visual progress bar
+- **Header Section:**
+  - Current streak counter: "Streak: 5 🔥" _(Improvement G4)_
+  - Estimated time remaining: "~8 min remaining" _(Improvement G8)_
+  - Pause button with modal _(Improvement G3)_
+  - Keyboard shortcuts help icon "?" _(Improvement G1)_
 - Exercise display (varies by type):
   1. **Fill in the Blank:**
      - Sentence with blank: "Ich ___ gestern ins Kino gegangen."
      - Text input for answer
   2. **Multiple Choice:**
      - Question text
-     - 3-4 radio button options
+     - 3-4 radio button options (selectable with 1-4 keys) _(Improvement G1)_
   3. **Translation:**
      - Source sentence (IT or EN)
      - Text input for German translation
@@ -2437,37 +2457,65 @@ function useStartPracticeSession() {
      - Drop zone for arranging words
      - Alternative: Text input with word hints
 - Buttons:
-  - "Hint" (progressive: first hint free, subsequent cost?)
-  - "Skip" (counts as incorrect)
-  - "Submit Answer"
-- Timer (optional, for tracking time spent)
+  - Flag/bookmark button: "Flag for Review ⚑" _(Improvement G7)_
+  - "Hint" (3-level system: grammar rule → partial answer → full reveal) _(Improvement G12)_
+  - "Skip" (counts as incorrect) - Keyboard: Esc _(Improvement G1)_
+  - "Submit Answer" - Keyboard: Enter _(Improvement G1)_
+- Timer showing time spent on current exercise
+- **Auto-save:** Session state auto-saved to localStorage after each action _(Improvement G2)_
+- **Keyboard Shortcuts:** _(Improvement G1)_
+  - Enter: Submit answer / Next exercise
+  - Esc: Skip exercise
+  - 1-4: Select multiple choice option
+  - Ctrl+Enter: Request hint
+  - ?: Show shortcuts overlay
 
 *Answer Feedback:*
 - API: `POST /api/grammar/practice/{session_id}/answer`
 - Immediate display:
   - ✓ or ✗ icon (large, animated)
+  - **Streak notification** (if milestone): "5 in a row! 🔥" _(Improvement G4)_
   - "Correct!" or "Not quite..."
-  - User's answer (if incorrect, show strikethrough)
+  - User's answer with **diff visualization** (if incorrect): _(Improvement G6)_
+    - Character-by-character comparison
+    - Deleted text in red: <del>gegehen</del>
+    - Inserted text in green: <ins>gegangen</ins>
+    - Side-by-side view on desktop, stacked on mobile
   - Correct answer (highlighted in green)
-  - Detailed explanation in German
+  - Detailed explanation in German (collapsible with Space key)
   - Grammar rule reference (link to topic)
   - Similar examples (2-3)
+  - **Understanding self-assessment:** _(Improvement G5)_
+    - "Do you understand this concept now?"
+    - 👍 I understand | 🤔 Partially | 👎 Still confused
+    - Tracked for session summary
   - "Next Exercise" button (auto-focus, Enter key works)
-- Optionally: Show mastery level change (+0.1, etc.)
+  - **Auto-advance option** (if enabled): Countdown timer "Next in 2..." _(Improvement G9)_
+- Show mastery level change (+0.1, etc.)
 
 *Session End Summary:*
 - API: `POST /api/grammar/practice/{session_id}/end`
 - Display:
-  - Completion celebration (confetti animation?)
+  - Completion celebration (confetti animation for >90% accuracy)
   - Statistics:
     - Exercises: 15 completed
     - Accuracy: 80% (12/15 correct)
     - Time spent: 18 minutes
+    - **Best streak achieved:** 7 in a row 🔥 _(Improvement G4)_
+    - **Average time per exercise:** 1:12 _(Improvement G8)_
     - Mastery gained: +0.3 points
   - Topic mastery update (before/after visual)
+  - **Flagged exercises:** List of exercises marked for review _(Improvement G7)_
+    - Link to "My Flagged Exercises" page
+  - **Concepts to review:** Topics marked as "Still confused" _(Improvement G5)_
+    - Direct links to topic detail pages
+    - Quick "Practice Now" buttons
   - Incorrect answers review section (expandable)
+  - **Session notes:** Display any notes taken during session _(Improvement G11)_
   - Achievements earned (if any)
   - Next steps:
+    - "Review Flagged Exercises"
+    - "Practice Confused Concepts"
     - "Review Incorrect Answers"
     - "Practice Another Topic"
     - "Return to Dashboard"
@@ -2564,37 +2612,60 @@ function useStartPracticeSession() {
 - "Start" button
 
 *Flashcard Interface:*
+- **Header Section:** _(Improvement V4)_
+  - Live stats bar: "📊 5/20  ⏱️ 3:24  ✅ 80%  🔥 Streak: 3"
+  - Pause button with modal _(Improvement V8)_
+- **Visual Card Stack:** _(Improvement V3)_
+  - Cards rendered as 3D stack (top card current, others visible behind)
+  - Stack shrinks as cards are completed
+  - Progress bar showing cards remaining
 - Card display (3D flip animation):
   - **Front:** Question/prompt
     - Type: DEFINITION, TRANSLATION, USAGE, etc. (badge)
     - Prompt text (e.g., "What does 'die Rechnung' mean?")
+    - **Flip timer:** Shows time before flip "⏱️ 0:03" _(Improvement V9)_
   - **Back:** Answer
-    - German word (if applicable)
+    - German word (if applicable) with **pronunciation button** 🔊 _(Improvement V7)_
     - Translation/definition
     - Example sentence
+    - **Personal mnemonic:** If user added memory aid 📝 _(Improvement V10)_
 - Card counter: "Card 5 of 20"
-- Flip button (or tap/click card to flip)
+- Flip button (or tap card) - **Keyboard: Space** _(Improvement V1)_
 - Self-rating buttons (after flip):
-  - "Again" (didn't know) - Red
-  - "Hard" (struggled) - Orange
-  - "Good" (knew it) - Yellow
-  - "Easy" (very confident) - Green
+  - "Again" (didn't know) - Red - **Keyboard: 1 or ←** _(Improvement V1)_
+  - "Hard" (struggled) - Orange - **Keyboard: 2 or ↓** _(Improvement V1)_
+  - "Good" (knew it) - Yellow - **Keyboard: 3 or ↑** _(Improvement V1)_
+  - "Easy" (very confident) - Green - **Keyboard: 4 or →** _(Improvement V1)_
+  - **Mobile Swipe Gestures:** _(Improvement V1)_
+    - Swipe down: Again | Swipe left: Hard | Swipe right: Good | Swipe up: Easy
   - Each affects spaced repetition interval
+  - **Next review date shown:** "See again in 3 days" _(Improvement V5)_
+- **Undo button:** "Undo last rating" (3s timeout) - **Keyboard: Backspace** _(Improvement V2)_
 - Navigation:
   - Previous card button (disabled on first card)
   - Next card button (appears after rating)
+  - **Next card preview:** Small thumbnail of upcoming card _(Improvement V11)_
 - Progress bar
-- "End Session" button
+- "End Session" button - **Keyboard: Esc** _(Improvement V1)_
+- **Auto-save:** Session state saved to localStorage _(Improvement V8)_
+- **Difficult cards segregation:** Cards rated "Again" set aside for end-of-session review _(Improvement V6)_
 
 *Session Summary:*
 - Statistics:
   - Cards reviewed: 20
   - Time spent: 12 minutes
   - Breakdown: Again (3), Hard (5), Good (8), Easy (4)
+  - **Accuracy:** 60% (Good + Easy) _(Improvement V4)_
+  - **Best streak:** 8 in a row 🔥 _(Improvement V4)_
+  - **Average flip time:** 4.2 seconds _(Improvement V9)_
   - Mastery gained (estimated)
 - Next review dates updated
 - Achievement check
-- "Review Difficult Cards" button (Again + Hard cards)
+- **Difficult Cards Review:** _(Improvement V6)_
+  - "You have 3 difficult cards to review"
+  - [Review Difficult Cards Now] button
+  - Launches focused review session with "Again" cards only
+  - Same interface and improvements apply
 - "Start Another Session" or "Return to Vocabulary"
 
 *Personal Lists:*
@@ -2954,6 +3025,55 @@ function useStartPracticeSession() {
   - Flashcard session (review 10 cards)
   - View progress dashboard
 - Run on CI/CD pipeline
+
+#### 6.4.7 Exercise Cycle UX Improvements
+
+**Note:** A comprehensive Exercise Cycle Review has been conducted to identify UX enhancements. See `/docs/EXERCISE_CYCLE_REVIEW.md` for detailed analysis.
+
+**Summary of Applied Improvements:**
+
+**Grammar Practice (12 improvements applied):**
+- **G1:** Comprehensive keyboard shortcuts (Enter, Esc, 1-4, Ctrl+Enter, ?, Space)
+- **G2:** Session state persistence to localStorage (prevents data loss)
+- **G3:** Pause & resume capability with state saving
+- **G4:** In-session streak tracking with milestone notifications ("5 in a row! 🔥")
+- **G5:** Understanding self-assessment after feedback (👍/🤔/👎)
+- **G6:** Text answer diff visualization (character-by-character comparison)
+- **G7:** Exercise bookmarking ("Flag for Review") with dedicated review page
+- **G8:** Estimated time remaining based on average pace
+- **G9:** Auto-advance option after correct answers (configurable 2s delay)
+- **G10:** Focus mode for distraction-free practice (planned)
+- **G11:** Session notes panel for learner reflections (planned)
+- **G12:** Enhanced 3-level hint system (grammar rule → partial → full reveal)
+
+**Vocabulary Flashcards (11 improvements applied):**
+- **V1:** Keyboard shortcuts (Space, 1-4, arrows, Backspace, Esc) + mobile swipe gestures
+- **V2:** Undo last rating capability (3s timeout or Backspace key)
+- **V3:** Visual 3D card stack showing progress
+- **V4:** Live stats bar (cards completed, time, accuracy, streak)
+- **V5:** Spaced repetition visibility ("See again in 3 days" after rating)
+- **V6:** Difficult cards pile for end-of-session focused review
+- **V7:** Audio pronunciation button using browser TTS API
+- **V8:** Pause & resume with localStorage persistence
+- **V9:** Flip timer showing recall time with average in summary
+- **V10:** Personal mnemonic notes field for memory aids (planned)
+- **V11:** Next card preview thumbnail (planned)
+
+**Impact:**
+- **Efficiency gains:** 40-50% faster completion for power users (keyboard shortcuts)
+- **Engagement:** Streak tracking, live stats, gamification elements
+- **Learning effectiveness:** Diff visualization, understanding assessment, pronunciation
+- **User confidence:** Undo capability, pause/resume, state persistence
+- **Accessibility:** Comprehensive keyboard navigation, WCAG 2.1 AA compliance
+
+**Implementation Priority:**
+- **Phase 7.1 (High Priority - Weeks 1-2):** G1-G4, V1-V4 (core UX wins)
+- **Phase 7.2 (Medium Priority - Weeks 3-4):** G5-G8, V5-V8 (power features)
+- **Phase 7.3 (Low Priority - Week 5):** G9-G12, V9-V11 (polish & delight)
+
+**All improvements are frontend-only** - no backend API changes required.
+
+For detailed specifications, user flows, implementation notes, and success metrics, refer to `/docs/EXERCISE_CYCLE_REVIEW.md`.
 
 ---
 
@@ -3782,21 +3902,30 @@ async def health_check():
 ## Document Control
 
 **Version History:**
-- **v1.2** (2026-01-18): **Phase 6.5 Complete - Frontend Specifications Added**
+- **v1.2** (2026-01-18): **Phase 6.5 Complete - Frontend Specifications + Exercise Cycle UX Improvements**
   - Updated for Phase 6.5 (Production Deployment complete)
   - Backend status: ✅ 74 endpoints, 18 database tables, 104 tests
   - Added comprehensive Section 6.4: Frontend Implementation Specifications
-  - Complete UI specifications for all 7 modules (900+ lines)
+  - Complete UI specifications for all 7 modules (1000+ lines)
   - Component architecture and state management strategy
   - API integration layer with TypeScript examples
   - Module-by-module UI specifications with all 74 endpoints mapped
   - UI/UX design principles (visual design, interactions, accessibility)
   - Error handling patterns and edge cases
   - Testing requirements (unit, component, integration, E2E)
+  - **🆕 Exercise Cycle UX Review & 23 Improvements:**
+    - Created `/docs/EXERCISE_CYCLE_REVIEW.md` (comprehensive 500+ line analysis)
+    - Grammar Practice: 12 improvements (keyboard shortcuts, state persistence, streaks, diff visualization, etc.)
+    - Vocabulary Flashcards: 11 improvements (gestures, undo, card stack, pronunciation, etc.)
+    - All frontend-only (no backend changes required)
+    - Integrated improvements into Section 6.4.3 (Grammar & Vocabulary UI specs)
+    - Added Section 6.4.7: Exercise Cycle UX Improvements summary
+    - Implementation roadmap with priority matrix (High/Medium/Low)
+    - Effort estimation: ~97 hours total development time
   - Updated technology stack to reflect actual implementation
   - Documented Claude Sonnet 4.5 AI integration
   - Production deployment details (Ubuntu 20.04, systemd, Nginx)
-  - Ready for Phase 7 (Frontend Development)
+  - Ready for Phase 7 (Frontend Development) with enhanced UX specifications
 
 - **v1.1** (2026-01-17): Added comprehensive Grammar Learning Module
   - 6 new database tables for grammar system
