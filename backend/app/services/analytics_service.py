@@ -11,7 +11,7 @@ from collections import defaultdict
 from app.models.user import User
 from app.models.session import Session as ConversationSession, ConversationTurn
 from app.models.grammar import (
-    GrammarTopic, UserGrammarProgress, GrammarSession,
+    GrammarTopic, GrammarExercise, UserGrammarProgress, GrammarSession,
     GrammarExerciseAttempt, DiagnosticTest
 )
 from app.models.vocabulary import (
@@ -416,7 +416,9 @@ class AnalyticsService:
         attempts = self.db.query(GrammarExerciseAttempt, GrammarTopic).join(
             GrammarSession
         ).join(
-            GrammarTopic, GrammarExerciseAttempt.topic_id == GrammarTopic.id
+            GrammarExercise, GrammarExerciseAttempt.exercise_id == GrammarExercise.id
+        ).join(
+            GrammarTopic, GrammarExercise.topic_id == GrammarTopic.id
         ).filter(
             GrammarSession.user_id == user_id,
             GrammarExerciseAttempt.timestamp >= cutoff_date,
@@ -428,7 +430,7 @@ class AnalyticsService:
                 "topic_id": topic.id,
                 "topic_name": topic.name_de,
                 "category": topic.category,
-                "attempted_at": attempt.attempted_at,
+                "attempted_at": attempt.timestamp,
                 "difficulty": topic.difficulty_level
             }
             for attempt, topic in attempts
@@ -438,13 +440,15 @@ class AnalyticsService:
         """Find topics with recurring errors."""
         # Get all incorrect attempts
         incorrect_attempts = self.db.query(
-            GrammarExerciseAttempt.topic_id,
+            GrammarExercise.topic_id,
             func.count(GrammarExerciseAttempt.id).label('error_count')
-        ).join(GrammarSession).filter(
+        ).join(GrammarSession).join(
+            GrammarExercise, GrammarExerciseAttempt.exercise_id == GrammarExercise.id
+        ).filter(
             GrammarSession.user_id == user_id,
             GrammarExerciseAttempt.timestamp >= cutoff_date,
             GrammarExerciseAttempt.is_correct == False
-        ).group_by(GrammarExerciseAttempt.topic_id).having(
+        ).group_by(GrammarExercise.topic_id).having(
             func.count(GrammarExerciseAttempt.id) >= 3  # 3+ errors = recurring
         ).all()
 
@@ -475,9 +479,11 @@ class AnalyticsService:
             # Check if accuracy is improving
             recent_attempts = self.db.query(GrammarExerciseAttempt).join(
                 GrammarSession
+            ).join(
+                GrammarExercise, GrammarExerciseAttempt.exercise_id == GrammarExercise.id
             ).filter(
                 GrammarSession.user_id == user_id,
-                GrammarExerciseAttempt.topic_id == topic.id,
+                GrammarExercise.topic_id == topic.id,
                 GrammarExerciseAttempt.timestamp >= cutoff_date
             ).order_by(GrammarExerciseAttempt.timestamp).all()
 
