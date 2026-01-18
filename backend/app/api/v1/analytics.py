@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_
 from typing import List, Optional
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from app.database import get_db
 from app.models.user import User
@@ -27,13 +28,15 @@ router = APIRouter()
 # ========== HELPER FUNCTIONS ==========
 
 def json_serialize_datetimes(obj):
-    """Convert datetime objects to ISO format strings for JSON serialization."""
+    """Convert datetime and Decimal objects for JSON serialization."""
     if isinstance(obj, dict):
         return {key: json_serialize_datetimes(value) for key, value in obj.items()}
     elif isinstance(obj, list):
         return [json_serialize_datetimes(item) for item in obj]
     elif isinstance(obj, datetime):
         return obj.isoformat()
+    elif isinstance(obj, Decimal):
+        return float(obj)  # Convert Decimal to float
     else:
         return obj
 
