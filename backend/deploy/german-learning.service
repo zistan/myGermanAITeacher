@@ -4,7 +4,7 @@ After=network.target postgresql.service
 Requires=postgresql.service
 
 [Service]
-Type=notify
+Type=simple
 User=REPLACE_WITH_YOUR_USERNAME
 Group=REPLACE_WITH_YOUR_USERNAME
 WorkingDirectory=/opt/german-learning-app/backend
