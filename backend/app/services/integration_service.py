@@ -67,8 +67,8 @@ class IntegrationService:
             duration = (session.ended_at - session.started_at).total_seconds() / 60
 
         # Extract grammar/vocabulary from session metadata
-        grammar_detected = session.grammar_topics_detected or []
-        vocabulary_detected = session.vocabulary_words_detected or []
+        grammar_detected = session.session_metadata.get('grammar_topics_detected', [])
+        vocabulary_detected = session.session_metadata.get('vocabulary_words_detected', [])
 
         # Get grammar recommendations
         grammar_recommendations = self._get_grammar_recommendations_from_session(
@@ -602,7 +602,7 @@ class IntegrationService:
                 "type": "grammar",
                 "timestamp": session.started_at,
                 "description": f"Grammar practice: {topic.name_de if topic else 'Unknown topic'}",
-                "details": {"session_id": session.id, "exercises_completed": session.exercises_completed}
+                "details": {"session_id": session.id, "exercises_correct": session.exercises_correct, "total_exercises": session.total_exercises}
             })
 
         # Vocabulary reviews (sample recent)
