@@ -8,6 +8,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { GrammarTopicsPage } from './pages/grammar/GrammarTopicsPage';
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -33,6 +34,18 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <DashboardPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Grammar routes */}
+          <Route
+            path="/grammar"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <GrammarTopicsPage />
                 </Layout>
               </ProtectedRoute>
             }
