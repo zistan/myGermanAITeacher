@@ -67,12 +67,15 @@ export function RegisterPage() {
 
     try {
       const { confirmPassword, ...registerData } = formData;
+      console.log('Sending registration data:', registerData);
+
       const response = await authService.register(registerData);
       setUser(response.user);
       addToast('success', 'Registration successful', `Welcome, ${response.user.full_name}!`);
       navigate('/dashboard');
     } catch (error) {
       const apiError = error as ApiError;
+      console.error('Registration error:', error);
       addToast('error', 'Registration failed', apiError.detail);
     } finally {
       setIsLoading(false);

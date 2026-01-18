@@ -27,11 +27,36 @@ apiClient.interceptors.request.use(
 // Response interceptor - Handle errors globally
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiError>) => {
+  (error: AxiosError<any>) => {
     if (error.response) {
-      // Server responded with error status
+      let errorMessage = 'An error occurred';
+
+      // Handle different error response formats
+      if (error.response.data) {
+        const data = error.response.data;
+
+        // Case 1: FastAPI validation error (422) - detail is an array
+        if (Array.isArray(data.detail)) {
+          const validationErrors = data.detail
+            .map((err: any) => {
+              const field = err.loc && err.loc.length > 1 ? err.loc[err.loc.length - 1] : 'field';
+              return `${field}: ${err.msg}`;
+            })
+            .join(', ');
+          errorMessage = validationErrors || 'Validation error';
+        }
+        // Case 2: Simple string detail
+        else if (typeof data.detail === 'string') {
+          errorMessage = data.detail;
+        }
+        // Case 3: Other error formats
+        else if (data.message) {
+          errorMessage = data.message;
+        }
+      }
+
       const apiError: ApiError = {
-        detail: error.response.data?.detail || 'An error occurred',
+        detail: errorMessage,
         status_code: error.response.status,
       };
 
