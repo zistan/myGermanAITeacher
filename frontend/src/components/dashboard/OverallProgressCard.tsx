@@ -39,33 +39,33 @@ export function OverallProgressCard({ progress }: OverallProgressCardProps) {
         {/* Conversation Stats */}
         <div className="text-center p-3 bg-blue-50 rounded-lg">
           <div className="text-2xl font-bold text-blue-600">
-            {progress.conversation.total_sessions}
+            {progress.conversation.total_sessions || 0}
           </div>
           <div className="text-xs text-gray-600 mt-1">Conversations</div>
           <div className="text-xs text-gray-500 mt-1">
-            {progress.conversation.sessions_last_7_days} this week
+            {progress.conversation.sessions_last_7_days || 0} this week
           </div>
         </div>
 
         {/* Grammar Stats */}
         <div className="text-center p-3 bg-green-50 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
-            {progress.grammar.topics_mastered}
+            {progress.grammar.topics_mastered || 0}
           </div>
           <div className="text-xs text-gray-600 mt-1">Topics Mastered</div>
           <div className="text-xs text-gray-500 mt-1">
-            {progress.grammar.overall_accuracy.toFixed(0)}% accuracy
+            {(progress.grammar.overall_accuracy ?? 0).toFixed(0)}% accuracy
           </div>
         </div>
 
         {/* Vocabulary Stats */}
         <div className="text-center p-3 bg-purple-50 rounded-lg">
           <div className="text-2xl font-bold text-purple-600">
-            {progress.vocabulary.words_mastered}
+            {progress.vocabulary.words_mastered || 0}
           </div>
           <div className="text-xs text-gray-600 mt-1">Words Mastered</div>
           <div className="text-xs text-gray-500 mt-1">
-            {progress.vocabulary.total_words_learned} total learned
+            {progress.vocabulary.total_words_learned || 0} total learned
           </div>
         </div>
       </div>
@@ -76,13 +76,13 @@ export function OverallProgressCard({ progress }: OverallProgressCardProps) {
           <div>
             <div className="text-sm text-gray-600">Total Active Days</div>
             <div className="text-lg font-semibold text-gray-900">
-              {progress.activity.total_active_days}
+              {progress.activity.total_active_days || 0}
             </div>
           </div>
           <div>
             <div className="text-sm text-gray-600">Avg. Daily Minutes</div>
             <div className="text-lg font-semibold text-gray-900">
-              {progress.activity.average_daily_minutes.toFixed(0)}
+              {(progress.activity.average_daily_minutes ?? 0).toFixed(0)}
             </div>
           </div>
         </div>

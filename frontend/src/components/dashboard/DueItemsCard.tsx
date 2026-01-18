@@ -45,10 +45,10 @@ export function DueItemsCard({ dueItems }: DueItemsCardProps) {
                     <div className="flex-1">
                       <div className="text-sm font-medium text-gray-900">{topic.topic_name}</div>
                       <div className="text-xs text-gray-500">
-                        Mastery: {(topic.mastery_level * 100).toFixed(0)}%
+                        Mastery: {((topic.mastery_level ?? 0) * 100).toFixed(0)}%
                       </div>
                     </div>
-                    {topic.days_overdue > 0 && (
+                    {(topic.days_overdue ?? 0) > 0 && (
                       <Badge variant="danger" size="sm">
                         {topic.days_overdue}d overdue
                       </Badge>
@@ -89,8 +89,8 @@ export function DueItemsCard({ dueItems }: DueItemsCardProps) {
                       <div className="text-sm font-medium text-gray-900">{word.word}</div>
                       <div className="text-xs text-gray-500">{word.translation_it}</div>
                     </div>
-                    {word.days_overdue > 0 && (
-                      <Badge color="danger" size="sm">
+                    {(word.days_overdue ?? 0) > 0 && (
+                      <Badge variant="danger" size="sm">
                         {word.days_overdue}d overdue
                       </Badge>
                     )}
