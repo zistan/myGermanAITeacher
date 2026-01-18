@@ -79,7 +79,7 @@ def analyze_error_patterns(
 
 # ========== PROGRESS SNAPSHOT ENDPOINTS ==========
 
-@router.post("/v1/analytics/snapshots", response_model=ProgressSnapshotResponse)
+@router.post("/v1/analytics/snapshots", response_model=ProgressSnapshotResponse, status_code=201)
 def create_progress_snapshot(
     request: CreateSnapshotRequest,
     db: Session = Depends(get_db),
