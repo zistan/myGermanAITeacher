@@ -1097,6 +1097,293 @@ def test_phase6_vocabulary():
 
 
 # ============================================================================
+# PHASE 7: ANALYTICS & PROGRESS TRACKING
+# ============================================================================
+
+def test_phase7_analytics():
+    """
+    Phase 7: Analytics & Progress Tracking (14 endpoints)
+    Tests progress analysis, achievements, leaderboards, and heatmaps
+    """
+    print("\n" + "=" * 80)
+    print("PHASE 7: ANALYTICS & PROGRESS TRACKING (14 endpoints)")
+    print("=" * 80)
+
+    # Test 1: GET /api/v1/analytics/progress - Overall progress
+    report = EndpointTestReport("Get Overall Progress", "GET", "/api/v1/analytics/progress")
+
+    result = make_request("GET", "/api/v1/analytics/progress", use_auth=True, expected_status=200)
+    result.name = "Get overall learning progress"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        result.add_note(f"Progress score: {result.response_data.get('progress_score', 'N/A')}")
+        result.add_note(f"Total sessions: {result.response_data.get('total_sessions', 'N/A')}")
+
+    report.print_report()
+
+    # Test 2: GET /api/v1/analytics/progress/comparison - Compare periods
+    report = EndpointTestReport("Compare Progress Periods", "GET", "/api/v1/analytics/progress/comparison")
+
+    # Test with default periods
+    result = make_request("GET", "/api/v1/analytics/progress/comparison?period=week",
+                         use_auth=True, expected_status=200)
+    result.name = "Compare weekly progress"
+    report.add_test(result)
+
+    # Test with monthly period
+    result2 = make_request("GET", "/api/v1/analytics/progress/comparison?period=month",
+                          use_auth=True, expected_status=200)
+    result2.name = "Compare monthly progress"
+    report.add_test(result2)
+
+    report.print_report()
+
+    # Test 3: GET /api/v1/analytics/errors - Error pattern analysis
+    report = EndpointTestReport("Error Pattern Analysis", "GET", "/api/v1/analytics/errors")
+
+    result = make_request("GET", "/api/v1/analytics/errors", use_auth=True, expected_status=200)
+    result.name = "Get error patterns and recurring mistakes"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        errors = result.response_data if isinstance(result.response_data, list) else []
+        result.add_note(f"Error patterns found: {len(errors)}")
+
+    report.print_report()
+
+    # Test 4: POST /api/v1/analytics/snapshots - Create progress snapshot
+    report = EndpointTestReport("Create Progress Snapshot", "POST", "/api/v1/analytics/snapshots")
+
+    snapshot_data = {
+        "snapshot_type": "daily",
+        "notes": "API test snapshot"
+    }
+    result = make_request("POST", "/api/v1/analytics/snapshots",
+                         data=snapshot_data, use_auth=True, expected_status=201)
+    result.name = "Create daily progress snapshot"
+    report.add_test(result)
+
+    snapshot_id = None
+    if result.passed and result.response_data:
+        snapshot_id = result.response_data.get('id')
+        result.add_note(f"Created snapshot ID: {snapshot_id}")
+        report.add_db_change(f"Created progress snapshot with ID: {snapshot_id}")
+
+    report.print_report()
+
+    # Test 5: GET /api/v1/analytics/snapshots - Get historical snapshots
+    report = EndpointTestReport("Get Progress Snapshots", "GET", "/api/v1/analytics/snapshots")
+
+    result = make_request("GET", "/api/v1/analytics/snapshots", use_auth=True, expected_status=200)
+    result.name = "Get all progress snapshots"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        snapshots = result.response_data if isinstance(result.response_data, list) else []
+        result.add_note(f"Snapshot count: {len(snapshots)}")
+
+    # Test with type filter
+    result2 = make_request("GET", "/api/v1/analytics/snapshots?snapshot_type=daily",
+                          use_auth=True, expected_status=200)
+    result2.name = "Filter snapshots by type (daily)"
+    report.add_test(result2)
+
+    report.print_report()
+
+    # Test 6: GET /api/v1/analytics/achievements - List all achievements
+    report = EndpointTestReport("List All Achievements", "GET", "/api/v1/analytics/achievements")
+
+    result = make_request("GET", "/api/v1/analytics/achievements", use_auth=True, expected_status=200)
+    result.name = "Get all available achievements"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        achievements = result.response_data if isinstance(result.response_data, list) else []
+        if achievements:
+            state.achievement_ids = [ach.get('id') for ach in achievements[:5]]
+            result.add_note(f"Achievement count: {len(achievements)}")
+            report.add_observation(f"Found {len(achievements)} total achievements")
+
+    # Test with category filter
+    result2 = make_request("GET", "/api/v1/analytics/achievements?category=grammar",
+                          use_auth=True, expected_status=200)
+    result2.name = "Filter achievements by category (grammar)"
+    report.add_test(result2)
+
+    # Test with tier filter
+    result3 = make_request("GET", "/api/v1/analytics/achievements?tier=gold",
+                          use_auth=True, expected_status=200)
+    result3.name = "Filter achievements by tier (gold)"
+    report.add_test(result3)
+
+    report.print_report()
+
+    # Test 7: GET /api/v1/analytics/achievements/earned - User's earned achievements
+    report = EndpointTestReport("Get Earned Achievements", "GET", "/api/v1/analytics/achievements/earned")
+
+    result = make_request("GET", "/api/v1/analytics/achievements/earned", use_auth=True, expected_status=200)
+    result.name = "Get user's earned achievements"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        earned = result.response_data if isinstance(result.response_data, list) else []
+        result.add_note(f"Earned achievements: {len(earned)}")
+
+    report.print_report()
+
+    # Test 8: GET /api/v1/analytics/achievements/progress - Achievement progress
+    report = EndpointTestReport("Get Achievement Progress", "GET", "/api/v1/analytics/achievements/progress")
+
+    result = make_request("GET", "/api/v1/analytics/achievements/progress", use_auth=True, expected_status=200)
+    result.name = "Get progress towards all achievements"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        progress_items = result.response_data if isinstance(result.response_data, list) else []
+        result.add_note(f"Achievement progress items: {len(progress_items)}")
+
+    report.print_report()
+
+    # Test 9: POST /api/v1/analytics/achievements/{id}/showcase - Showcase achievement
+    report = EndpointTestReport("Showcase Achievement", "POST", "/api/v1/analytics/achievements/{id}/showcase")
+
+    if state.achievement_ids:
+        achievement_id = state.achievement_ids[0]
+        showcase_data = {
+            "achievement_id": achievement_id,
+            "is_showcased": True
+        }
+        result = make_request("POST", f"/api/v1/analytics/achievements/{achievement_id}/showcase",
+                            data=showcase_data, use_auth=True, expected_status=200)
+        result.name = f"Showcase achievement {achievement_id}"
+        report.add_test(result)
+
+        # Try showcasing again with False (toggle off)
+        showcase_data2 = {
+            "achievement_id": achievement_id,
+            "is_showcased": False
+        }
+        result2 = make_request("POST", f"/api/v1/analytics/achievements/{achievement_id}/showcase",
+                             data=showcase_data2, use_auth=True, expected_status=200)
+        result2.name = f"Toggle showcase off for achievement {achievement_id}"
+        report.add_test(result2)
+
+    # Test invalid achievement ID
+    invalid_showcase_data = {
+        "achievement_id": 99999,
+        "is_showcased": True
+    }
+    result3 = make_request("POST", "/api/v1/analytics/achievements/99999/showcase",
+                          data=invalid_showcase_data, use_auth=True, expected_status=404)
+    result3.name = "Showcase invalid achievement (should fail)"
+    report.add_test(result3)
+
+    report.print_report()
+
+    # Test 10: GET /api/v1/analytics/stats - User statistics
+    report = EndpointTestReport("Get User Statistics", "GET", "/api/v1/analytics/stats")
+
+    result = make_request("GET", "/api/v1/analytics/stats", use_auth=True, expected_status=200)
+    result.name = "Get aggregated user statistics"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        stats = result.response_data
+        result.add_note(f"Current streak: {stats.get('current_streak', 'N/A')} days")
+        result.add_note(f"Total points: {stats.get('total_points', 'N/A')}")
+
+    report.print_report()
+
+    # Test 11: POST /api/v1/analytics/stats/refresh - Refresh statistics
+    report = EndpointTestReport("Refresh User Statistics", "POST", "/api/v1/analytics/stats/refresh")
+
+    result = make_request("POST", "/api/v1/analytics/stats/refresh", use_auth=True, expected_status=200)
+    result.name = "Refresh user statistics cache"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        report.add_observation("Statistics refreshed successfully")
+
+    report.print_report()
+
+    # Test 12: GET /api/v1/analytics/leaderboard/{type} - Leaderboard rankings
+    report = EndpointTestReport("Get Leaderboard Rankings", "GET", "/api/v1/analytics/leaderboard/{type}")
+
+    # Test overall leaderboard
+    result = make_request("GET", "/api/v1/analytics/leaderboard/overall",
+                         use_auth=True, expected_status=200)
+    result.name = "Get overall leaderboard"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        rankings = result.response_data if isinstance(result.response_data, list) else []
+        result.add_note(f"Leaderboard entries: {len(rankings)}")
+
+    # Test grammar leaderboard
+    result2 = make_request("GET", "/api/v1/analytics/leaderboard/grammar",
+                          use_auth=True, expected_status=200)
+    result2.name = "Get grammar leaderboard"
+    report.add_test(result2)
+
+    # Test vocabulary leaderboard
+    result3 = make_request("GET", "/api/v1/analytics/leaderboard/vocabulary",
+                          use_auth=True, expected_status=200)
+    result3.name = "Get vocabulary leaderboard"
+    report.add_test(result3)
+
+    # Test streak leaderboard
+    result4 = make_request("GET", "/api/v1/analytics/leaderboard/streak",
+                          use_auth=True, expected_status=200)
+    result4.name = "Get streak leaderboard"
+    report.add_test(result4)
+
+    # Test invalid leaderboard type
+    result5 = make_request("GET", "/api/v1/analytics/leaderboard/invalid",
+                          use_auth=True, expected_status=400)
+    result5.name = "Get invalid leaderboard type (should fail)"
+    report.add_test(result5)
+
+    report.print_report()
+
+    # Test 13: GET /api/v1/analytics/heatmap/activity - Activity heatmap
+    report = EndpointTestReport("Get Activity Heatmap", "GET", "/api/v1/analytics/heatmap/activity")
+
+    result = make_request("GET", "/api/v1/analytics/heatmap/activity", use_auth=True, expected_status=200)
+    result.name = "Get 365-day activity heatmap"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        heatmap_data = result.response_data if isinstance(result.response_data, list) else []
+        result.add_note(f"Heatmap days: {len(heatmap_data)}")
+        report.add_observation(f"Activity heatmap covers {len(heatmap_data)} days")
+
+    # Test with date range
+    result2 = make_request("GET", "/api/v1/analytics/heatmap/activity?days=30",
+                          use_auth=True, expected_status=200)
+    result2.name = "Get 30-day activity heatmap"
+    report.add_test(result2)
+
+    report.print_report()
+
+    # Test 14: GET /api/v1/analytics/heatmap/grammar - Grammar mastery heatmap
+    report = EndpointTestReport("Get Grammar Mastery Heatmap", "GET", "/api/v1/analytics/heatmap/grammar")
+
+    result = make_request("GET", "/api/v1/analytics/heatmap/grammar", use_auth=True, expected_status=200)
+    result.name = "Get grammar mastery heatmap"
+    report.add_test(result)
+
+    if result.passed and result.response_data:
+        heatmap_data = result.response_data if isinstance(result.response_data, list) else []
+        result.add_note(f"Grammar topics tracked: {len(heatmap_data)}")
+        report.add_observation(f"Grammar heatmap covers {len(heatmap_data)} topics")
+
+    report.print_report()
+
+    return True
+
+
+# ============================================================================
 # MAIN EXECUTION
 # ============================================================================
 
@@ -1138,6 +1425,8 @@ def main():
                 test_phase4_conversations()
             if run_specific_phase > 5:
                 test_phase5_grammar()
+            if run_specific_phase > 6:
+                test_phase6_vocabulary()
 
         if not run_specific_phase or run_specific_phase == 1:
             if not test_phase1_health():
@@ -1182,10 +1471,18 @@ def main():
             if not test_phase6_vocabulary():
                 print("[FAIL] Phase 6 failed. Stopping tests.")
                 return
+            if not run_specific_phase:
+                pause_or_continue("Press Enter to continue to Phase 7 (Analytics & Progress)...")
+
+        # Phase 7: Analytics & Progress Tracking
+        if not run_specific_phase or run_specific_phase == 7:
+            if not test_phase7_analytics():
+                print("[FAIL] Phase 7 failed. Stopping tests.")
+                return
 
         if not run_specific_phase:
-            print("\n[SUCCESS] Phases 1-6 completed successfully!")
-            print("Phases 7-8 will be implemented next.")
+            print("\n[SUCCESS] Phases 1-7 completed successfully!")
+            print("Phase 8 will be implemented next.")
 
     except KeyboardInterrupt:
         print("\n\n[WARN] Testing interrupted by user")
