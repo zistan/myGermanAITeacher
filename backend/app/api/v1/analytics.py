@@ -24,6 +24,20 @@ from app.api.deps import get_current_user
 router = APIRouter()
 
 
+# ========== HELPER FUNCTIONS ==========
+
+def json_serialize_datetimes(obj):
+    """Convert datetime objects to ISO format strings for JSON serialization."""
+    if isinstance(obj, dict):
+        return {key: json_serialize_datetimes(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [json_serialize_datetimes(item) for item in obj]
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+    else:
+        return obj
+
+
 # ========== OVERALL PROGRESS ENDPOINTS ==========
 
 @router.get("/v1/analytics/progress", response_model=OverallProgressResponse)
@@ -75,16 +89,16 @@ def create_progress_snapshot(
     analytics = AnalyticsService(db)
     snapshot_data = analytics.create_progress_snapshot(current_user.id)
 
-    # Save to database
+    # Save to database (convert datetime objects to ISO strings for JSON serialization)
     snapshot = ProgressSnapshot(
         user_id=current_user.id,
         snapshot_type=request.snapshot_type,
-        overall_progress=snapshot_data["overall_progress"],
-        error_analysis=snapshot_data["error_analysis"],
+        overall_progress=json_serialize_datetimes(snapshot_data["overall_progress"]),
+        error_analysis=json_serialize_datetimes(snapshot_data["error_analysis"]),
         overall_score=snapshot_data["overall_progress"]["overall_score"],
         total_sessions=(
             snapshot_data["overall_progress"]["conversation"]["total_sessions"] +
-            snapshot_data["overall_progress"]["grammar"]["total_sessions"]
+            snapshot_data["overall_progress"]["grammar"].get("total_sessions", 0)
         )
     )
 
