@@ -419,7 +419,7 @@ class AnalyticsService:
             GrammarTopic, GrammarExerciseAttempt.topic_id == GrammarTopic.id
         ).filter(
             GrammarSession.user_id == user_id,
-            GrammarExerciseAttempt.attempted_at >= cutoff_date,
+            GrammarExerciseAttempt.timestamp >= cutoff_date,
             GrammarExerciseAttempt.is_correct == False
         ).all()
 
@@ -442,7 +442,7 @@ class AnalyticsService:
             func.count(GrammarExerciseAttempt.id).label('error_count')
         ).join(GrammarSession).filter(
             GrammarSession.user_id == user_id,
-            GrammarExerciseAttempt.attempted_at >= cutoff_date,
+            GrammarExerciseAttempt.timestamp >= cutoff_date,
             GrammarExerciseAttempt.is_correct == False
         ).group_by(GrammarExerciseAttempt.topic_id).having(
             func.count(GrammarExerciseAttempt.id) >= 3  # 3+ errors = recurring
@@ -478,8 +478,8 @@ class AnalyticsService:
             ).filter(
                 GrammarSession.user_id == user_id,
                 GrammarExerciseAttempt.topic_id == topic.id,
-                GrammarExerciseAttempt.attempted_at >= cutoff_date
-            ).order_by(GrammarExerciseAttempt.attempted_at).all()
+                GrammarExerciseAttempt.timestamp >= cutoff_date
+            ).order_by(GrammarExerciseAttempt.timestamp).all()
 
             if len(recent_attempts) >= 5:
                 first_half = recent_attempts[:len(recent_attempts)//2]
@@ -647,8 +647,8 @@ class AnalyticsService:
         # Exercises
         exercises = self.db.query(GrammarExerciseAttempt).join(GrammarSession).filter(
             GrammarSession.user_id == user_id,
-            GrammarExerciseAttempt.attempted_at >= start,
-            GrammarExerciseAttempt.attempted_at < end
+            GrammarExerciseAttempt.timestamp >= start,
+            GrammarExerciseAttempt.timestamp < end
         ).all()
 
         exercise_accuracy = 0
