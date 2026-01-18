@@ -1598,7 +1598,7 @@ def main():
 
         if not run_specific_phase:
             print("\n[SUCCESS] All 8 phases completed successfully!")
-            print("API testing 100% complete! 🎉")
+            print("API testing 100% complete!")
 
     except KeyboardInterrupt:
         print("\n\n[WARN] Testing interrupted by user")
