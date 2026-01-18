@@ -24,14 +24,28 @@ export function OverallProgressCard({ progress }: OverallProgressCardProps) {
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">Weekly Goal</span>
           <span className="text-lg font-semibold text-gray-900">
-            {progress.weekly_goal_progress}%
+            {progress.weekly_goal_progress.sessions_this_week} /{' '}
+            {progress.weekly_goal_progress.goal_sessions} sessions
           </span>
         </div>
         <ProgressBar
-          value={progress.weekly_goal_progress}
-          color="success"
+          value={progress.weekly_goal_progress.goal_percentage ?? 0}
+          color={progress.weekly_goal_progress.goal_met ? 'success' : 'primary'}
           showLabel={false}
         />
+        <div className="text-xs text-gray-500 mt-1 text-center">
+          {progress.weekly_goal_progress.goal_met ? (
+            <span className="text-green-600 font-medium">Weekly goal achieved! 🎉</span>
+          ) : (
+            <span>
+              {progress.weekly_goal_progress.goal_sessions -
+                progress.weekly_goal_progress.sessions_this_week}{' '}
+              more session{progress.weekly_goal_progress.goal_sessions -
+                progress.weekly_goal_progress.sessions_this_week !== 1 && 's'}{' '}
+              to reach your goal
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Module Stats Grid */}

@@ -24,7 +24,14 @@ export interface OverallProgress {
   grammar: GrammarStats;
   vocabulary: VocabularyStats;
   activity: ActivityStats;
-  weekly_goal_progress: number; // 0-100
+  weekly_goal_progress: WeeklyGoalProgress;
+}
+
+export interface WeeklyGoalProgress {
+  sessions_this_week: number;
+  goal_sessions: number;
+  goal_percentage: number; // 0-100
+  goal_met: boolean;
 }
 
 export interface ConversationStats {
