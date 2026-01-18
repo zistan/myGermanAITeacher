@@ -1,10 +1,28 @@
 {
   "permissions": {
     "allow": [
+      "Bash(source:*)",
+      "Bash(alembic revision:*)",
+      "Bash(python test_api_manual.py:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
+      "Bash(git push)",
       "Bash(git push:*)",
-      "Bash(grep:*)"
+      "Bash(npm create:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(node node_modules/tailwindcss/lib/cli.js:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run build:*)",
+      "Bash(tree:*)",
+      "Bash(wc:*)",
+      "Bash(ss:*)",
+      "Bash(ip addr:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(ipconfig:*)",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []
