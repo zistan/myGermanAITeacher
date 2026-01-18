@@ -117,6 +117,12 @@ class AnalyticsService:
 
     def _get_grammar_stats(self, user_id: int) -> Dict:
         """Get grammar module statistics."""
+        # Total grammar sessions (completed)
+        total_sessions = self.db.query(GrammarSession).filter(
+            GrammarSession.user_id == user_id,
+            GrammarSession.ended_at.isnot(None)
+        ).count()
+
         # Total topics practiced
         topics_practiced = self.db.query(UserGrammarProgress).filter(
             UserGrammarProgress.user_id == user_id
@@ -179,6 +185,7 @@ class AnalyticsService:
         ]
 
         return {
+            "total_sessions": total_sessions,
             "topics_practiced": topics_practiced,
             "topics_mastered": topics_mastered,
             "total_exercises_attempted": total_exercises,
