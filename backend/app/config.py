@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     # AI Services
     ANTHROPIC_API_KEY: str
+    AI_MODEL: str = "claude-sonnet-4-5"  # Default: Claude Sonnet 4.5 (auto-updates)
 
     # Security
     SECRET_KEY: str

@@ -21,7 +21,7 @@ class GrammarAIService:
         """
         self.api_key = api_key or settings.ANTHROPIC_API_KEY
         self.client = Anthropic(api_key=self.api_key)
-        self.model = "claude-sonnet-4-5"  # Latest Claude Sonnet 4.5 (auto-updates)
+        self.model = settings.AI_MODEL  # Configurable AI model from environment
 
     def generate_exercises(
         self,
