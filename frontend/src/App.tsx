@@ -9,6 +9,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { GrammarTopicsPage } from './pages/grammar/GrammarTopicsPage';
+import { PracticeSessionPage } from './pages/grammar/PracticeSessionPage';
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -46,6 +47,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <GrammarTopicsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/grammar/practice"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PracticeSessionPage />
                 </Layout>
               </ProtectedRoute>
             }
