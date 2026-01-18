@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from './components/common';
+import { Layout } from './components/layout';
 import { useAuthStore } from './store/authStore';
 import { useNotificationStore } from './store/notificationStore';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -30,7 +31,9 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <Layout>
+                  <DashboardPage />
+                </Layout>
               </ProtectedRoute>
             }
           />
