@@ -819,6 +819,110 @@ def test_analyze_word_success(mock_ai_service, test_user, mock_get_current_user)
 
 
 @patch('app.api.v1.vocabulary.VocabularyAIService')
+def test_analyze_word_with_missing_fields(mock_ai_service, test_user, mock_get_current_user):
+    """Test analyzing a word when AI returns incomplete data."""
+    mock_ai = Mock()
+    # Return minimal analysis with missing optional fields
+    mock_ai.analyze_word.return_value = {
+        "word": "Zahlung",
+        "translation_it": "pagamento",
+        "part_of_speech": "noun"
+        # Missing: pronunciation, definition_de, synonyms, etc.
+    }
+    mock_ai_service.return_value = mock_ai
+
+    request_data = {
+        "word": "Zahlung",
+        "include_examples": True
+    }
+
+    response = client.post(
+        "/api/v1/vocabulary/analyze",
+        json=request_data,
+        headers={"Authorization": "Bearer test_token"}
+    )
+
+    # Should succeed with defaults for missing fields
+    assert response.status_code == 200
+    data = response.json()
+    assert data["word"] == "Zahlung"
+    assert data["translation_it"] == "pagamento"
+    assert data["part_of_speech"] == "noun"
+    assert data["pronunciation"] == ""  # Default
+    assert data["synonyms"] == []  # Default
+    assert data["antonyms"] == []  # Default
+    assert data["examples"] == []  # Default
+    assert data["is_compound"] == False  # Default
+    assert data["is_separable"] == False  # Default
+    assert data["register"] == "neutral"  # Default
+    assert data["frequency"] == "common"  # Default
+
+
+@patch('app.api.v1.vocabulary.VocabularyAIService')
+def test_analyze_word_ai_error(mock_ai_service, test_user, mock_get_current_user):
+    """Test analyzing a word when AI service returns an error."""
+    mock_ai = Mock()
+    # Simulate AI service returning error response
+    mock_ai.analyze_word.return_value = {
+        "word": "TestWort",
+        "error": "API error: Rate limit exceeded",
+        "translation_it": "Errore API",
+        "part_of_speech": "unknown",
+        "difficulty_level": "B2",
+        "pronunciation": "",
+        "definition_de": "Analyse aufgrund eines API-Fehlers fehlgeschlagen",
+        "synonyms": [],
+        "antonyms": [],
+        "examples": [],
+        "collocations": [],
+        "is_compound": False,
+        "is_separable": False,
+        "register": "neutral",
+        "frequency": "common"
+    }
+    mock_ai_service.return_value = mock_ai
+
+    request_data = {
+        "word": "TestWort",
+        "include_examples": True
+    }
+
+    response = client.post(
+        "/api/v1/vocabulary/analyze",
+        json=request_data,
+        headers={"Authorization": "Bearer test_token"}
+    )
+
+    # Should return 500 error when AI service indicates failure
+    assert response.status_code == 500
+    assert "Word analysis failed" in response.json()["detail"]
+
+
+@patch('app.api.v1.vocabulary.VocabularyAIService')
+def test_analyze_word_exception_handling(mock_ai_service, test_user, mock_get_current_user):
+    """Test analyzing a word when AI service throws an exception."""
+    mock_ai = Mock()
+    # Simulate exception being raised
+    mock_ai.analyze_word.side_effect = Exception("Unexpected error occurred")
+    mock_ai_service.return_value = mock_ai
+
+    request_data = {
+        "word": "TestWort",
+        "include_examples": True
+    }
+
+    response = client.post(
+        "/api/v1/vocabulary/analyze",
+        json=request_data,
+        headers={"Authorization": "Bearer test_token"}
+    )
+
+    # Should return 500 error with proper error message
+    assert response.status_code == 500
+    assert "Error analyzing word" in response.json()["detail"]
+
+
+@patch('app.api.v1.vocabulary.VocabularyAIService')
 def test_detect_vocabulary_from_text(mock_ai_service, test_user, mock_get_current_user):
     """Test detecting vocabulary from German text."""
     mock_ai = Mock()

@@ -932,18 +932,54 @@ def analyze_word(
     current_user: User = Depends(get_current_user)
 ):
     """Analyze a German word using AI."""
-    ai_service = VocabularyAIService()
+    try:
+        ai_service = VocabularyAIService()
 
-    analysis = ai_service.analyze_word(
-        word=request.word,
-        user_level="B2",  # Could get from user profile
-        include_examples=request.include_examples
-    )
+        analysis = ai_service.analyze_word(
+            word=request.word,
+            user_level="B2",  # Could get from user profile
+            include_examples=request.include_examples
+        )
 
-    if "error" in analysis:
-        raise HTTPException(status_code=500, detail="Word analysis failed")
+        # Check if analysis failed
+        if "error" in analysis:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Word analysis failed: {analysis.get('error', 'Unknown error')}"
+            )
 
-    return analysis
+        # Ensure all required fields are present with defaults
+        return {
+            "word": analysis.get("word", request.word),
+            "translation_it": analysis.get("translation_it", "Traduzione non disponibile"),
+            "part_of_speech": analysis.get("part_of_speech", "unknown"),
+            "gender": analysis.get("gender"),
+            "plural_form": analysis.get("plural_form"),
+            "difficulty_level": analysis.get("difficulty_level", "B2"),
+            "pronunciation": analysis.get("pronunciation", ""),
+            "definition_de": analysis.get("definition_de", "Definition nicht verfügbar"),
+            "usage_notes": analysis.get("usage_notes"),
+            "synonyms": analysis.get("synonyms", []),
+            "antonyms": analysis.get("antonyms", []),
+            "examples": analysis.get("examples", []),
+            "collocations": analysis.get("collocations", []),
+            "is_compound": analysis.get("is_compound", False),
+            "compound_parts": analysis.get("compound_parts"),
+            "is_separable": analysis.get("is_separable", False),
+            "separable_prefix": analysis.get("separable_prefix"),
+            "register": analysis.get("register", "neutral"),
+            "frequency": analysis.get("frequency", "common")
+        }
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        # Catch any other unexpected errors
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error analyzing word: {str(e)}"
+        )
 
 
 @router.post("/v1/vocabulary/detect", response_model=DetectVocabularyResponse)

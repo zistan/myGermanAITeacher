@@ -91,25 +91,50 @@ Analysiere dieses deutsche Wort und gib folgende Informationen:
 
             analysis = self._extract_json(response.content[0].text)
             if analysis and isinstance(analysis, dict):
-                return analysis
+                # Ensure all required fields exist
+                return self._ensure_complete_analysis(analysis, word, user_level)
             else:
-                # Fallback
-                return {
-                    "word": word,
-                    "translation_it": "Traduzione non disponibile",
-                    "part_of_speech": "unknown",
-                    "difficulty_level": user_level,
-                    "definition_de": f"Wort: {word}",
-                    "examples": []
-                }
+                # Fallback if JSON extraction failed
+                print(f"Warning: Failed to extract JSON from AI response for word '{word}'")
+                return self._get_fallback_analysis(word, user_level)
 
         except APIError as e:
-            print(f"Error analyzing word: {e}")
+            print(f"Anthropic API error analyzing word '{word}': {e}")
             return {
                 "word": word,
-                "error": "Analysis failed",
-                "translation_it": "Errore",
-                "examples": []
+                "error": f"API error: {str(e)}",
+                "translation_it": "Errore API",
+                "part_of_speech": "unknown",
+                "difficulty_level": user_level,
+                "pronunciation": "",
+                "definition_de": "Analyse aufgrund eines API-Fehlers fehlgeschlagen",
+                "synonyms": [],
+                "antonyms": [],
+                "examples": [],
+                "collocations": [],
+                "is_compound": False,
+                "is_separable": False,
+                "register": "neutral",
+                "frequency": "common"
+            }
+        except Exception as e:
+            print(f"Unexpected error analyzing word '{word}': {e}")
+            return {
+                "word": word,
+                "error": f"Unexpected error: {str(e)}",
+                "translation_it": "Errore imprevisto",
+                "part_of_speech": "unknown",
+                "difficulty_level": user_level,
+                "pronunciation": "",
+                "definition_de": "Analyse aufgrund eines unerwarteten Fehlers fehlgeschlagen",
+                "synonyms": [],
+                "antonyms": [],
+                "examples": [],
+                "collocations": [],
+                "is_compound": False,
+                "is_separable": False,
+                "register": "neutral",
+                "frequency": "common"
             }
 
     def detect_vocabulary_from_text(
@@ -411,6 +436,71 @@ Erstelle die Beispiele:"""
         except APIError as e:
             print(f"Error generating examples: {e}")
             return []
+
+    def _ensure_complete_analysis(self, analysis: Dict, word: str, user_level: str) -> Dict:
+        """Ensure analysis has all required fields with defaults.
+
+        Args:
+            analysis: Partial analysis from AI
+            word: The word being analyzed
+            user_level: User's CEFR level
+
+        Returns:
+            Complete analysis with all required fields
+        """
+        return {
+            "word": analysis.get("word", word),
+            "translation_it": analysis.get("translation_it", "Traduzione non disponibile"),
+            "part_of_speech": analysis.get("part_of_speech", "unknown"),
+            "gender": analysis.get("gender"),
+            "plural_form": analysis.get("plural_form"),
+            "difficulty_level": analysis.get("difficulty_level", user_level),
+            "pronunciation": analysis.get("pronunciation", ""),
+            "definition_de": analysis.get("definition_de", "Definition nicht verfügbar"),
+            "usage_notes": analysis.get("usage_notes"),
+            "synonyms": analysis.get("synonyms", []),
+            "antonyms": analysis.get("antonyms", []),
+            "examples": analysis.get("examples", []),
+            "collocations": analysis.get("collocations", []),
+            "is_compound": analysis.get("is_compound", False),
+            "compound_parts": analysis.get("compound_parts"),
+            "is_separable": analysis.get("is_separable", False),
+            "separable_prefix": analysis.get("separable_prefix"),
+            "register": analysis.get("register", "neutral"),
+            "frequency": analysis.get("frequency", "common")
+        }
+
+    def _get_fallback_analysis(self, word: str, user_level: str) -> Dict:
+        """Get a fallback analysis when AI fails.
+
+        Args:
+            word: The word being analyzed
+            user_level: User's CEFR level
+
+        Returns:
+            Basic fallback analysis
+        """
+        return {
+            "word": word,
+            "translation_it": "Traduzione non disponibile",
+            "part_of_speech": "unknown",
+            "gender": None,
+            "plural_form": None,
+            "difficulty_level": user_level,
+            "pronunciation": "",
+            "definition_de": f"Das Wort '{word}' konnte nicht vollständig analysiert werden.",
+            "usage_notes": None,
+            "synonyms": [],
+            "antonyms": [],
+            "examples": [],
+            "collocations": [],
+            "is_compound": False,
+            "compound_parts": None,
+            "is_separable": False,
+            "separable_prefix": None,
+            "register": "neutral",
+            "frequency": "common"
+        }
 
     def _extract_json(self, text: str) -> Optional[dict]:
         """Extract JSON from AI response text.
