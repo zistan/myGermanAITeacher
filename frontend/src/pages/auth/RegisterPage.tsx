@@ -186,16 +186,17 @@ export function RegisterPage() {
               </label>
               <select
                 id="proficiency_level"
+                data-testid="proficiency-level-select"
                 value={formData.proficiency_level}
                 onChange={(e) => handleChange('proficiency_level', e.target.value)}
                 className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
               >
-                <option value="A1">A1 - Beginner</option>
-                <option value="A2">A2 - Elementary</option>
-                <option value="B1">B1 - Intermediate</option>
-                <option value="B2">B2 - Upper Intermediate</option>
-                <option value="C1">C1 - Advanced</option>
-                <option value="C2">C2 - Proficient</option>
+                <option value="A1" data-testid="option-a1">A1 - Beginner</option>
+                <option value="A2" data-testid="option-a2">A2 - Elementary</option>
+                <option value="B1" data-testid="option-b1">B1 - Intermediate</option>
+                <option value="B2" data-testid="option-b2">B2 - Upper Intermediate</option>
+                <option value="C1" data-testid="option-c1">C1 - Advanced</option>
+                <option value="C2" data-testid="option-c2">C2 - Proficient</option>
               </select>
             </div>
 
