@@ -61,6 +61,7 @@ export function SessionHeader({
                       'text-sm font-mono px-2 py-1 rounded',
                       isPaused ? 'bg-yellow-100 text-yellow-700' : 'text-gray-600'
                     )}
+                    data-testid="session-timer"
                   >
                     {isPaused && (
                       <span className="mr-1" title="Paused">
