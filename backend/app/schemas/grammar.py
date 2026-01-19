@@ -119,10 +119,19 @@ class ExerciseFeedback(BaseModel):
     points_earned: int = Field(..., ge=0, le=3)
 
 
+class SessionProgress(BaseModel):
+    """Session progress tracking (BUG-010 fix - matches frontend interface)."""
+    exercises_completed: int = Field(..., description="Number of exercises attempted")
+    exercises_correct: int = Field(..., description="Number of correct answers")
+    current_streak: int = Field(..., description="Current streak of correct answers")
+    total_points: int = Field(..., description="Total points earned in session")
+    accuracy_percentage: float = Field(..., ge=0, le=100, description="Accuracy percentage (0-100)")
+
+
 class SubmitExerciseAnswerResponse(BaseModel):
     """Response after submitting an exercise answer."""
     feedback: ExerciseFeedback
-    session_progress: dict = Field(..., description="Current session progress")
+    session_progress: SessionProgress = Field(..., description="Current session progress")
     next_exercise: Optional[GrammarExerciseResponse] = None
 
 

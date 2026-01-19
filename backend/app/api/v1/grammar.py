@@ -432,14 +432,46 @@ def submit_exercise_answer(
         points_earned=points
     )
 
-    # Session progress
+    # Session progress (API contract with frontend - BUG-010 fix)
     total_attempted = session.exercises_correct + session.exercises_incorrect
+
+    # Calculate current streak from recent attempts
+    recent_attempts = db.query(GrammarExerciseAttempt).filter(
+        GrammarExerciseAttempt.grammar_session_id == session_id
+    ).order_by(GrammarExerciseAttempt.timestamp.desc()).limit(10).all()
+
+    current_streak = 0
+    for attempt in reversed(recent_attempts):
+        if attempt.is_correct:
+            current_streak += 1
+        else:
+            break
+
+    # Calculate total points based on difficulty
+    total_points = 0
+    all_attempts = db.query(GrammarExerciseAttempt).join(
+        GrammarExercise,
+        GrammarExercise.id == GrammarExerciseAttempt.exercise_id
+    ).filter(
+        GrammarExerciseAttempt.grammar_session_id == session_id,
+        GrammarExerciseAttempt.is_correct == True
+    ).all()
+
+    for attempt in all_attempts:
+        exercise = db.query(GrammarExercise).filter(
+            GrammarExercise.id == attempt.exercise_id
+        ).first()
+        if exercise:
+            difficulty_points = {"A1": 1, "A2": 1, "B1": 2, "B2": 2, "C1": 3, "C2": 3}
+            total_points += difficulty_points.get(exercise.difficulty_level, 1)
+
     session_progress = {
-        "completed": total_attempted,
-        "total": session.total_exercises,
-        "correct": session.exercises_correct,
-        "accuracy": (session.exercises_correct / total_attempted * 100)
-        if total_attempted > 0 else 0
+        "exercises_completed": total_attempted,
+        "exercises_correct": session.exercises_correct,
+        "current_streak": current_streak,
+        "total_points": total_points,
+        "accuracy_percentage": (session.exercises_correct / total_attempted * 100)
+            if total_attempted > 0 else 0
     }
 
     # Get next exercise (if any)
