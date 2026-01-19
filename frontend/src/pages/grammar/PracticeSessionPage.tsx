@@ -530,10 +530,18 @@ export function PracticeSessionPage() {
             You have an incomplete practice session. Would you like to resume where you left off?
           </p>
           <div className="flex gap-3 justify-end">
-            <Button onClick={handleStartFresh} variant="secondary">
+            <Button
+              onClick={handleStartFresh}
+              variant="secondary"
+              data-testid="clear-session-button"
+            >
               Start Fresh
             </Button>
-            <Button onClick={handleRestoreSession} variant="primary">
+            <Button
+              onClick={handleRestoreSession}
+              variant="primary"
+              data-testid="restore-session-button"
+            >
               Resume Session
             </Button>
           </div>

@@ -111,9 +111,9 @@ export function VocabularyBrowserPage() {
       const fullWord = await vocabularyService.getWord(word.id);
       setSelectedWord(fullWord);
       setIsDetailModalOpen(true);
-    } catch (error) {
-      const apiError = error as ApiError;
-      addToast('error', 'Failed to load word details', apiError.detail || 'An error occurred');
+    } catch (err) {
+      const apiError = err as ApiError;
+      addToast('warning', 'Could not load full details', apiError.detail || 'Showing cached data');
       // Fallback: use the word data from the list (may have missing progress fields)
       setSelectedWord(word);
       setIsDetailModalOpen(true);

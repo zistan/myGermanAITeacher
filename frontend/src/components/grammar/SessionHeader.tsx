@@ -61,7 +61,7 @@ export function SessionHeader({
                       'text-sm font-mono px-2 py-1 rounded',
                       isPaused ? 'bg-yellow-100 text-yellow-700' : 'text-gray-600'
                     )}
-                    data-testid="session-timer"
+                    data-testid="session-timer elapsed-time"
                   >
                     {isPaused && (
                       <span className="mr-1" title="Paused">
@@ -94,7 +94,7 @@ export function SessionHeader({
                     : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                 )}
                 title={isPaused ? 'Resume (P)' : 'Pause (P)'}
-                data-testid="pause-resume-button"
+                data-testid={isPaused ? "resume-button pause-resume-button" : "pause-button pause-resume-button"}
               >
                 {isPaused ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
