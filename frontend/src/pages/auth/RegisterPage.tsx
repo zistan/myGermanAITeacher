@@ -72,10 +72,14 @@ export function RegisterPage() {
       const response = await authService.register(registerData);
       setUser(response.user);
       addToast('success', 'Registration successful', `Welcome, ${response.user.username}!`);
-      // Use queueMicrotask to ensure state update is processed before navigation
+      // Use queueMicrotask and verify state before navigation
       // This fixes the race condition where ProtectedRoute might check auth before store is updated
       queueMicrotask(() => {
-        navigate('/dashboard');
+        // Verify state is set before navigating
+        const isAuthenticated = useAuthStore.getState().isAuthenticated;
+        if (isAuthenticated) {
+          navigate('/dashboard');
+        }
       });
     } catch (error) {
       const apiError = error as ApiError;

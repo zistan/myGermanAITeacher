@@ -55,10 +55,14 @@ export function LoginPage() {
       const response = await authService.login(formData);
       setUser(response.user);
       addToast('success', 'Login successful', `Welcome back, ${response.user.username}!`);
-      // Use queueMicrotask to ensure state update is processed before navigation
+      // Use queueMicrotask and verify state before navigation
       // This fixes the race condition where ProtectedRoute might check auth before store is updated
       queueMicrotask(() => {
-        navigate('/dashboard');
+        // Verify state is set before navigating
+        const isAuthenticated = useAuthStore.getState().isAuthenticated;
+        if (isAuthenticated) {
+          navigate('/dashboard');
+        }
       });
     } catch (error) {
       const apiError = error as ApiError;

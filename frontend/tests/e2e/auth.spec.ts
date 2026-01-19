@@ -77,7 +77,10 @@ test.describe('Authentication Flow', () => {
       await page.locator('#password').fill(existingUser.password);
       await page.locator('button[type="submit"]').click();
 
-      // Should redirect to dashboard
+      // Wait for success toast first - this ensures API call completed and state was updated
+      await expect(page.locator('text=/Login successful|Welcome back/i')).toBeVisible({ timeout: 10000 });
+
+      // Then verify redirect to dashboard
       await expect(page).toHaveURL(/dashboard/, { timeout: 10000 });
 
       // Verify token is stored
@@ -174,8 +177,11 @@ test.describe('Authentication Flow', () => {
       await page.locator('#proficiency_level').selectOption('B2');
       await page.locator('button[type="submit"]').click();
 
-      // Should redirect to dashboard after successful registration
-      await expect(page).toHaveURL(/dashboard/, { timeout: 15000 });
+      // Wait for success toast first - this ensures API call completed and state was updated
+      await expect(page.locator('text=/Registration successful|Welcome/i')).toBeVisible({ timeout: 15000 });
+
+      // Then verify redirect to dashboard
+      await expect(page).toHaveURL(/dashboard/, { timeout: 10000 });
 
       // Verify auto-login (token stored)
       const token = await page.evaluate(() => localStorage.getItem('auth_token'));
