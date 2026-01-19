@@ -1,0 +1,296 @@
+{
+  "description": "Phase 2: Business Vocabulary Generation Batches (3,500 words total)",
+  "batches": [
+    {
+      "name": "finance_payments",
+      "category": "finance",
+      "subcategory": "payment methods",
+      "count": 80,
+      "difficulty": "B2",
+      "context": "Payment methods used in Germany and EU: cards, transfers, direct debit, mobile payments",
+      "output_file": "business/generated_payments_01_methods.py"
+    },
+    {
+      "name": "finance_transaction_processing",
+      "category": "finance",
+      "subcategory": "transaction processing",
+      "count": 120,
+      "difficulty": "C1",
+      "context": "Payment processing terminology: authorization, clearing, settlement, booking, refunds",
+      "output_file": "business/generated_payments_02_processing.py"
+    },
+    {
+      "name": "finance_security_fraud",
+      "category": "finance",
+      "subcategory": "payment security and fraud prevention",
+      "count": 80,
+      "difficulty": "C1",
+      "context": "Security measures, fraud detection, encryption, authentication, PCI compliance",
+      "output_file": "business/generated_payments_03_security.py"
+    },
+    {
+      "name": "finance_compliance",
+      "category": "finance",
+      "subcategory": "financial compliance and regulation",
+      "count": 100,
+      "difficulty": "C1",
+      "context": "PCI-DSS, PSD2, GDPR, AML, KYC, financial regulations in EU and Switzerland",
+      "output_file": "business/generated_payments_04_compliance.py"
+    },
+    {
+      "name": "finance_settlement_clearing",
+      "category": "finance",
+      "subcategory": "settlement and clearing processes",
+      "count": 70,
+      "difficulty": "C1",
+      "context": "Interbank settlement, clearing houses, SEPA systems, payment networks",
+      "output_file": "business/generated_payments_05_settlement.py"
+    },
+    {
+      "name": "finance_apis",
+      "category": "technology",
+      "subcategory": "payment APIs and integration",
+      "count": 90,
+      "difficulty": "C1",
+      "context": "REST APIs, webhooks, tokens, endpoints, integration, payment gateways, SDKs",
+      "output_file": "business/generated_payments_06_apis.py"
+    },
+    {
+      "name": "finance_customer_experience",
+      "category": "business",
+      "subcategory": "e-commerce checkout and customer experience",
+      "count": 80,
+      "difficulty": "B2",
+      "context": "Online checkout, shopping cart, conversion, UX, payment page, abandoned carts",
+      "output_file": "business/generated_payments_07_checkout.py"
+    },
+    {
+      "name": "finance_merchant_services",
+      "category": "finance",
+      "subcategory": "merchant services and acquiring",
+      "count": 90,
+      "difficulty": "C1",
+      "context": "Acquiring banks, PSPs, payment service providers, merchant accounts, fees, commissions",
+      "output_file": "business/generated_payments_08_merchant.py"
+    },
+    {
+      "name": "finance_cross_border",
+      "category": "finance",
+      "subcategory": "cross-border and international payments",
+      "count": 90,
+      "difficulty": "C1",
+      "context": "Currency exchange, SWIFT, SEPA, international transfers, FX rates, correspondent banks",
+      "output_file": "business/generated_payments_09_international.py"
+    },
+    {
+      "name": "business_meetings",
+      "category": "business",
+      "subcategory": "meetings and conferences",
+      "count": 150,
+      "difficulty": "B2",
+      "context": "Scheduling meetings, agendas, minutes, presentations, video conferences, facilitation",
+      "output_file": "business/generated_general_01_meetings.py"
+    },
+    {
+      "name": "business_email_communication",
+      "category": "business",
+      "subcategory": "email and business correspondence",
+      "count": 150,
+      "difficulty": "B1",
+      "context": "Email etiquette, subject lines, greetings, closings, cc/bcc, attachments, formal writing",
+      "output_file": "business/generated_general_02_email.py"
+    },
+    {
+      "name": "business_negotiations",
+      "category": "business",
+      "subcategory": "negotiations and deal-making",
+      "count": 120,
+      "difficulty": "C1",
+      "context": "Negotiating contracts, offers, counteroffers, compromises, terms, conditions",
+      "output_file": "business/generated_general_03_negotiations.py"
+    },
+    {
+      "name": "business_project_management",
+      "category": "business",
+      "subcategory": "project management",
+      "count": 150,
+      "difficulty": "B2",
+      "context": "Milestones, deliverables, timelines, Gantt charts, resources, stakeholders, risks",
+      "output_file": "business/generated_general_04_projects.py"
+    },
+    {
+      "name": "business_strategy",
+      "category": "business",
+      "subcategory": "business strategy and planning",
+      "count": 120,
+      "difficulty": "C1",
+      "context": "Strategic planning, objectives, KPIs, competitive advantage, market analysis, SWOT",
+      "output_file": "business/generated_general_05_strategy.py"
+    },
+    {
+      "name": "business_management",
+      "category": "business",
+      "subcategory": "management and leadership",
+      "count": 120,
+      "difficulty": "B2",
+      "context": "Leadership, delegation, team building, performance reviews, coaching, mentoring",
+      "output_file": "business/generated_general_06_management.py"
+    },
+    {
+      "name": "business_sales_marketing",
+      "category": "business",
+      "subcategory": "sales and marketing",
+      "count": 150,
+      "difficulty": "B2",
+      "context": "Sales pitch, customer acquisition, retention, marketing campaigns, branding, lead generation",
+      "output_file": "business/generated_general_07_sales.py"
+    },
+    {
+      "name": "business_reporting",
+      "category": "business",
+      "subcategory": "reporting and analytics",
+      "count": 120,
+      "difficulty": "B2",
+      "context": "Business reports, dashboards, metrics, data analysis, performance indicators, insights",
+      "output_file": "business/generated_general_08_reporting.py"
+    },
+    {
+      "name": "business_office",
+      "category": "business",
+      "subcategory": "office work and administration",
+      "count": 120,
+      "difficulty": "B1",
+      "context": "Office supplies, equipment, filing, documentation, scheduling, administrative tasks",
+      "output_file": "business/generated_general_09_office.py"
+    },
+    {
+      "name": "business_customer_service",
+      "category": "business",
+      "subcategory": "customer service and support",
+      "count": 100,
+      "difficulty": "B2",
+      "context": "Customer inquiries, complaints, support tickets, satisfaction, escalation, SLAs",
+      "output_file": "business/generated_general_10_customer_service.py"
+    },
+    {
+      "name": "finance_banking_accounts",
+      "category": "finance",
+      "subcategory": "banking and accounts",
+      "count": 150,
+      "difficulty": "B1",
+      "context": "Bank accounts, checking, savings, interest, overdraft, statements, transactions",
+      "output_file": "business/generated_banking_01_accounts.py"
+    },
+    {
+      "name": "finance_banking_loans",
+      "category": "finance",
+      "subcategory": "loans and credit",
+      "count": 120,
+      "difficulty": "B2",
+      "context": "Loans, mortgages, credit lines, interest rates, collateral, amortization, debt",
+      "output_file": "business/generated_banking_02_loans.py"
+    },
+    {
+      "name": "finance_banking_investments",
+      "category": "finance",
+      "subcategory": "investments and securities",
+      "count": 130,
+      "difficulty": "C1",
+      "context": "Stocks, bonds, funds, portfolios, dividends, capital gains, risk management",
+      "output_file": "business/generated_banking_03_investments.py"
+    },
+    {
+      "name": "finance_accounting_basics",
+      "category": "finance",
+      "subcategory": "accounting fundamentals",
+      "count": 100,
+      "difficulty": "B2",
+      "context": "Bookkeeping, ledgers, accounts payable/receivable, journal entries, double-entry",
+      "output_file": "business/generated_accounting_01_basics.py"
+    },
+    {
+      "name": "finance_accounting_reporting",
+      "category": "finance",
+      "subcategory": "financial reporting and statements",
+      "count": 120,
+      "difficulty": "C1",
+      "context": "Balance sheet, income statement, cash flow, P&L, financial ratios, GAAP, IFRS",
+      "output_file": "business/generated_accounting_02_reporting.py"
+    },
+    {
+      "name": "finance_accounting_tax",
+      "category": "finance",
+      "subcategory": "taxation and tax compliance",
+      "count": 80,
+      "difficulty": "B2",
+      "context": "VAT, income tax, corporate tax, deductions, tax returns, tax authorities, audits",
+      "output_file": "business/generated_accounting_03_tax.py"
+    },
+    {
+      "name": "business_legal_contracts",
+      "category": "legal",
+      "subcategory": "contracts and agreements",
+      "count": 150,
+      "difficulty": "C1",
+      "context": "Contract clauses, terms, conditions, obligations, breach, termination, amendments",
+      "output_file": "business/generated_legal_01_contracts.py"
+    },
+    {
+      "name": "business_legal_compliance",
+      "category": "legal",
+      "subcategory": "legal compliance and regulation",
+      "count": 100,
+      "difficulty": "C1",
+      "context": "Regulatory compliance, legal requirements, due diligence, liability, intellectual property",
+      "output_file": "business/generated_legal_02_compliance.py"
+    },
+    {
+      "name": "business_legal_disputes",
+      "category": "legal",
+      "subcategory": "disputes and litigation",
+      "count": 50,
+      "difficulty": "C1",
+      "context": "Disputes, arbitration, mediation, lawsuits, settlements, legal proceedings",
+      "output_file": "business/generated_legal_03_disputes.py"
+    },
+    {
+      "name": "business_hr_recruitment",
+      "category": "business",
+      "subcategory": "recruitment and hiring",
+      "count": 80,
+      "difficulty": "B2",
+      "context": "Job postings, interviews, candidates, selection, offers, onboarding, probation",
+      "output_file": "business/generated_hr_01_recruitment.py"
+    },
+    {
+      "name": "business_hr_employment",
+      "category": "business",
+      "subcategory": "employment and contracts",
+      "count": 70,
+      "difficulty": "B2",
+      "context": "Employment contracts, salary, benefits, working hours, vacation, sick leave, termination",
+      "output_file": "business/generated_hr_02_employment.py"
+    },
+    {
+      "name": "business_hr_development",
+      "category": "business",
+      "subcategory": "employee development and training",
+      "count": 50,
+      "difficulty": "B2",
+      "context": "Training programs, professional development, skills, certifications, career progression",
+      "output_file": "business/generated_hr_03_development.py"
+    }
+  ],
+  "summary": {
+    "total_batches": 32,
+    "total_words": 3500,
+    "breakdown": {
+      "finance_payments": 800,
+      "business_general": 1500,
+      "finance_banking": 400,
+      "finance_accounting": 300,
+      "business_legal": 300,
+      "business_hr": 200
+    }
+  }
+}
