@@ -9,12 +9,13 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import random
 import hashlib
+import json
 
 from app.database import get_db
 from app.models.user import User
 from app.models.vocabulary import (
     Vocabulary, UserVocabularyProgress, UserVocabularyList,
-    VocabularyListWord, VocabularyReview
+    VocabularyListWord, VocabularyReview, FlashcardSession, VocabularyQuiz
 )
 from app.schemas.vocabulary import (
     VocabularyResponse, VocabularyWithProgress, VocabularyCreate,
@@ -206,9 +207,6 @@ def create_vocabulary_word(
 
 # ========== FLASHCARD ENDPOINTS ==========
 
-# In-memory session storage (should be Redis in production)
-flashcard_sessions = {}
-
 
 @router.post("/v1/vocabulary/flashcards/start", response_model=FlashcardSessionResponse)
 def start_flashcard_session(
@@ -295,18 +293,22 @@ def start_flashcard_session(
             "difficulty": word.difficulty
         })
 
-    # Create session
-    # Use max of existing keys to ensure unique, monotonically increasing IDs
-    session_id = max(flashcard_sessions.keys(), default=0) + 1
-    flashcard_sessions[session_id] = {
-        "user_id": current_user.id,
-        "cards": cards,
-        "current_index": 0,
-        "started_at": datetime.utcnow()
-    }
+    # Create session in database
+    db_session = FlashcardSession(
+        user_id=current_user.id,
+        total_cards=len(cards),
+        current_index=0,
+        cards_data=json.dumps(cards),  # Store cards as JSON string
+        use_spaced_repetition=1 if request.use_spaced_repetition else 0,
+        category=request.category,
+        difficulty=request.difficulty
+    )
+    db.add(db_session)
+    db.commit()
+    db.refresh(db_session)
 
     return {
-        "session_id": session_id,
+        "session_id": db_session.id,
         "total_cards": len(cards),
         "current_card_number": 1,
         "current_card": cards[0]
@@ -321,15 +323,22 @@ def submit_flashcard_answer(
     current_user: User = Depends(get_current_user)
 ):
     """Submit answer to a flashcard and get next card."""
-    session = flashcard_sessions.get(session_id)
-    if not session:
+    # Query session from database
+    db_session = db.query(FlashcardSession).filter(
+        FlashcardSession.id == session_id
+    ).first()
+
+    if not db_session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    if session["user_id"] != current_user.id:
+    if db_session.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your session")
 
+    # Parse cards from JSON
+    cards = json.loads(db_session.cards_data)
+
     # Find the card
-    card = next((c for c in session["cards"] if c["card_id"] == request.card_id), None)
+    card = next((c for c in cards if c["card_id"] == request.card_id), None)
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
 
@@ -404,11 +413,13 @@ def submit_flashcard_answer(
     else:
         feedback = f"Nicht ganz. Die richtige Antwort ist: {correct_answer}"
 
-    # Get next card
-    session["current_index"] += 1
+    # Get next card and update database
+    db_session.current_index += 1
+    db.commit()
+
     next_card = None
-    if session["current_index"] < len(session["cards"]):
-        next_card = session["cards"][session["current_index"]]
+    if db_session.current_index < len(cards):
+        next_card = cards[db_session.current_index]
 
     return {
         "is_correct": is_correct,
@@ -426,17 +437,24 @@ def get_current_flashcard(
     current_user: User = Depends(get_current_user)
 ):
     """Get the current flashcard in a session."""
-    session = flashcard_sessions.get(session_id)
-    if not session:
+    # Query session from database
+    db_session = db.query(FlashcardSession).filter(
+        FlashcardSession.id == session_id
+    ).first()
+
+    if not db_session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    if session["user_id"] != current_user.id:
+    if db_session.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your session")
 
-    if session["current_index"] >= len(session["cards"]):
+    # Parse cards from JSON
+    cards = json.loads(db_session.cards_data)
+
+    if db_session.current_index >= len(cards):
         raise HTTPException(status_code=400, detail="Session completed")
 
-    return session["cards"][session["current_index"]]
+    return cards[db_session.current_index]
 
 
 # ========== PERSONAL VOCABULARY LIST ENDPOINTS ==========
@@ -666,9 +684,6 @@ def delete_vocabulary_list(
 
 # ========== VOCABULARY QUIZ ENDPOINTS ==========
 
-# In-memory quiz storage
-vocabulary_quizzes = {}
-
 
 @router.post("/v1/vocabulary/quiz/generate", response_model=VocabularyQuizResponse)
 def generate_vocabulary_quiz(
@@ -702,19 +717,23 @@ def generate_vocabulary_quiz(
         difficulty=request.difficulty or "B2"
     )
 
-    # Store quiz
-    # Use max of existing keys to ensure unique, monotonically increasing IDs
-    quiz_id = max(vocabulary_quizzes.keys(), default=0) + 1
-    vocabulary_quizzes[quiz_id] = {
-        "user_id": current_user.id,
-        "questions": quiz_questions,
-        "created_at": datetime.utcnow()
-    }
+    # Store quiz in database
+    db_quiz = VocabularyQuiz(
+        user_id=current_user.id,
+        quiz_type=request.quiz_type,
+        total_questions=len(quiz_questions),
+        questions_data=json.dumps(quiz_questions),  # Store questions as JSON string
+        category=request.category,
+        difficulty=request.difficulty
+    )
+    db.add(db_quiz)
+    db.commit()
+    db.refresh(db_quiz)
 
     # Format questions
     formatted_questions = []
     for i, q in enumerate(quiz_questions):
-        question_id = f"{quiz_id}_{i}"
+        question_id = f"{db_quiz.id}_{i}"
         formatted_questions.append({
             "question_id": question_id,
             "question": q.get("question", ""),
@@ -728,7 +747,7 @@ def generate_vocabulary_quiz(
     estimated_duration = len(formatted_questions) * 2  # 2 minutes per question
 
     return {
-        "quiz_id": quiz_id,
+        "quiz_id": db_quiz.id,
         "questions": formatted_questions,
         "total_questions": len(formatted_questions),
         "estimated_duration_minutes": estimated_duration
@@ -743,12 +762,19 @@ def submit_quiz_answer(
     current_user: User = Depends(get_current_user)
 ):
     """Submit an answer to a quiz question."""
-    quiz = vocabulary_quizzes.get(quiz_id)
-    if not quiz:
+    # Query quiz from database
+    db_quiz = db.query(VocabularyQuiz).filter(
+        VocabularyQuiz.id == quiz_id
+    ).first()
+
+    if not db_quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
 
-    if quiz["user_id"] != current_user.id:
+    if db_quiz.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your quiz")
+
+    # Parse questions from JSON
+    questions = json.loads(db_quiz.questions_data)
 
     # Parse question_id
     parts = request.question_id.split("_")
@@ -756,10 +782,10 @@ def submit_quiz_answer(
         raise HTTPException(status_code=400, detail="Invalid question ID")
 
     question_index = int(parts[1])
-    if question_index >= len(quiz["questions"]):
+    if question_index >= len(questions):
         raise HTTPException(status_code=404, detail="Question not found")
 
-    question = quiz["questions"][question_index]
+    question = questions[question_index]
     correct_answer = question.get("correct_answer", "")
     is_correct = request.user_answer.strip().lower() == correct_answer.lower()
 

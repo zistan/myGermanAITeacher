@@ -2,6 +2,7 @@
 Tests for vocabulary learning endpoints.
 """
 import pytest
+import json
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
@@ -9,8 +10,8 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.models.user import User
 from app.models.vocabulary import (
-    VocabularyWord, UserVocabularyProgress, UserVocabularyList,
-    VocabularyListWord, VocabularyReview
+    Vocabulary, UserVocabularyProgress, UserVocabularyList,
+    VocabularyListWord, VocabularyReview, FlashcardSession, VocabularyQuiz
 )
 
 
@@ -41,7 +42,7 @@ def test_user():
 @pytest.fixture
 def test_word():
     """Create a test vocabulary word."""
-    word = VocabularyWord(
+    word = Vocabulary(
         id=1,
         word="die Arbeit",
         translation_it="il lavoro",
@@ -308,9 +309,9 @@ def test_start_multiple_flashcard_sessions_unique_ids(mock_ai_service, mock_db, 
         "use_spaced_repetition": False
     }
 
-    # Clear flashcard sessions first
-    from app.api.v1 import vocabulary
-    vocabulary.flashcard_sessions.clear()
+    # Mock FlashcardSession database inserts
+    mock_session_1 = Mock(id=1)
+    mock_session_2 = Mock(id=2)
 
     # Start first session
     with patch('app.api.v1.vocabulary.get_db', return_value=mock_db):
@@ -340,9 +341,12 @@ def test_start_multiple_flashcard_sessions_unique_ids(mock_ai_service, mock_db, 
     assert session_id_1 != session_id_2
 
 
-@patch('app.api.v1.vocabulary.flashcard_sessions', {1: {
-    "user_id": 1,
-    "cards": [{
+def test_submit_flashcard_answer_correct(mock_db, test_user, mock_get_current_user):
+    """Test submitting a correct flashcard answer."""
+    import json
+
+    # Mock FlashcardSession from database
+    cards_data = [{
         "card_id": "abc123",
         "word_id": 1,
         "word": "die Arbeit",
@@ -351,12 +355,17 @@ def test_start_multiple_flashcard_sessions_unique_ids(mock_ai_service, mock_db, 
         "back": "il lavoro",
         "hint": "",
         "difficulty": "A1"
-    }],
-    "current_index": 0,
-    "started_at": datetime.utcnow()
-}})
-def test_submit_flashcard_answer_correct(mock_db, test_user, mock_get_current_user):
-    """Test submitting a correct flashcard answer."""
+    }]
+
+    mock_session = FlashcardSession(
+        id=1,
+        user_id=test_user.id,
+        total_cards=1,
+        current_index=0,
+        cards_data=json.dumps(cards_data),
+        use_spaced_repetition=0
+    )
+
     # Mock progress
     progress = UserVocabularyProgress(
         id=1,
@@ -368,11 +377,17 @@ def test_submit_flashcard_answer_correct(mock_db, test_user, mock_get_current_us
         accuracy_rate=80.0
     )
 
-    mock_query = Mock()
-    mock_query.filter.return_value = mock_query
-    mock_query.first.return_value = progress
+    # Mock database queries
+    def mock_query_side_effect(model):
+        mock_query = Mock()
+        mock_query.filter.return_value = mock_query
+        if model == FlashcardSession:
+            mock_query.first.return_value = mock_session
+        else:  # UserVocabularyProgress
+            mock_query.first.return_value = progress
+        return mock_query
 
-    mock_db.query.return_value = mock_query
+    mock_db.query.side_effect = mock_query_side_effect
 
     answer_data = {
         "card_id": "abc123",
@@ -395,9 +410,12 @@ def test_submit_flashcard_answer_correct(mock_db, test_user, mock_get_current_us
     assert data["next_review_interval_days"] > 0
 
 
-@patch('app.api.v1.vocabulary.flashcard_sessions', {1: {
-    "user_id": 1,
-    "cards": [{
+def test_submit_flashcard_answer_incorrect(mock_db, test_user, mock_get_current_user):
+    """Test submitting an incorrect flashcard answer."""
+    import json
+
+    # Mock FlashcardSession from database
+    cards_data = [{
         "card_id": "abc123",
         "word_id": 1,
         "word": "die Arbeit",
@@ -406,11 +424,17 @@ def test_submit_flashcard_answer_correct(mock_db, test_user, mock_get_current_us
         "back": "il lavoro",
         "hint": "",
         "difficulty": "A1"
-    }],
-    "current_index": 0
-}})
-def test_submit_flashcard_answer_incorrect(mock_db, test_user, mock_get_current_user):
-    """Test submitting an incorrect flashcard answer."""
+    }]
+
+    mock_session = FlashcardSession(
+        id=1,
+        user_id=test_user.id,
+        total_cards=1,
+        current_index=0,
+        cards_data=json.dumps(cards_data),
+        use_spaced_repetition=0
+    )
+
     progress = UserVocabularyProgress(
         id=1,
         user_id=test_user.id,
@@ -420,11 +444,17 @@ def test_submit_flashcard_answer_incorrect(mock_db, test_user, mock_get_current_
         times_correct=8
     )
 
-    mock_query = Mock()
-    mock_query.filter.return_value = mock_query
-    mock_query.first.return_value = progress
+    # Mock database queries
+    def mock_query_side_effect(model):
+        mock_query = Mock()
+        mock_query.filter.return_value = mock_query
+        if model == FlashcardSession:
+            mock_query.first.return_value = mock_session
+        else:  # UserVocabularyProgress
+            mock_query.first.return_value = progress
+        return mock_query
 
-    mock_db.query.return_value = mock_query
+    mock_db.query.side_effect = mock_query_side_effect
 
     answer_data = {
         "card_id": "abc123",
@@ -689,16 +719,31 @@ def test_generate_vocabulary_quiz_success(mock_ai_service, mock_db, test_user, t
     assert data["total_questions"] >= 1
 
 
-@patch('app.api.v1.vocabulary.vocabulary_quizzes', {1: {
-    "user_id": 1,
-    "questions": [{
+def test_submit_quiz_answer_correct(mock_db, test_user, mock_get_current_user):
+    """Test submitting a correct quiz answer."""
+    import json
+
+    # Mock VocabularyQuiz from database
+    questions_data = [{
         "question": "Was bedeutet 'die Arbeit'?",
         "correct_answer": "il lavoro",
         "explanation": "Test explanation"
     }]
-}})
-def test_submit_quiz_answer_correct(mock_db, test_user, mock_get_current_user):
-    """Test submitting a correct quiz answer."""
+
+    mock_quiz = VocabularyQuiz(
+        id=1,
+        user_id=test_user.id,
+        quiz_type="multiple_choice",
+        total_questions=1,
+        questions_data=json.dumps(questions_data)
+    )
+
+    # Mock database query
+    mock_query = Mock()
+    mock_query.filter.return_value = mock_query
+    mock_query.first.return_value = mock_quiz
+    mock_db.query.return_value = mock_query
+
     answer_data = {
         "question_id": "1_0",
         "user_answer": "il lavoro"
@@ -745,10 +790,6 @@ def test_generate_multiple_quizzes_unique_ids(mock_ai_service, mock_db, test_use
         "question_count": 1,
         "difficulty": "B2"
     }
-
-    # Clear quiz dictionary first
-    from app.api.v1 import vocabulary
-    vocabulary.vocabulary_quizzes.clear()
 
     # Generate first quiz
     with patch('app.api.v1.vocabulary.get_db', return_value=mock_db):
@@ -827,8 +868,8 @@ def test_get_vocabulary_progress_summary(mock_db, test_user, test_word, mock_get
         next_review_due=datetime.utcnow() + timedelta(days=5)
     )
 
-    word1 = VocabularyWord(id=1, difficulty="A1", category="business", word="test1")
-    word2 = VocabularyWord(id=2, difficulty="B2", category="daily", word="test2")
+    word1 = Vocabulary(id=1, difficulty="A1", category="business", word="test1")
+    word2 = Vocabulary(id=2, difficulty="B2", category="daily", word="test2")
 
     review1 = VocabularyReview(
         user_id=test_user.id,

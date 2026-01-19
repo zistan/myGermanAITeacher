@@ -7,6 +7,10 @@ This subagent specializes in developing, modifying, and enhancing the Python Fas
 
 **IMPORTANT**: Before starting any task, review these reference documents to understand the project context, architecture, and requirements:
 
+### deployed setup
+- **backend URL**: http://192.168.178.100:8000
+- **frontend URL**: http://192.168.178.100.5173
+
 ### Primary References
 - **`/.claude/claude.md`** - Complete project documentation including:
   - Project overview and technology stack

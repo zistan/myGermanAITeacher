@@ -28,6 +28,10 @@ Building a comprehensive React-based frontend for an AI-powered German learning 
 - `/docs/EXERCISE_CYCLE_REVIEW.md` - 23 UX improvements for grammar and vocabulary
 - '/frontend/DEVELOPMENT_STATUS.md' - which is the sole reference of the development status as well as the overall implementation plan for the frontend part
 - Backend API docs: http://localhost:8000/docs (Swagger UI)
+- 
+- ### deployed setup
+- **backend URL**: http://192.168.178.100:8000
+- **frontend URL**: http://192.168.178.100.5173
 
 ### 3. Technology Stack (REQUIRED)
 - **Framework:** React 18 with TypeScript

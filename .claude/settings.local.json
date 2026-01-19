@@ -44,7 +44,12 @@
       "Bash(git reset:*)",
       "Bash(git check-ignore:*)",
       "Bash(git ls-tree:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(sudo journalctl:*)",
+      "Bash(git checkout:*)",
+      "Bash(/tmp/test-quiz-persistence.sh:*)",
+      "Bash(bash:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

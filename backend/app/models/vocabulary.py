@@ -178,3 +178,64 @@ class VocabularyReview(Base):
 
     def __repr__(self) -> str:
         return f"<VocabularyReview(user_id={self.user_id}, word_id={self.word_id}, correct={self.was_correct})>"
+
+
+class FlashcardSession(Base):
+    """
+    Flashcard practice sessions - persists across workers and restarts.
+    Stores session state in database instead of in-memory dictionary.
+    """
+
+    __tablename__ = "flashcard_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Foreign key
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Session timing
+    started_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    ended_at = Column(TIMESTAMP, nullable=True)
+
+    # Session configuration
+    total_cards = Column(Integer, nullable=False)
+    current_index = Column(Integer, default=0, nullable=False)
+    cards_data = Column(Text, nullable=False)  # JSON string of flashcard data
+    use_spaced_repetition = Column(Integer, default=1, nullable=False)  # Boolean: 0=false, 1=true
+
+    # Optional filters
+    category = Column(String(50), nullable=True)
+    difficulty = Column(String(10), nullable=True)
+
+    def __repr__(self) -> str:
+        return f"<FlashcardSession(id={self.id}, user_id={self.user_id}, cards={self.total_cards})>"
+
+
+class VocabularyQuiz(Base):
+    """
+    Vocabulary quiz sessions - persists across workers and restarts.
+    Stores quiz questions in database instead of in-memory dictionary.
+    """
+
+    __tablename__ = "vocabulary_quizzes"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Foreign key
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Session timing
+    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    completed_at = Column(TIMESTAMP, nullable=True)
+
+    # Quiz configuration
+    quiz_type = Column(String(50), nullable=False)  # multiple_choice, fill_blank, matching
+    total_questions = Column(Integer, nullable=False)
+    questions_data = Column(Text, nullable=False)  # JSON string of quiz questions
+
+    # Optional filters
+    category = Column(String(50), nullable=True)
+    difficulty = Column(String(10), nullable=True)
+
+    def __repr__(self) -> str:
+        return f"<VocabularyQuiz(id={self.id}, user_id={self.user_id}, questions={self.total_questions})>"
