@@ -222,6 +222,11 @@ export const useGrammarStore = create<GrammarState>()(
       endSession: () =>
         set({
           sessionState: 'completed',
+          // BUG-021: Clear all session data to prevent conflicts with next session
+          currentSession: null,
+          currentExercise: null,
+          sessionNotes: {},
+          bookmarkedExercises: [],
         }),
 
       clearSession: () =>

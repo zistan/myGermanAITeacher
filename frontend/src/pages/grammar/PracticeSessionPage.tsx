@@ -46,6 +46,7 @@ export function PracticeSessionPage() {
     pauseSession,
     resumeSession,
     endSession: storeEndSession,
+    clearSession,
     isFocusMode,
     toggleFocusMode,
     autoAdvanceEnabled,
@@ -169,6 +170,12 @@ export function PracticeSessionPage() {
 
   const startSession = async () => {
     setSessionState('loading');
+
+    // BUG-021: Clear any completed session from store before starting new one
+    if (storeSessionState === 'completed') {
+      clearSession();
+    }
+
     try {
       // Parse URL params
       const topicsParam = searchParams.get('topics');

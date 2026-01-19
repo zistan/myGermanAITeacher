@@ -3,8 +3,29 @@
 **Date:** 2026-01-19
 **Severity:** 🔴 CRITICAL
 **Category:** Grammar Practice / Session State Management
-**Status:** Root Cause Identified
+**Status:** ✅ FIXED
 **Reported By:** User
+**Fixed By:** Frontend changes to grammarStore.ts and PracticeSessionPage.tsx
+**Fix Date:** 2026-01-19
+
+---
+
+## ✅ FIX SUMMARY
+
+**Status:** Both fixes implemented and ready for testing
+
+**Changes Made:**
+1. ✅ **Fix 1:** Clear all session data in `endSession()` (grammarStore.ts)
+2. ✅ **Fix 2:** Defensive clear before starting new session (PracticeSessionPage.tsx)
+
+**Files Modified:**
+- `frontend/src/store/grammarStore.ts` (lines 222-230)
+- `frontend/src/pages/grammar/PracticeSessionPage.tsx` (lines 49, 174-177)
+
+**Test Verification:**
+- See `BUG-021-TEST-VERIFICATION.md` for comprehensive test plan
+
+**Effort:** 10 minutes (as estimated)
 
 ---
 
