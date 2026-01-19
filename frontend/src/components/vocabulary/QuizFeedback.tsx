@@ -72,7 +72,7 @@ export function QuizFeedback({
             onClick={onNext}
             variant="primary"
             fullWidth
-            data-testid="next-question-btn"
+            data-testid="next-question-btn quiz-continue-btn"
           >
             Next Question
           </Button>
