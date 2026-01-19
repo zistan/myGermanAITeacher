@@ -173,7 +173,13 @@ export function FeedbackDisplay({ feedback, onNext }: FeedbackDisplayProps) {
 
       {/* Continue Button */}
       <div className="flex justify-center">
-        <Button onClick={onNext} variant="primary" size="lg" className="min-w-[200px]">
+        <Button
+          onClick={onNext}
+          variant="primary"
+          size="lg"
+          className="min-w-[200px]"
+          data-testid="continue-button"
+        >
           Next Exercise →
         </Button>
       </div>

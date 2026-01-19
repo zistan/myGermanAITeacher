@@ -54,7 +54,13 @@ export function SessionHeader({
             />
           </div>
 
-          <Button onClick={onEndSession} variant="secondary" size="sm" className="ml-4">
+          <Button
+            onClick={onEndSession}
+            variant="secondary"
+            size="sm"
+            className="ml-4"
+            data-testid="end-session-button"
+          >
             End Session
           </Button>
         </div>

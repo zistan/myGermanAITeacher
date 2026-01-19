@@ -257,7 +257,7 @@ export function PracticeSessionPage() {
       )}
 
       {/* Keyboard Shortcuts Helper */}
-      <div className="mt-4 text-center text-sm text-gray-500">
+      <div className="mt-4 text-center text-sm text-gray-500" data-testid="keyboard-shortcuts-hint">
         <span className="inline-flex items-center">
           {sessionState === 'active' && (
             <>
