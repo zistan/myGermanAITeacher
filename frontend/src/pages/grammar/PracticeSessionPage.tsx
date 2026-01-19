@@ -178,9 +178,10 @@ export function PracticeSessionPage() {
       const topicIds = topicsParam ? topicsParam.split(',').map(Number) : undefined;
 
       // Start session via API
+      // Only send difficulty_level if explicitly specified in URL (BUG-020 fix)
       const session = await grammarService.startPracticeSession({
         topic_ids: topicIds,
-        difficulty_level: difficultyParam as any,
+        ...(difficultyParam && { difficulty_level: difficultyParam as any }),
         exercise_count: countParam ? parseInt(countParam) : 10,
         use_spaced_repetition: true,
       });
@@ -205,6 +206,27 @@ export function PracticeSessionPage() {
       await loadNextExercise(session.session_id);
     } catch (error) {
       const apiError = error as ApiError;
+
+      // BUG-020: Handle "no exercises found" error with helpful retry
+      if (apiError.detail?.includes('No exercises found')) {
+        const difficultyParam = searchParams.get('difficulty');
+        const topicsParam = searchParams.get('topics');
+
+        if (difficultyParam && topicsParam) {
+          // Specific message for filter mismatch
+          addToast(
+            'warning',
+            'No exercises found at this difficulty level',
+            `This topic doesn't have ${difficultyParam} level exercises. Trying with all available difficulties...`
+          );
+
+          // Retry without difficulty filter
+          const retryUrl = `/grammar/practice?topics=${topicsParam}&count=${searchParams.get('count') || 10}`;
+          navigate(retryUrl, { replace: true });
+          return;
+        }
+      }
+
       addToast('error', 'Failed to start session', apiError.detail);
       setSessionState('error');
     }

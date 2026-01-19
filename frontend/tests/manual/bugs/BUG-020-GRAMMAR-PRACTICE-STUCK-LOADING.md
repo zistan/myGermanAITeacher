@@ -3,8 +3,28 @@
 **Date:** 2026-01-19
 **Severity:** 🔴 CRITICAL
 **Category:** Grammar Practice / Frontend Loading Issue
-**Status:** Root Cause Identified
+**Status:** ✅ FIXED
 **Reported By:** User (Frontend behavior issue)
+**Fixed By:** Frontend changes to PracticeSessionPage.tsx
+**Fix Date:** 2026-01-19
+
+---
+
+## ✅ FIX SUMMARY
+
+**Status:** Both fixes implemented and ready for testing
+
+**Changes Made:**
+1. ✅ **Fix 1:** Conditional difficulty parameter - only send if explicitly in URL
+2. ✅ **Fix 2:** Better error handling with auto-retry logic
+
+**Files Modified:**
+- `frontend/src/pages/grammar/PracticeSessionPage.tsx` (lines 180-232)
+
+**Test Verification:**
+- See `BUG-020-TEST-VERIFICATION.md` for comprehensive test plan
+
+**Effort:** 15 minutes (as estimated)
 
 ---
 
