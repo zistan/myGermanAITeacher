@@ -15,16 +15,41 @@
 
 ## ✅ RE-FIX SUMMARY (2026-01-19)
 
-**Issue Type:** Partially False Positive - Core functionality implemented, missing test IDs only
+**Issue Type:** Mixed - Core functionality implemented, but useEffect dependency bug + missing test IDs
 
-**Root Cause:**
-- Session persistence functionality was already implemented (Zustand persist middleware, restore modal, etc.)
-- E2E tests were failing because the restore modal buttons were missing required `data-testid` attributes
-- Tests look for `restore-session-button` and `clear-session-button` test IDs
+**Root Causes:**
+1. **useEffect Dependency Bug:** The restore prompt check had an empty dependency array, so `hasIncompleteSession` changes weren't triggering the modal to show
+2. **Missing Test IDs:** Restore modal buttons were missing required `data-testid` attributes
+
+**Technical Issue:**
+The useEffect hook checking for incomplete sessions had `[]` as dependencies, meaning it only ran once on mount. At that time, `hasIncompleteSession` from the `useSessionPersistence` hook might not be initialized yet, so the restore modal never showed.
 
 **Changes Made:**
 
-**PracticeSessionPage.tsx** - Added test IDs to restore modal buttons (lines 533-546):
+**1. PracticeSessionPage.tsx (lines 95-106)** - Fixed useEffect dependency array:
+```tsx
+// Before:
+useEffect(() => {
+  if (hasIncompleteSession) {
+    setShowRestoreModal(true);
+  } else {
+    startSession();
+  }
+}, []); // ❌ Empty dependencies - hasIncompleteSession changes not detected
+
+// After:
+useEffect(() => {
+  if (hasIncompleteSession) {
+    setShowRestoreModal(true);
+  } else {
+    if (!showRestoreModal) {
+      startSession();
+    }
+  }
+}, [hasIncompleteSession]); // ✅ Properly tracks hasIncompleteSession changes
+```
+
+**2. PracticeSessionPage.tsx (lines 533-546)** - Added test IDs to restore modal buttons:
 ```tsx
 <Button
   onClick={handleStartFresh}

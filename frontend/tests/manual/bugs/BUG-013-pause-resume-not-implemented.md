@@ -15,17 +15,58 @@
 
 ## ✅ RE-FIX SUMMARY (2026-01-19)
 
-**Issue Type:** False Positive - Core functionality fully implemented, missing test IDs only
+**Issue Type:** Critical Bug - State synchronization issue between local and store sessionState
 
 **Root Cause:**
-- Pause/resume functionality was already fully implemented with all features
-- E2E tests were failing because button test IDs didn't exactly match what tests expected
-- Tests look for `pause-button` (not paused) and `resume-button` (paused) separately
-- Tests also look for `elapsed-time` test ID for timer element
+The page maintained TWO separate `sessionState` variables:
+1. **Local state** (`useState`) - Used for UI state (loading, active, feedback, completed, error)
+2. **Store state** (Zustand) - Used for pause/resume state (active, paused)
+
+**The Critical Bug:**
+When checking which keyboard shortcut context to enable, the code checked the LOCAL `sessionState` instead of the STORE's `sessionState`:
+```tsx
+// BEFORE (BROKEN):
+{ ...practiceContext, enabled: sessionState === 'active' && !isPaused }
+{ ...pausedContext, enabled: isPaused }
+```
+
+When user pressed 'p' to pause:
+1. `pauseSession()` updated STORE's `sessionState` to 'paused' ✅
+2. But local `sessionState` remained 'active' ❌
+3. Keyboard context still checked `sessionState === 'active'` (local) which was TRUE ❌
+4. So `practiceContext` stayed enabled, `pausedContext` never activated ❌
+5. Result: Pause didn't work because context never switched
 
 **Changes Made:**
 
-**1. SessionHeader.tsx** - Added dynamic pause/resume button test IDs (line 97):
+**1. PracticeSessionPage.tsx (lines 40-57)** - Subscribe to store's sessionState:
+```tsx
+const {
+  setSessionState: setStoreSessionState,
+  sessionState: storeSessionState, // ✅ ADDED - subscribe to store's state
+  startSession: storeStartSession,
+  // ... other store values
+} = useGrammarStore();
+```
+
+**2. PracticeSessionPage.tsx (lines 388-393)** - Fix keyboard context conditions:
+```tsx
+// BEFORE (BROKEN):
+const contexts = [
+  { ...practiceContext, enabled: sessionState === 'active' && !isPaused && !isFocusMode },
+  { ...pausedContext, enabled: isPaused },
+];
+
+// AFTER (FIXED):
+const contexts = [
+  { ...practiceContext, enabled: sessionState === 'active' && storeSessionState === 'active' && !isFocusMode },
+  { ...feedbackContext, enabled: sessionState === 'feedback' && storeSessionState === 'active' && !isFocusMode },
+  { ...pausedContext, enabled: storeSessionState === 'paused' }, // ✅ Check store's state for pause
+  { ...focusModeContext, enabled: isFocusMode },
+];
+```
+
+**3. SessionHeader.tsx (line 97)** - Added dynamic pause/resume button test IDs:
 ```tsx
 // Before:
 data-testid="pause-resume-button"
@@ -33,29 +74,32 @@ data-testid="pause-resume-button"
 // After:
 data-testid={isPaused ? "resume-button pause-resume-button" : "pause-button pause-resume-button"}
 ```
-This allows tests to find `pause-button` when not paused and `resume-button` when paused, while keeping the generic `pause-resume-button` for other tests.
+This allows tests to find `pause-button` when not paused and `resume-button` when paused.
 
-**2. SessionHeader.tsx** - Added elapsed-time test ID to timer (line 64):
+**4. SessionHeader.tsx (line 64)** - Added elapsed-time test ID to timer:
 ```tsx
-// Before:
-data-testid="session-timer"
-
-// After:
 data-testid="session-timer elapsed-time"
 ```
-This allows tests to find the timer element using either test ID.
 
-**Verification of Existing Implementation:**
-- ✅ Pause button UI: SessionHeader.tsx lines 87-125 (fully implemented)
-- ✅ P key handler: useKeyboardShortcuts.ts with pause/resume context
-- ✅ Paused overlay: FocusMode.tsx PausedOverlay component with `data-testid="paused-overlay"` (line 259)
-- ✅ Resume button in overlay: Has `data-testid="resume-button"` (line 270)
-- ✅ Space key to resume: Keyboard shortcut context implemented
-- ✅ Timer pause/resume: useSessionTimer hook handles paused state correctly
-- ✅ All functionality: grammarStore.ts pauseSession/resumeSession functions (lines 192-220)
+**How the Fix Works:**
+Now when user presses 'p' to pause:
+1. `handlePause()` called → `pauseSession()` in store ✅
+2. Store's `sessionState` changes to 'paused' ✅
+3. Component re-renders with new `storeSessionState` value ✅
+4. Keyboard context condition `storeSessionState === 'paused'` evaluates to TRUE ✅
+5. `pausedContext` becomes enabled, `practiceContext` disabled ✅
+6. Next 'p' press triggers `handleResume()` from `pausedContext` ✅
+7. Store's `sessionState` changes back to 'active' ✅
+8. Context switches back to `practiceContext` ✅
 
 **Test Results After Fix:**
-Expected: All 6 tests in pause/resume suite should pass
+Expected: All 6 tests in pause/resume suite should now pass:
+- ✅ Pause with P key
+- ✅ Pause button click
+- ✅ Paused overlay displays
+- ✅ Resume with P key
+- ✅ Resume with Space key
+- ✅ Timer accounts for paused time
 
 ---
 

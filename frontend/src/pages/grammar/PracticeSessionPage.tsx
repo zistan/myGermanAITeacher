@@ -39,6 +39,7 @@ export function PracticeSessionPage() {
   // Grammar store
   const {
     setSessionState: setStoreSessionState,
+    sessionState: storeSessionState,
     startSession: storeStartSession,
     setCurrentExercise,
     recordAnswer,
@@ -96,9 +97,14 @@ export function PracticeSessionPage() {
     if (hasIncompleteSession) {
       setShowRestoreModal(true);
     } else {
-      startSession();
+      // Only start session if we haven't checked for incomplete session yet
+      // and modal is not showing
+      if (!showRestoreModal) {
+        startSession();
+      }
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasIncompleteSession]);
 
   const loadSessionFromStore = async (restoredSessionId: number) => {
     setSessionState('loading');
@@ -380,9 +386,9 @@ export function PracticeSessionPage() {
   });
 
   const contexts = [
-    { ...practiceContext, enabled: sessionState === 'active' && !isPaused && !isFocusMode },
-    { ...feedbackContext, enabled: sessionState === 'feedback' && !isPaused && !isFocusMode },
-    { ...pausedContext, enabled: isPaused },
+    { ...practiceContext, enabled: sessionState === 'active' && storeSessionState === 'active' && !isFocusMode },
+    { ...feedbackContext, enabled: sessionState === 'feedback' && storeSessionState === 'active' && !isFocusMode },
+    { ...pausedContext, enabled: storeSessionState === 'paused' },
     { ...focusModeContext, enabled: isFocusMode },
   ];
 
