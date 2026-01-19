@@ -205,15 +205,13 @@ def start_grammar_practice(
         grammar_metadata={
             "target_level": target_level,
             "topic_ids": request.topic_ids or [],
+            "exercise_ids": [ex.id for ex in selected],
             "use_spaced_repetition": request.use_spaced_repetition
         }
     )
     db.add(session)
     db.commit()
     db.refresh(session)
-
-    # Store exercise IDs in session (simplified - in production, use a session table)
-    # For now, we'll just return the session info and client will fetch exercises
 
     # Get unique topics
     unique_topics = list(set([ex.topic_id for ex in selected]))
@@ -228,6 +226,85 @@ def start_grammar_practice(
         estimated_duration_minutes=len(selected) * 2,  # Estimate 2 min per exercise
         topics_included=[t[0] for t in topic_names]
     )
+
+
+@router.get("/practice/{session_id}/next", response_model=GrammarExerciseResponse)
+def get_next_exercise(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get the next exercise for a practice session.
+
+    Returns the first unanswered exercise from the session's exercise list.
+    Returns 404 if session not found, session complete, or no exercises remain.
+    """
+    # Get session and verify ownership
+    session = db.query(GrammarSession).filter(
+        GrammarSession.id == session_id,
+        GrammarSession.user_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(
+            status_code=404,
+            detail="Grammar session not found"
+        )
+
+    # Check if session is already ended
+    if session.ended_at:
+        raise HTTPException(
+            status_code=400,
+            detail="Session already ended"
+        )
+
+    # Parse exercise_ids from metadata
+    try:
+        exercise_ids = session.grammar_metadata.get("exercise_ids", [])
+        if not exercise_ids:
+            raise HTTPException(
+                status_code=404,
+                detail="No exercises found in session"
+            )
+    except (AttributeError, TypeError) as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to parse session metadata: {str(e)}"
+        )
+
+    # Get list of already answered exercise IDs
+    answered_attempts = db.query(GrammarExerciseAttempt.exercise_id).filter(
+        GrammarExerciseAttempt.grammar_session_id == session_id
+    ).all()
+    answered_exercise_ids = {attempt.exercise_id for attempt in answered_attempts}
+
+    # Find first unanswered exercise
+    next_exercise_id = None
+    for ex_id in exercise_ids:
+        if ex_id not in answered_exercise_ids:
+            next_exercise_id = ex_id
+            break
+
+    # If all exercises are answered, return 404
+    if next_exercise_id is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Session complete - all exercises answered"
+        )
+
+    # Get the exercise details
+    exercise = db.query(GrammarExercise).filter(
+        GrammarExercise.id == next_exercise_id
+    ).first()
+
+    if not exercise:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Exercise {next_exercise_id} not found in database"
+        )
+
+    return exercise
 
 
 @router.post("/practice/{session_id}/answer", response_model=SubmitExerciseAnswerResponse)

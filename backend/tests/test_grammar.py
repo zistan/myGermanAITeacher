@@ -407,6 +407,273 @@ class TestGrammarPracticeEndpoints:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_get_next_exercise_first_exercise(self, client, auth_headers, db_session, test_user, test_grammar_exercises):
+        """Test getting the first exercise when no attempts exist."""
+        from app.models.grammar import GrammarSession
+
+        # Create a session with exercise_ids in metadata
+        session = GrammarSession(
+            user_id=test_user.id,
+            session_type="practice",
+            total_exercises=3,
+            grammar_metadata={
+                "target_level": "A2",
+                "topic_ids": [test_grammar_exercises[0].topic_id],
+                "exercise_ids": [ex.id for ex in test_grammar_exercises[:3]],
+                "use_spaced_repetition": False
+            }
+        )
+        db_session.add(session)
+        db_session.commit()
+        db_session.refresh(session)
+
+        response = client.get(
+            f"/api/grammar/practice/{session.id}/next",
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] == test_grammar_exercises[0].id
+        assert "question_text" in data
+        assert "correct_answer" in data
+        assert "explanation_de" in data
+
+    def test_get_next_exercise_second_exercise(self, client, auth_headers, db_session, test_user, test_grammar_exercises):
+        """Test getting second exercise after first is answered."""
+        from app.models.grammar import GrammarSession, GrammarExerciseAttempt
+
+        # Create session
+        session = GrammarSession(
+            user_id=test_user.id,
+            session_type="practice",
+            total_exercises=3,
+            grammar_metadata={
+                "target_level": "A2",
+                "exercise_ids": [ex.id for ex in test_grammar_exercises[:3]]
+            }
+        )
+        db_session.add(session)
+        db_session.commit()
+        db_session.refresh(session)
+
+        # Answer first exercise
+        attempt = GrammarExerciseAttempt(
+            grammar_session_id=session.id,
+            user_id=test_user.id,
+            exercise_id=test_grammar_exercises[0].id,
+            user_answer="den",
+            is_correct=True,
+            time_spent_seconds=30
+        )
+        db_session.add(attempt)
+        db_session.commit()
+
+        response = client.get(
+            f"/api/grammar/practice/{session.id}/next",
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] == test_grammar_exercises[1].id  # Should be second exercise
+
+    def test_get_next_exercise_all_completed(self, client, auth_headers, db_session, test_user, test_grammar_exercises):
+        """Test that 404 is returned when all exercises are answered."""
+        from app.models.grammar import GrammarSession, GrammarExerciseAttempt
+
+        # Create session with 2 exercises
+        session = GrammarSession(
+            user_id=test_user.id,
+            session_type="practice",
+            total_exercises=2,
+            grammar_metadata={
+                "target_level": "A2",
+                "exercise_ids": [test_grammar_exercises[0].id, test_grammar_exercises[1].id]
+            }
+        )
+        db_session.add(session)
+        db_session.commit()
+        db_session.refresh(session)
+
+        # Answer both exercises
+        for ex in test_grammar_exercises[:2]:
+            attempt = GrammarExerciseAttempt(
+                grammar_session_id=session.id,
+                user_id=test_user.id,
+                exercise_id=ex.id,
+                user_answer="answer",
+                is_correct=True,
+                time_spent_seconds=30
+            )
+            db_session.add(attempt)
+        db_session.commit()
+
+        response = client.get(
+            f"/api/grammar/practice/{session.id}/next",
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "complete" in response.json()["detail"].lower()
+
+    def test_get_next_exercise_session_not_found(self, client, auth_headers):
+        """Test that 404 is returned for invalid session_id."""
+        response = client.get(
+            "/api/grammar/practice/99999/next",
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "not found" in response.json()["detail"].lower()
+
+    def test_get_next_exercise_wrong_user(self, client, auth_headers, db_session, test_grammar_exercises):
+        """Test that user cannot access another user's session."""
+        from app.models.grammar import GrammarSession
+        from app.models.user import User
+
+        # Create another user
+        other_user = User(
+            email="other@example.com",
+            hashed_password="hashed",
+            full_name="Other User",
+            proficiency_level="B1",
+            native_language="en"
+        )
+        db_session.add(other_user)
+        db_session.commit()
+        db_session.refresh(other_user)
+
+        # Create session for other user
+        session = GrammarSession(
+            user_id=other_user.id,
+            session_type="practice",
+            total_exercises=2,
+            grammar_metadata={
+                "target_level": "A2",
+                "exercise_ids": [test_grammar_exercises[0].id]
+            }
+        )
+        db_session.add(session)
+        db_session.commit()
+        db_session.refresh(session)
+
+        # Try to access with current user's auth
+        response = client.get(
+            f"/api/grammar/practice/{session.id}/next",
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_get_next_exercise_ended_session(self, client, auth_headers, db_session, test_user, test_grammar_exercises):
+        """Test that 400 is returned when session is already ended."""
+        from app.models.grammar import GrammarSession
+
+        # Create ended session
+        session = GrammarSession(
+            user_id=test_user.id,
+            session_type="practice",
+            total_exercises=2,
+            ended_at=datetime.utcnow(),
+            grammar_metadata={
+                "target_level": "A2",
+                "exercise_ids": [test_grammar_exercises[0].id]
+            }
+        )
+        db_session.add(session)
+        db_session.commit()
+        db_session.refresh(session)
+
+        response = client.get(
+            f"/api/grammar/practice/{session.id}/next",
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "ended" in response.json()["detail"].lower()
+
+    def test_get_next_exercise_partial_progress(self, client, auth_headers, db_session, test_user, test_grammar_exercises):
+        """Test getting correct exercise in middle of session."""
+        from app.models.grammar import GrammarSession, GrammarExerciseAttempt
+
+        # Create session with 3 exercises
+        session = GrammarSession(
+            user_id=test_user.id,
+            session_type="practice",
+            total_exercises=3,
+            grammar_metadata={
+                "target_level": "A2",
+                "exercise_ids": [ex.id for ex in test_grammar_exercises[:3]]
+            }
+        )
+        db_session.add(session)
+        db_session.commit()
+        db_session.refresh(session)
+
+        # Answer first two exercises
+        for ex in test_grammar_exercises[:2]:
+            attempt = GrammarExerciseAttempt(
+                grammar_session_id=session.id,
+                user_id=test_user.id,
+                exercise_id=ex.id,
+                user_answer="answer",
+                is_correct=True,
+                time_spent_seconds=30
+            )
+            db_session.add(attempt)
+        db_session.commit()
+
+        response = client.get(
+            f"/api/grammar/practice/{session.id}/next",
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] == test_grammar_exercises[2].id  # Should be third exercise
+
+    def test_get_next_exercise_response_format(self, client, auth_headers, db_session, test_user, test_grammar_exercises):
+        """Test that response matches GrammarExerciseResponse schema."""
+        from app.models.grammar import GrammarSession
+
+        # Create session
+        session = GrammarSession(
+            user_id=test_user.id,
+            session_type="practice",
+            total_exercises=1,
+            grammar_metadata={
+                "target_level": "A2",
+                "exercise_ids": [test_grammar_exercises[0].id]
+            }
+        )
+        db_session.add(session)
+        db_session.commit()
+        db_session.refresh(session)
+
+        response = client.get(
+            f"/api/grammar/practice/{session.id}/next",
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Validate all required fields exist
+        required_fields = [
+            "id", "exercise_type", "difficulty_level", "question_text",
+            "correct_answer", "alternative_answers", "explanation_de",
+            "hints", "context_category", "topic_id", "created_at"
+        ]
+        for field in required_fields:
+            assert field in data, f"Missing required field: {field}"
+
+        # Validate field types
+        assert isinstance(data["id"], int)
+        assert isinstance(data["exercise_type"], str)
+        assert isinstance(data["alternative_answers"], list)
+        assert isinstance(data["hints"], list)
+
 
 class TestGrammarProgressEndpoints:
     """Test grammar progress tracking endpoints."""
