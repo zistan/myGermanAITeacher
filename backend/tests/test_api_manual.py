@@ -627,6 +627,46 @@ def test_phase5_grammar():
 
     report.print_report()
 
+    # Test 4.5: GET /api/grammar/practice/{session_id}/next - Get next exercise
+    report = EndpointTestReport("Get Next Exercise", "GET", "/api/grammar/practice/{id}/next")
+
+    next_exercise_id = None
+    if state.grammar_session_ids:
+        session_id = state.grammar_session_ids[0]
+
+        # Test getting first exercise
+        result = make_request("GET", f"/api/grammar/practice/{session_id}/next",
+                            use_auth=True, expected_status=200)
+        result.name = "Get first exercise in session"
+        report.add_test(result)
+
+        if result.passed and result.response_data:
+            next_exercise_id = result.response_data.get('id')
+            result.add_note(f"Exercise ID: {next_exercise_id}")
+            result.add_note(f"Exercise type: {result.response_data.get('exercise_type')}")
+            report.add_observation("Successfully retrieved next unanswered exercise")
+
+        # Test getting next exercise again (should return same exercise until answered)
+        result2 = make_request("GET", f"/api/grammar/practice/{session_id}/next",
+                             use_auth=True, expected_status=200)
+        result2.name = "Get next exercise again (should return same unanswered exercise)"
+        report.add_test(result2)
+
+        if result2.passed and result2.response_data:
+            second_exercise_id = result2.response_data.get('id')
+            if next_exercise_id and second_exercise_id == next_exercise_id:
+                result2.add_note("✓ Correctly returns same unanswered exercise")
+            else:
+                result2.add_note(f"⚠ Returned different exercise: {second_exercise_id} vs {next_exercise_id}")
+
+    # Test with invalid session ID
+    result3 = make_request("GET", "/api/grammar/practice/99999/next",
+                          use_auth=True, expected_status=404)
+    result3.name = "Get next exercise with invalid session (should fail)"
+    report.add_test(result3)
+
+    report.print_report()
+
     # Test 5: POST /api/grammar/practice/{session_id}/answer - Submit answer
     report = EndpointTestReport("Submit Exercise Answer", "POST", "/api/grammar/practice/{id}/answer")
 
