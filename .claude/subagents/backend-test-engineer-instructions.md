@@ -15,6 +15,31 @@ Your mission is to **thoroughly test all 74 backend API endpoints** and **report
 
 ---
 
+## Quick Start Guide
+
+**Ready to start testing immediately?**
+
+```bash
+# 1. Navigate to tests directory
+cd /backend/tests
+
+# 2. Run the comprehensive test suite (all 61+ test cases, 8 phases)
+python test_api_manual.py --non-interactive
+
+# 3. Review output for failures (marked with [FAIL])
+
+# 4. Create bug reports for any failures in /backend/tests/bugs/
+```
+
+**Your primary testing tool**: `/backend/tests/test_api_manual.py`
+- ✅ 1,616 lines of comprehensive API testing
+- ✅ Tests all 74 endpoints systematically
+- ✅ 8 phases covering all modules
+- ✅ Automatic authentication and state management
+- ✅ Detailed pass/fail reporting
+
+---
+
 ## Critical Constraints
 
 ### ✅ ALLOWED Activities
@@ -188,6 +213,53 @@ Your mission is to **thoroughly test all 74 backend API endpoints** and **report
 
 ---
 
+## Main Testing Script
+
+### Primary Test Tool: `test_api_manual.py`
+
+**Location**: `/backend/tests/test_api_manual.py`
+
+This is your **primary testing tool** - a comprehensive 1,616-line script that tests all 74 API endpoints systematically across 8 phases:
+
+- **Phase 1**: Health & Infrastructure (2 endpoints)
+- **Phase 2**: Authentication (3 endpoints)
+- **Phase 3**: Context Management (5 endpoints)
+- **Phase 4**: Conversation Sessions (4 endpoints)
+- **Phase 5**: Grammar Learning (11 endpoints)
+- **Phase 6**: Vocabulary Learning (19 endpoints)
+- **Phase 7**: Analytics & Progress Tracking (14 endpoints)
+- **Phase 8**: Integration & Cross-Module (3 endpoints)
+
+### Running the Test Script
+
+**Run all phases**:
+```bash
+cd /backend/tests
+python test_api_manual.py
+```
+
+**Run in non-interactive mode** (no pauses between phases):
+```bash
+python test_api_manual.py --non-interactive
+# or
+python test_api_manual.py -y
+```
+
+**Run specific phase only**:
+```bash
+python test_api_manual.py --phase=5  # Grammar module only
+python test_api_manual.py --phase=6  # Vocabulary module only
+```
+
+**Features**:
+- ✅ Automatic test user registration and authentication
+- ✅ State management across test phases
+- ✅ Detailed pass/fail reporting per endpoint
+- ✅ Response data validation
+- ✅ Database state tracking
+- ✅ Error scenario testing
+- ✅ Edge case validation
+
 ## Test Environment Setup
 
 ### Prerequisites
@@ -203,11 +275,55 @@ Your mission is to **thoroughly test all 74 backend API endpoints** and **report
 
 3. **Testing tools installed**:
    ```bash
-   pip install pytest pytest-asyncio httpx
+   pip install pytest pytest-asyncio httpx requests
    ```
 
+### Test Script Output
+
+When you run `test_api_manual.py`, you'll see detailed reports like this:
+
+```
+================================================================================
+TEST REPORT: User Login
+================================================================================
+Endpoint: POST /api/v1/auth/login
+Test Cases: 4
+Passed: 3/4
+Failed: 1/4
+
+DETAILS:
+
+[PASS] Test 1: Login with valid credentials - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['access_token', 'token_type']
+   Note: Token type: bearer
+   Note: Token length: 187
+
+[FAIL] Test 2: Login with invalid password (should fail) - FAILED
+   Expected: 401
+   Actual: 200
+   Error response: {...}
+
+OBSERVATIONS:
+- Successfully obtained JWT token
+- Token format: JWT
+
+DATABASE STATE:
+- User authenticated successfully
+================================================================================
+```
+
+**The script automatically**:
+- Creates test users (`testuser1`, `testuser2`)
+- Logs in and stores JWT tokens
+- Maintains state (session IDs, topic IDs, etc.) across phases
+- Tests both success and failure scenarios
+- Reports detailed pass/fail results
+
 ### Test User Setup
-Create a dedicated test user for API testing:
+
+**Note**: `test_api_manual.py` automatically creates test users. You only need to manually create a test user if running individual curl commands:
 
 ```bash
 curl -X POST http://192.168.178.100:8000/api/v1/auth/register \
@@ -1109,9 +1225,107 @@ Create a file: `/backend/tests/bug-summary.md`
 
 ---
 
+## Understanding test_api_manual.py Structure
+
+### Key Components
+
+**1. TestState Class** (Lines 18-31)
+- Stores state across test phases (auth tokens, IDs)
+- Automatically populated as tests run
+- Used by subsequent tests (e.g., session_id from Phase 4 used in Phase 8)
+
+**2. TestResult Class** (Lines 34-59)
+- Records individual test case results
+- Tracks expected vs actual status codes
+- Stores response data and errors
+- Adds contextual notes
+
+**3. EndpointTestReport Class** (Lines 61-143)
+- Groups multiple test cases for one endpoint
+- Generates formatted reports
+- Tracks database changes and observations
+- Calculates pass/fail statistics
+
+**4. make_request() Function** (Lines 145-193)
+- Centralized HTTP request handler
+- Automatically adds authentication headers
+- Handles both JSON and form data
+- Returns TestResult objects
+
+**5. Phase Test Functions** (Lines 196-1489)
+- `test_phase1_health()` - Health & infrastructure
+- `test_phase2_authentication()` - Auth flow
+- `test_phase3_contexts()` - Context management
+- `test_phase4_conversations()` - Conversation sessions
+- `test_phase5_grammar()` - Grammar module
+- `test_phase6_vocabulary()` - Vocabulary module
+- `test_phase7_analytics()` - Analytics & progress
+- `test_phase8_integration()` - Cross-module workflows
+
+### Extending test_api_manual.py
+
+**To add a new test case** to an existing phase:
+
+```python
+# Inside test_phaseX_module():
+report = EndpointTestReport("Test Name", "METHOD", "/api/endpoint")
+
+# Test case 1: Success scenario
+result = make_request("GET", "/api/endpoint", use_auth=True, expected_status=200)
+result.name = "Description of what this tests"
+report.add_test(result)
+
+if result.passed:
+    # Store any IDs or data for later tests
+    some_id = result.response_data.get('id')
+    state.some_ids.append(some_id)
+    report.add_db_change(f"Created resource with ID: {some_id}")
+
+# Test case 2: Error scenario
+result2 = make_request("GET", "/api/endpoint/99999", use_auth=True, expected_status=404)
+result2.name = "Test with invalid ID (should fail)"
+report.add_test(result2)
+
+report.print_report()
+```
+
+**To add a new endpoint not yet covered**:
+
+1. Identify which phase it belongs to (or create Phase 9 if cross-cutting)
+2. Add test function following the pattern above
+3. Call it from `main()` function
+4. Update total endpoint count in documentation
+
+### Analyzing Test Failures
+
+When `test_api_manual.py` reports a failure:
+
+1. **Check the report output**:
+   - Expected status vs Actual status
+   - Response data (first 500 chars shown)
+   - Error message if exception occurred
+
+2. **Review server logs**:
+   ```bash
+   sudo journalctl -u german-learning -f -n 100
+   ```
+
+3. **Reproduce with curl**:
+   ```bash
+   # Copy endpoint details from test
+   curl -X POST http://192.168.178.100:8000/api/endpoint \
+     -H "Authorization: Bearer TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"field": "value"}'
+   ```
+
+4. **Create bug report**: Use template in bug reporting section
+
 ## Test Automation Scripts
 
-### Setup Test Environment
+### Additional Testing Tools
+
+Beyond `test_api_manual.py`, you can create supplementary test scripts.
 
 Create file: `/backend/tests/api_test_helper.py`
 
@@ -1408,17 +1622,50 @@ See [bug-summary.md](./bug-summary.md) for complete bug list.
    ```
 
 ### Testing Session
-1. Execute relevant test cases for new/changed features
-2. Run automated test scripts
-3. Document results immediately
-4. Create bug reports for failures
-5. Update test results and bug summary
+
+**Option 1: Full Comprehensive Test** (Recommended for major changes or weekly regression)
+```bash
+cd /backend/tests
+python test_api_manual.py --non-interactive 2>&1 | tee test_output_$(date +%Y%m%d).log
+```
+This runs all 61+ test cases across 8 phases and saves output to a log file.
+
+**Option 2: Targeted Module Test** (For specific feature changes)
+```bash
+# Test only grammar module
+python test_api_manual.py --phase=5 --non-interactive
+
+# Test only vocabulary module
+python test_api_manual.py --phase=6 --non-interactive
+
+# Test only analytics module
+python test_api_manual.py --phase=7 --non-interactive
+```
+
+**Option 3: Manual Specific Endpoint Test** (For quick verification)
+```bash
+# Use curl or custom test script for specific endpoint
+curl -X GET http://192.168.178.100:8000/api/grammar/topics \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Workflow Steps**:
+1. Run `test_api_manual.py` with appropriate phase/flags
+2. Review output for PASS/FAIL status
+3. Document failures immediately in bug reports
+4. For each failure:
+   - Check actual vs expected status codes
+   - Review error response
+   - Check server logs: `sudo journalctl -u german-learning -f`
+   - Create bug report in `/backend/tests/bugs/`
+5. Update test results summary
 
 ### End of Day
-1. Update test results document
-2. Generate summary report
-3. Communicate findings to backend engineers
-4. Plan next day's testing focus
+1. Update test results document (`/backend/tests/test-results.md`)
+2. Update bug summary (`/backend/tests/bug-summary.md`)
+3. Generate summary report with statistics
+4. Communicate findings to backend engineers
+5. Plan next day's testing focus
 
 ---
 
