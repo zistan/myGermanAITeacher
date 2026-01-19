@@ -49,11 +49,11 @@ An AI-powered German language learning application designed for advanced learner
 ### Completed Phases
 
 #### ✅ Phase 1: Core Infrastructure (Complete)
-- FastAPI backend with 14 database models
+- FastAPI backend with 20 database models
 - JWT authentication with bcrypt
 - PostgreSQL database setup
-- Alembic migrations
-- All core models: User, Context, Session, Message, Grammar (6 tables), Vocabulary (4 tables), Achievement (4 tables)
+- Alembic migrations (2 migrations: 001, 002)
+- All core models: User, Context, Session, Message, Grammar (6 tables), Vocabulary (7 tables), Achievement (4 tables)
 
 #### ✅ Phase 2: AI Integration & Conversation Engine (Complete)
 - ConversationAI service with Claude 3.5 Sonnet
@@ -142,6 +142,34 @@ An AI-powered German language learning application designed for advanced learner
 16. **Grammar Progress Endpoints** - Fixed field names and mastery level conversions in progress/weak-areas/summary
 17. **Vocabulary Model/Schema Alignment** - Fixed 550 validation errors by aligning Vocabulary model field names with schemas
 18. **Vocabulary Database Migration** - Created comprehensive migration (001_update_vocabulary_schema) to update existing database schema
+
+**Multi-Worker Session Persistence Fix (2026-01-19 - BUG-015, BUG-016):**
+19. **Vocabulary Session Persistence** - Replaced in-memory dictionaries with database persistence for flashcard sessions and vocabulary quizzes
+
+**Root Cause:** In-memory dictionaries (`flashcard_sessions = {}`, `vocabulary_quizzes = {}`) caused 404 errors in multi-worker deployments. Sessions created on Worker A were not accessible on Worker B due to isolated process memory. All sessions were also lost on server restart.
+
+**Solution:** Database persistence using PostgreSQL (matching Grammar module pattern)
+
+**Changes Made:**
+- Added `FlashcardSession` model - Stores flashcard practice session state (cards, current_index, user_id)
+- Added `VocabularyQuiz` model - Stores quiz questions and metadata (questions, quiz_type, user_id)
+- Created migration `002_add_vocabulary_sessions.py` - Creates both tables with proper indexes
+- Updated 5 API endpoints to use database queries instead of dict lookups:
+  - `POST /api/v1/vocabulary/flashcards/start` - Stores session in DB
+  - `GET /api/v1/vocabulary/flashcards/{session_id}/current` - Queries session from DB
+  - `POST /api/v1/vocabulary/flashcards/{session_id}/answer` - Updates session in DB
+  - `POST /api/v1/vocabulary/quiz/generate` - Stores quiz in DB
+  - `POST /api/v1/vocabulary/quiz/{quiz_id}/answer` - Queries quiz from DB
+- Removed in-memory dictionaries: `flashcard_sessions = {}` and `vocabulary_quizzes = {}`
+- Updated test fixtures to mock database models instead of dictionaries
+- Sessions stored as JSON strings in `cards_data` and `questions_data` TEXT columns
+
+**Benefits:**
+- ✅ Works with multiple workers (`uvicorn --workers 3+`)
+- ✅ Sessions persist across server restarts
+- ✅ No more 404 "Session not found" or "Quiz not found" errors
+- ✅ Matches proven Grammar module architecture
+- ✅ Fully tested with database-backed fixtures
 
 **Deployment Documentation:**
 - `/docs/DEPLOYMENT_GUIDE.md` - Complete deployment walkthrough
@@ -269,7 +297,7 @@ This migration preserves all existing vocabulary and user progress data while up
 - GET `/` - Root endpoint
 - GET `/api/health` - Health check
 
-### Database Schema (18 Tables)
+### Database Schema (20 Tables)
 
 **Core Tables (4):**
 - `users` - User accounts with authentication
@@ -281,16 +309,18 @@ This migration preserves all existing vocabulary and user progress data while up
 - `grammar_topics` - 50+ topics
 - `grammar_exercises` - 200+ manual exercises
 - `user_grammar_progress` - Mastery tracking with spaced repetition
-- `grammar_sessions` - Practice sessions
+- `grammar_sessions` - Practice sessions (database-persisted)
 - `grammar_exercise_attempts` - Individual answers
 - `diagnostic_tests` - Assessment results
 
-**Vocabulary Module (4 tables):**
-- `vocabulary_words` - 150+ words (foundation for 1000+)
+**Vocabulary Module (7 tables):**
+- `vocabulary` - 150+ words (foundation for 1000+)
 - `user_vocabulary_progress` - Mastery tracking (6 levels)
 - `user_vocabulary_lists` - Personal lists
 - `vocabulary_list_words` - List membership
 - `vocabulary_reviews` - Review history
+- `flashcard_sessions` - Flashcard practice sessions (database-persisted, multi-worker safe) **NEW**
+- `vocabulary_quizzes` - Quiz sessions (database-persisted, multi-worker safe) **NEW**
 
 **Analytics Module (4 tables):**
 - `achievements` - 31 achievement definitions
@@ -306,12 +336,12 @@ myGermanAITeacher/
 │   │   ├── main.py                           # FastAPI app with 74 endpoints
 │   │   ├── config.py                         # Settings
 │   │   ├── database.py                       # SQLAlchemy setup
-│   │   ├── models/                           # 18 database models
+│   │   ├── models/                           # 20 database models
 │   │   │   ├── user.py                       # User model
 │   │   │   ├── context.py                    # Context model
 │   │   │   ├── session.py                    # Session, Message models
 │   │   │   ├── grammar.py                    # 6 grammar models
-│   │   │   ├── vocabulary.py                 # 4 vocabulary models
+│   │   │   ├── vocabulary.py                 # 7 vocabulary models (includes FlashcardSession, VocabularyQuiz)
 │   │   │   └── achievement.py                # 4 analytics models
 │   │   ├── schemas/                          # Pydantic schemas
 │   │   │   ├── user.py
@@ -561,7 +591,7 @@ sudo systemctl restart german-learning
 
 ### Success Metrics (Backend Complete ✅)
 - ✅ 74 REST API endpoints fully implemented
-- ✅ 18 database models with relationships
+- ✅ 20 database models with relationships
 - ✅ 104 comprehensive tests (>80% coverage)
 - ✅ 12+ conversation contexts (6 business, 6 daily)
 - ✅ 50+ grammar topics with 200+ exercises
@@ -571,6 +601,7 @@ sudo systemctl restart german-learning
 - ✅ All AI services functional (conversation, grammar, vocabulary)
 - ✅ Spaced repetition algorithms implemented
 - ✅ Error tracking and improvement analysis
+- ✅ Multi-worker safe session persistence (database-backed)
 
 ### Next Steps: Phase 7 - Frontend Development
 - Initialize React 18 + TypeScript + Vite project
@@ -627,7 +658,7 @@ sudo systemctl restart german-learning
 
 ### All Production Issues (Resolved ✅)
 
-All 16 production deployment and testing issues have been identified and fixed during Phase 6.5. The application is now fully functional on the production server.
+All 19 production deployment and testing issues have been identified and fixed during Phase 6.5. The application is now fully functional on the production server.
 
 **Key Fixes:**
 - ✅ Authentication (bcrypt, JWT)
@@ -636,8 +667,9 @@ All 16 production deployment and testing issues have been identified and fixed d
 - ✅ Database field mappings (all models aligned)
 - ✅ Schema validation (metadata conflicts, field types)
 - ✅ Spaced repetition (mastery levels, progress tracking)
+- ✅ Multi-worker session persistence (BUG-015, BUG-016 fixed)
 
-See "Production Fixes Applied" section above for complete list of all 16 fixes.
+See "Production Fixes Applied" section above for complete list of all 19 fixes.
 
 ### Technical Notes
 
@@ -658,6 +690,12 @@ See "Production Fixes Applied" section above for complete list of all 16 fixes.
 
 ---
 
-Last Updated: 2026-01-17
-Project Version: 1.0 (Phase 6.5 Complete - Production Deployment & Testing Complete!)
+Last Updated: 2026-01-19
+Project Version: 1.0 (Phase 6.5 - Production Deployment In Progress)
 Next Phase: Phase 7 - Frontend Development
+
+**Recent Changes (2026-01-19):**
+- Fixed BUG-015 and BUG-016: Replaced in-memory session storage with database persistence
+- Added 2 new database tables: flashcard_sessions, vocabulary_quizzes
+- Created migration 002_add_vocabulary_sessions.py
+- All vocabulary sessions now persist across multiple workers and server restarts
