@@ -145,17 +145,18 @@ export function GrammarTopicsPage() {
             </label>
             <select
               id="difficulty"
+              data-testid="difficulty-filter"
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value as DifficultyLevel | 'all')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             >
-              <option value="all">All Levels</option>
-              <option value="A1">A1 - Beginner</option>
-              <option value="A2">A2 - Elementary</option>
-              <option value="B1">B1 - Intermediate</option>
-              <option value="B2">B2 - Upper Intermediate</option>
-              <option value="C1">C1 - Advanced</option>
-              <option value="C2">C2 - Mastery</option>
+              <option value="all" data-testid="difficulty-all">All Levels</option>
+              <option value="A1" data-testid="difficulty-a1">A1 - Beginner</option>
+              <option value="A2" data-testid="difficulty-a2">A2 - Elementary</option>
+              <option value="B1" data-testid="difficulty-b1">B1 - Intermediate</option>
+              <option value="B2" data-testid="difficulty-b2">B2 - Upper Intermediate</option>
+              <option value="C1" data-testid="difficulty-c1">C1 - Advanced</option>
+              <option value="C2" data-testid="difficulty-c2">C2 - Mastery</option>
             </select>
           </div>
         </div>
