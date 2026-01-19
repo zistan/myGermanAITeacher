@@ -153,24 +153,39 @@ Generiere jetzt die {count} Übungen als JSON-Array:"""
             partial_instruction = """  "is_partially_correct": true/false,  // nur true wenn die Antwort FAST richtig ist (z.B. kleine Rechtschreibfehler bei ansonsten korrekter Grammatik)"""
             evaluation_guidance = """
 **Bewertungsrichtlinien:**
-- is_correct: true wenn EINE dieser Bedingungen erfüllt ist:
-  * Der Lernende hat NUR die fehlenden Wörter in der richtigen Reihenfolge geschrieben (z.B. "Die, der")
-  * Der Lernende hat den KOMPLETTEN RICHTIGEN SATZ geschrieben, wobei die fehlenden Wörter korrekt eingefügt sind
+- SCHRITT 1 - PRÜFE ZUERST DEN KONTEXT DER AUFGABE:
+  * Hat der Satz genug Kontext (z.B. Subjektpronomen wie "ich", "du", "er")?
+  * Beispiel MEHRDEUTIG: "Das Geschenk ist für ____ Vater" (könnte meinen/deinen/seinen/ihren sein)
+  * Beispiel EINDEUTIG: "Ich kaufe ein Geschenk für ____ Vater" (nur "meinen" ist richtig)
+
+- SCHRITT 2 - BEWERTE DIE ANTWORT:
+  * Wenn die Aufgabe MEHRDEUTIG ist (ohne klaren Kontext):
+    → is_correct: true wenn die Antwort grammatisch korrekt ist, AUCH wenn sie von der "richtigen Antwort" abweicht
+    → Beispiel: Aufgabe "Das Geschenk ist für ____ Vater", richtige Antwort "meinen", Lernender sagt "deinen"
+    → Bewertung: is_correct: true, weil BEIDE grammatisch korrekt sind
+    → Feedback: "Deine Antwort ist grammatisch korrekt! Die Aufgabe hatte nicht genug Kontext. Sowohl 'meinen' als auch 'deinen' sind hier richtig."
+
+  * Wenn die Aufgabe EINDEUTIG ist (mit klarem Kontext):
+    → is_correct: true wenn EINE dieser Bedingungen erfüllt ist:
+      - Der Lernende hat NUR die fehlenden Wörter in der richtigen Reihenfolge geschrieben (z.B. "Die, der")
+      - Der Lernende hat den KOMPLETTEN RICHTIGEN SATZ geschrieben, wobei die fehlenden Wörter korrekt eingefügt sind
+
 - is_partially_correct: true NUR für kleine Fehler wie:
   * Rechtschreibfehler (z.B. "denn" statt "den") in den fehlenden Wörtern
   * Akzentfehler
   * Kleinere grammatische Fehler bei ansonsten korrekter Struktur
+
 - is_partially_correct: false wenn:
   * Die Grammatik komplett falsch ist
   * Der Lernende FALSCHE zusätzliche Wörter hinzugefügt hat
   * Die Antwort komplett falsch ist
-- WICHTIG: Bei fill_blank Übungen:
-  * Wenn richtige Antwort "Die, der" ist und Lernender schreibt "Die, der" → is_correct: true
-  * Wenn richtige Antwort "Die, der" ist und Lernender schreibt "Die Lehrerin und der Schüler sind in der Schule" → is_correct: true (kompletter Satz mit korrekten fehlenden Wörtern!)
-  * Wenn richtige Antwort "Die, der" ist und Lernender schreibt "Der, Die" → is_correct: false (falsche Reihenfolge)
-- Sei ermutigend und konstruktiv
-- Erkläre WARUM etwas falsch oder richtig ist
-- Gib spezifische Hinweise zur Grammatikregel"""
+
+- WICHTIG: Sei FAIR zum Lernenden:
+  * Wenn die Aufgabe mehrdeutig ist, gib dem Lernenden den Punkt!
+  * Erkläre, dass mehrere Antworten möglich waren
+  * Sei ermutigend und konstruktiv
+  * Erkläre WARUM etwas richtig oder falsch ist
+  * Gib spezifische Hinweise zur Grammatikregel"""
         else:
             partial_instruction = """  "is_partially_correct": false,  // IMMER false bei diesem Übungstyp - es gibt nur richtig oder falsch"""
             evaluation_guidance = """
