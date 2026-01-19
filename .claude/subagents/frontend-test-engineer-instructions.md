@@ -42,13 +42,16 @@ Your mission is to **thoroughly test all implemented frontend features** and **r
 1. **Frontend README**: `/frontend/README.md`
    - Setup instructions, features implemented, troubleshooting
 
-2. **Frontend Development Guide**: `/.claude/subagents/frontend-development-instructions.md`
+2. **Frontend Development Guide**: `/frontend/DEVELOPMENT_STATUS.md`
    - What has been developed, what's missing
 
-3. **Project Instructions**: `/.claude/claude.md`
+3. **Development guidelines**: `/claude/subagents/frontend-development-instructions.md`
+    - How it was developed. Do not look at any hints or reference to plan in this document
+   
+4. **Project Instructions**: `/.claude/claude.md`
    - Full project context, backend details, all modules
 
-4. **API Documentation**: http://192.168.178.100:8000/docs
+5. **API Documentation**: http://192.168.178.100:8000/docs
    - Complete API reference with request/response schemas
 
 ### Supporting References

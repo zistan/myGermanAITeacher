@@ -1,0 +1,128 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - complementary [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e8]:
+        - generic [ref=e10]: DE
+        - generic [ref=e11]: German Learning
+      - navigation [ref=e12]:
+        - list [ref=e13]:
+          - listitem [ref=e14]:
+            - link "Dashboard" [ref=e15] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e17]
+              - generic [ref=e19]: Dashboard
+          - listitem [ref=e20]:
+            - link "Conversation" [ref=e21] [cursor=pointer]:
+              - /url: /conversation
+              - img [ref=e23]
+              - generic [ref=e25]: Conversation
+          - listitem [ref=e26]:
+            - link "Grammar" [ref=e27] [cursor=pointer]:
+              - /url: /grammar
+              - img [ref=e29]
+              - generic [ref=e31]: Grammar
+          - listitem [ref=e32]:
+            - button "Vocabulary" [ref=e33] [cursor=pointer]:
+              - generic [ref=e34]:
+                - img [ref=e36]
+                - generic [ref=e38]: Vocabulary
+              - img [ref=e39]
+            - list [ref=e41]:
+              - listitem [ref=e42]:
+                - link "Browse Words" [ref=e43] [cursor=pointer]:
+                  - /url: /vocabulary
+              - listitem [ref=e44]:
+                - link "Flashcards" [ref=e45] [cursor=pointer]:
+                  - /url: /vocabulary/flashcards
+              - listitem [ref=e46]:
+                - link "My Lists" [ref=e47] [cursor=pointer]:
+                  - /url: /vocabulary/lists
+              - listitem [ref=e48]:
+                - link "Quiz" [ref=e49] [cursor=pointer]:
+                  - /url: /vocabulary/quiz
+              - listitem [ref=e50]:
+                - link "Progress" [ref=e51] [cursor=pointer]:
+                  - /url: /vocabulary/progress
+          - listitem [ref=e52]:
+            - link "Progress" [ref=e53] [cursor=pointer]:
+              - /url: /progress
+              - img [ref=e55]
+              - generic [ref=e57]: Progress
+          - listitem [ref=e58]:
+            - link "Achievements" [ref=e59] [cursor=pointer]:
+              - /url: /achievements
+              - img [ref=e61]
+              - generic [ref=e63]: Achievements
+          - listitem [ref=e64]:
+            - link "Learning Path" [ref=e65] [cursor=pointer]:
+              - /url: /learning-path
+              - img [ref=e67]
+              - generic [ref=e69]: Learning Path
+      - generic [ref=e71]:
+        - img [ref=e72]
+        - generic [ref=e74]: v1.0.0 - Phase 7
+  - generic [ref=e75]:
+    - banner [ref=e76]:
+      - generic [ref=e78]:
+        - button [ref=e79] [cursor=pointer]:
+          - img [ref=e80]
+        - button "T test_engineer B2" [ref=e83] [cursor=pointer]:
+          - generic [ref=e85]: T
+          - generic [ref=e86]:
+            - generic [ref=e87]: test_engineer
+            - generic [ref=e89]: B2
+          - img [ref=e90]
+    - main [ref=e92]:
+      - generic [ref=e93]:
+        - generic [ref=e96]:
+          - generic [ref=e97]:
+            - generic [ref=e99]:
+              - generic [ref=e100]: Question 1 of 10
+              - generic [ref=e101]: 0:00
+            - button "End Session" [ref=e104] [cursor=pointer]
+          - generic [ref=e105]:
+            - generic [ref=e106]:
+              - generic [ref=e107]: 0%
+              - generic [ref=e108]: Accuracy
+            - generic [ref=e109]:
+              - generic [ref=e110]: "0"
+              - generic [ref=e111]: Correct
+            - generic [ref=e112]:
+              - generic [ref=e113]: "0"
+              - generic [ref=e114]: Points
+            - generic [ref=e115]:
+              - generic [ref=e116]: "0"
+              - generic [ref=e117]: Streak
+          - generic [ref=e118]:
+            - generic [ref=e119]: "Topics in this session:"
+            - generic [ref=e120]:
+              - generic [ref=e121]: Nominativ
+              - generic [ref=e122]: Konjunktiv II
+              - generic [ref=e123]: Nebensatz - Verbposition
+              - generic [ref=e124]: Wechselpräpositionen
+              - generic [ref=e125]: Passiv (Vorgangspassiv)
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - generic [ref=e129]: fill blank
+            - generic [ref=e130]: A1
+          - generic [ref=e131]:
+            - generic [ref=e132]:
+              - paragraph [ref=e133]: ____ Lehrerin ist sehr nett.
+              - textbox "Type your answer..." [disabled] [ref=e134]: test answer
+            - generic [ref=e136]:
+              - img [ref=e137]
+              - generic [ref=e139]:
+                - generic [ref=e140]: "Hint:"
+                - generic [ref=e141]: "'Lehrerin' ist feminin"
+            - button "Check Answer" [disabled] [ref=e143]:
+              - img [ref=e144]
+              - text: Check Answer
+        - generic [ref=e148]:
+          - generic [ref=e149]: Enter
+          - text: Submit •
+          - generic [ref=e150]: Esc
+          - text: End Session
+```

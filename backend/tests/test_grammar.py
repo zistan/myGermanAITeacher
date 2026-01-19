@@ -359,6 +359,124 @@ class TestGrammarPracticeEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    @patch('app.api.v1.grammar.GrammarAIService')
+    def test_submit_multiple_choice_incorrect_never_partial(
+        self,
+        mock_ai_service,
+        client,
+        auth_headers,
+        db_session,
+        test_user,
+        test_grammar_exercises
+    ):
+        """Test that multiple choice incorrect answers are never partially correct."""
+        from app.models.grammar import GrammarSession
+        session = GrammarSession(
+            user_id=test_user.id,
+            session_type="practice",
+            target_level="A2",
+            total_exercises=3
+        )
+        db_session.add(session)
+        db_session.commit()
+        db_session.refresh(session)
+
+        # Mock AI evaluation - for multiple choice, should NEVER return is_partially_correct=true
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.evaluate_answer.return_value = {
+            "is_correct": False,
+            "is_partially_correct": False,  # Must always be False for multiple_choice
+            "feedback_de": "Falsch. Die richtige Antwort ist 'einen Stift'.",
+            "specific_errors": ["Falsche Option gewählt"],
+            "suggestions": ["Bei maskulinen Nomen im Akkusativ: ein → einen"]
+        }
+        mock_ai_service.return_value = mock_ai_instance
+
+        # Use the multiple choice exercise (test_grammar_exercises[1])
+        exercise_id = test_grammar_exercises[1].id
+
+        response = client.post(
+            f"/api/grammar/practice/{session.id}/answer",
+            json={
+                "exercise_id": exercise_id,
+                "user_answer": "ein Stift",  # Wrong answer
+                "time_spent_seconds": 20
+            },
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Verify AI was called with exercise_type parameter
+        mock_ai_instance.evaluate_answer.assert_called_once()
+        call_args = mock_ai_instance.evaluate_answer.call_args
+        assert call_args[1]["exercise_type"] == "multiple_choice"
+
+        # Verify response never shows partial correctness
+        assert data["feedback"]["is_correct"] is False
+        assert data["feedback"]["is_partially_correct"] is False
+        assert data["feedback"]["points_earned"] == 0
+
+    @patch('app.api.v1.grammar.GrammarAIService')
+    def test_submit_fill_blank_can_be_partially_correct(
+        self,
+        mock_ai_service,
+        client,
+        auth_headers,
+        db_session,
+        test_user,
+        test_grammar_exercises
+    ):
+        """Test that fill_blank exercises can be partially correct (e.g., spelling errors)."""
+        from app.models.grammar import GrammarSession
+        session = GrammarSession(
+            user_id=test_user.id,
+            session_type="practice",
+            target_level="A2",
+            total_exercises=3
+        )
+        db_session.add(session)
+        db_session.commit()
+        db_session.refresh(session)
+
+        # Mock AI evaluation - for fill_blank, can be partially correct
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.evaluate_answer.return_value = {
+            "is_correct": False,
+            "is_partially_correct": True,  # Can be True for fill_blank
+            "feedback_de": "Fast richtig! Die Grammatik stimmt, aber die Schreibweise ist 'den' nicht 'denn'.",
+            "specific_errors": ["Rechtschreibfehler: 'denn' → 'den'"],
+            "suggestions": ["Achte auf die Rechtschreibung: 'den' ist der Artikel"]
+        }
+        mock_ai_service.return_value = mock_ai_instance
+
+        # Use the fill_blank exercise (test_grammar_exercises[0])
+        exercise_id = test_grammar_exercises[0].id
+
+        response = client.post(
+            f"/api/grammar/practice/{session.id}/answer",
+            json={
+                "exercise_id": exercise_id,
+                "user_answer": "denn",  # Spelling error but grammatically would be correct
+                "time_spent_seconds": 25
+            },
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Verify AI was called with exercise_type parameter
+        mock_ai_instance.evaluate_answer.assert_called_once()
+        call_args = mock_ai_instance.evaluate_answer.call_args
+        assert call_args[1]["exercise_type"] == "fill_blank"
+
+        # Verify response shows partial correctness
+        assert data["feedback"]["is_correct"] is False
+        assert data["feedback"]["is_partially_correct"] is True
+        assert data["feedback"]["points_earned"] == 1  # Partial points
+
     def test_end_grammar_session(self, client, auth_headers, db_session, test_user):
         """Test ending a grammar practice session."""
         from app.models.grammar import GrammarSession

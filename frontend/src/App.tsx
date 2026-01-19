@@ -10,6 +10,9 @@ import { RegisterPage } from './pages/auth/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { GrammarTopicsPage } from './pages/grammar/GrammarTopicsPage';
 import { PracticeSessionPage } from './pages/grammar/PracticeSessionPage';
+import { ProgressPage as GrammarProgressPage } from './pages/grammar/ProgressPage';
+import { ReviewQueuePage } from './pages/grammar/ReviewQueuePage';
+import { ResultsPage } from './pages/grammar/ResultsPage';
 import {
   VocabularyBrowserPage,
   FlashcardSessionPage,
@@ -65,6 +68,36 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <PracticeSessionPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/grammar/progress"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <GrammarProgressPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/grammar/review-queue"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReviewQueuePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/grammar/results"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ResultsPage />
                 </Layout>
               </ProtectedRoute>
             }

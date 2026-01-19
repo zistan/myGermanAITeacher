@@ -1,14 +1,40 @@
-import type { ExerciseFeedback } from '../../api/types/grammar.types';
+import type { ExerciseFeedback, ExerciseType } from '../../api/types/grammar.types';
 import { Button, Badge } from '../common';
+import { TextDiff } from './TextDiff';
 
 interface FeedbackDisplayProps {
   feedback: ExerciseFeedback;
   onNext: () => void;
+  /** The user's original answer (for diff display) */
+  userAnswer?: string;
+  /** The exercise type (to determine which diff mode to use) */
+  exerciseType?: ExerciseType;
 }
 
-export function FeedbackDisplay({ feedback, onNext }: FeedbackDisplayProps) {
+// Exercise types that benefit from text diff visualization
+const DIFF_ENABLED_TYPES: ExerciseType[] = [
+  'translation',
+  'error_correction',
+  'fill_blank',
+  'sentence_building',
+];
+
+export function FeedbackDisplay({
+  feedback,
+  onNext,
+  userAnswer,
+  exerciseType,
+}: FeedbackDisplayProps) {
   const isCorrect = feedback.is_correct;
   const isPartial = feedback.is_partially_correct;
+
+  // Determine if we should show the diff view
+  const shouldShowDiff =
+    !isCorrect &&
+    exerciseType &&
+    DIFF_ENABLED_TYPES.includes(exerciseType) &&
+    userAnswer &&
+    feedback.correct_answer;
 
   return (
     <div className="space-y-6">
@@ -25,7 +51,7 @@ export function FeedbackDisplay({ feedback, onNext }: FeedbackDisplayProps) {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center">
             <div className="text-3xl mr-3">
-              {isCorrect ? '✅' : isPartial ? '⚠️' : '❌'}
+              {isCorrect ? '!' : isPartial ? '!' : '!'}
             </div>
             <div>
               <h3
@@ -63,26 +89,39 @@ export function FeedbackDisplay({ feedback, onNext }: FeedbackDisplayProps) {
         </div>
       </div>
 
-      {/* Answers Comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Your Answer */}
-        <div
-          className={`p-4 rounded-lg border ${
-            isCorrect ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
-          }`}
-        >
-          <div className="text-sm font-medium text-gray-700 mb-2">Your Answer:</div>
-          <div className="text-lg font-mono">{feedback.user_answer}</div>
+      {/* Answers Comparison with Diff */}
+      {shouldShowDiff ? (
+        <div className="space-y-3">
+          <div className="text-sm font-medium text-gray-700">Answer Comparison:</div>
+          <TextDiff
+            original={feedback.correct_answer}
+            modified={feedback.user_answer}
+            mode="side-by-side"
+            showLegend={true}
+            wordLevel={exerciseType === 'sentence_building'}
+          />
         </div>
-
-        {/* Correct Answer */}
-        {!isCorrect && (
-          <div className="p-4 rounded-lg border bg-green-50 border-green-200">
-            <div className="text-sm font-medium text-gray-700 mb-2">Correct Answer:</div>
-            <div className="text-lg font-mono text-green-800">{feedback.correct_answer}</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Your Answer */}
+          <div
+            className={`p-4 rounded-lg border ${
+              isCorrect ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+            }`}
+          >
+            <div className="text-sm font-medium text-gray-700 mb-2">Your Answer:</div>
+            <div className="text-lg font-mono">{feedback.user_answer}</div>
           </div>
-        )}
-      </div>
+
+          {/* Correct Answer */}
+          {!isCorrect && (
+            <div className="p-4 rounded-lg border bg-green-50 border-green-200">
+              <div className="text-sm font-medium text-gray-700 mb-2">Correct Answer:</div>
+              <div className="text-lg font-mono text-green-800">{feedback.correct_answer}</div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Feedback Text */}
       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -147,7 +186,7 @@ export function FeedbackDisplay({ feedback, onNext }: FeedbackDisplayProps) {
               /* TODO: Track understanding */
             }}
           >
-            <div className="text-2xl mb-1">👍</div>
+            <div className="text-2xl mb-1">+</div>
             <div className="text-xs text-gray-600">I understand</div>
           </button>
           <button
@@ -156,7 +195,7 @@ export function FeedbackDisplay({ feedback, onNext }: FeedbackDisplayProps) {
               /* TODO: Track understanding */
             }}
           >
-            <div className="text-2xl mb-1">🤔</div>
+            <div className="text-2xl mb-1">?</div>
             <div className="text-xs text-gray-600">Not sure</div>
           </button>
           <button
@@ -165,7 +204,7 @@ export function FeedbackDisplay({ feedback, onNext }: FeedbackDisplayProps) {
               /* TODO: Track understanding */
             }}
           >
-            <div className="text-2xl mb-1">👎</div>
+            <div className="text-2xl mb-1">-</div>
             <div className="text-xs text-gray-600">Still confused</div>
           </button>
         </div>
@@ -180,7 +219,7 @@ export function FeedbackDisplay({ feedback, onNext }: FeedbackDisplayProps) {
           className="min-w-[200px]"
           data-testid="continue-button"
         >
-          Next Exercise →
+          Next Exercise
         </Button>
       </div>
     </div>

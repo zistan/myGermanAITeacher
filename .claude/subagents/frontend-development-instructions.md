@@ -26,6 +26,7 @@ Building a comprehensive React-based frontend for an AI-powered German learning 
 ### 2. Reference Documents (MUST READ and MUST ABIDE TO)
 - `/brd and planning documents/german_learning_app_brd.md` - Complete BRD with Section 6.4 for frontend specs
 - `/docs/EXERCISE_CYCLE_REVIEW.md` - 23 UX improvements for grammar and vocabulary
+- '/frontend/DEVELOPMENT_STATUS.md' - which is the sole reference of the development status as well as the overall implementation plan for the frontend part
 - Backend API docs: http://localhost:8000/docs (Swagger UI)
 
 ### 3. Technology Stack (REQUIRED)

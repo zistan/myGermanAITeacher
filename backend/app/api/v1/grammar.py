@@ -344,7 +344,8 @@ def submit_exercise_answer(
         user_answer=request.user_answer,
         correct_answer=exercise.correct_answer,
         topic_name=topic.name_de if topic else "Grammar",
-        difficulty_level=exercise.difficulty_level
+        difficulty_level=exercise.difficulty_level,
+        exercise_type=exercise.exercise_type
     )
 
     # Determine points (1-3 based on difficulty and correctness)

@@ -9,7 +9,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['/vocabulary']);
+  const [expandedItems, setExpandedItems] = useState<string[]>(['/vocabulary', '/grammar']);
   const navItems = [
     {
       name: 'Dashboard',
@@ -52,6 +52,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           />
         </svg>
       ),
+      subItems: [
+        { name: 'Browse Topics', path: '/grammar' },
+        { name: 'Practice', path: '/grammar/practice' },
+        { name: 'Progress', path: '/grammar/progress' },
+        { name: 'Review Queue', path: '/grammar/review-queue' },
+      ],
     },
     {
       name: 'Vocabulary',

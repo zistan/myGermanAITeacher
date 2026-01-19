@@ -128,7 +128,8 @@ Generiere jetzt die {count} Übungen als JSON-Array:"""
         user_answer: str,
         correct_answer: str,
         topic_name: str,
-        difficulty_level: str
+        difficulty_level: str,
+        exercise_type: str = "fill_blank"
     ) -> Dict:
         """Evaluate a user's answer with detailed feedback.
 
@@ -138,13 +139,44 @@ Generiere jetzt die {count} Übungen als JSON-Array:"""
             correct_answer: The correct answer
             topic_name: Grammar topic being practiced
             difficulty_level: User's level
+            exercise_type: Type of exercise (affects strictness of evaluation)
 
         Returns:
             Dictionary with is_correct, feedback, and suggestions
         """
+        # Determine if partial correctness is allowed based on exercise type
+        # Multiple choice and error_correction: only correct or incorrect
+        # Fill blank, translation, sentence_building: allow partial correctness
+        allow_partial = exercise_type in ["fill_blank", "translation", "sentence_building"]
+
+        if allow_partial:
+            partial_instruction = """  "is_partially_correct": true/false,  // nur true wenn die Antwort FAST richtig ist (z.B. kleine Rechtschreibfehler bei ansonsten korrekter Grammatik)"""
+            evaluation_guidance = """
+**Bewertungsrichtlinien:**
+- is_correct: true nur wenn die Antwort vollständig korrekt ist
+- is_partially_correct: true nur wenn die Grammatik stimmt aber kleine Fehler vorliegen (z.B. Rechtschreibung, Akzent)
+- Sei ermutigend und konstruktiv
+- Erkläre WARUM etwas falsch oder richtig ist
+- Gib spezifische Hinweise zur Grammatikregel
+- Wenn fast richtig, erwähne was gut war
+- Wenn komplett falsch, zeige den Unterschied klar auf"""
+        else:
+            partial_instruction = """  "is_partially_correct": false,  // IMMER false bei diesem Übungstyp - es gibt nur richtig oder falsch"""
+            evaluation_guidance = """
+**Bewertungsrichtlinien:**
+- is_correct: true wenn die Antwort korrekt ist, false wenn falsch
+- is_partially_correct: MUSS IMMER false sein bei diesem Übungstyp
+- Bei Multiple-Choice oder Error-Correction gibt es keine teilweise richtigen Antworten
+- Sei ermutigend aber klar
+- Erkläre WARUM die Antwort falsch oder richtig ist
+- Gib spezifische Hinweise zur Grammatikregel
+- Zeige klar den Unterschied zwischen richtiger und falscher Antwort"""
+
         prompt = f"""Du bist ein geduldiger Deutschlehrer für italienischsprachige Lernende (Niveau {difficulty_level}).
 
 **Grammatikthema:** {topic_name}
+
+**Übungstyp:** {exercise_type}
 
 **Aufgabe:** {question_text}
 
@@ -159,19 +191,13 @@ Bewerte die Antwort des Lernenden und gib Feedback.
 ```json
 {{
   "is_correct": true/false,
-  "is_partially_correct": true/false,  // wenn fast richtig (z.B. nur kleine Fehler)
+{partial_instruction}
   "feedback_de": "Detailliertes Feedback auf Deutsch (2-4 Sätze)",
   "specific_errors": ["Fehler 1", "Fehler 2"],  // spezifische identifizierte Fehler
   "suggestions": ["Vorschlag 1", "Vorschlag 2"]  // konstruktive Verbesserungsvorschläge
 }}
 ```
-
-**Anforderungen:**
-- Sei ermutigend und konstruktiv
-- Erkläre WARUM etwas falsch oder richtig ist
-- Gib spezifische Hinweise zur Grammatikregel
-- Wenn fast richtig, erwähne was gut war
-- Wenn komplett falsch, zeige den Unterschied klar auf"""
+{evaluation_guidance}"""
 
         try:
             response = self.client.messages.create(
