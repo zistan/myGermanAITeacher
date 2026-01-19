@@ -179,7 +179,7 @@ export function GrammarTopicsPage() {
               <div className="mb-4">
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="text-lg font-semibold text-gray-900">{topic.name_en}</h3>
-                  <Badge variant="info" size="sm">
+                  <Badge variant="info" size="sm" testId="topic-difficulty-badge">
                     {topic.difficulty_level}
                   </Badge>
                 </div>
@@ -191,7 +191,7 @@ export function GrammarTopicsPage() {
 
               {/* Category */}
               <div className="mb-4">
-                <Badge variant="gray" size="sm">
+                <Badge variant="gray" size="sm" testId="topic-category-badge">
                   {topic.category}
                 </Badge>
               </div>

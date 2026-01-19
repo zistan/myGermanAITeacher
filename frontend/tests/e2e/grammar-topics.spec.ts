@@ -281,19 +281,26 @@ test.describe('Grammar Topics Browser', () => {
       await page.waitForSelector('text=Grammar Topics', { timeout: 10000 });
       await page.waitForTimeout(2000);
 
-      // Topics should have difficulty badges (A1, A2, B1, B2, C1, C2)
-      const difficultyBadge = page.locator('text=/^(A1|A2|B1|B2|C1|C2)$/').first();
+      // Topics should have difficulty badges with data-testid
+      const difficultyBadge = page.getByTestId('topic-difficulty-badge').first();
       await expect(difficultyBadge).toBeVisible();
+
+      // Verify badge contains a CEFR level
+      const badgeText = await difficultyBadge.textContent();
+      expect(badgeText).toMatch(/^(A1|A2|B1|B2|C1|C2)$/);
     });
 
     test('should display category badge', async ({ page }) => {
       await page.waitForSelector('text=Grammar Topics', { timeout: 10000 });
       await page.waitForTimeout(2000);
 
-      // Topics should have category badges
-      // The categories are dynamic from the API
-      const categoryBadges = page.locator('[class*="Badge"]').first();
-      await expect(categoryBadges).toBeVisible();
+      // Topics should have category badges with data-testid
+      const categoryBadge = page.getByTestId('topic-category-badge').first();
+      await expect(categoryBadge).toBeVisible();
+
+      // Verify badge contains text (category name)
+      const badgeText = await categoryBadge.textContent();
+      expect(badgeText).toBeTruthy();
     });
 
     test('should display Practice This Topic button', async ({ page }) => {

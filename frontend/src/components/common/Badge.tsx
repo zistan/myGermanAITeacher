@@ -4,6 +4,8 @@ import clsx from 'clsx';
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'gray';
   size?: 'sm' | 'md' | 'lg';
+  /** Test ID for E2E testing - renders as data-testid attribute */
+  testId?: string;
 }
 
 export function Badge({
@@ -11,6 +13,7 @@ export function Badge({
   variant = 'gray',
   size = 'md',
   className,
+  testId,
   ...props
 }: BadgeProps) {
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-full';
@@ -38,6 +41,7 @@ export function Badge({
         sizeStyles[size],
         className
       )}
+      data-testid={testId}
       {...props}
     >
       {children}
