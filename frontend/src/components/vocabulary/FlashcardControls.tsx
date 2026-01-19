@@ -59,7 +59,7 @@ const ratingOptions: RatingOption[] = [
 
 export function FlashcardControls({ onRate, disabled = false }: FlashcardControlsProps) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-testid="rating-buttons">
       <p className="text-center text-sm text-gray-600 font-medium">
         Rate your recall
       </p>
