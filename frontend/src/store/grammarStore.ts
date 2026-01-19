@@ -349,6 +349,7 @@ export const useGrammarStore = create<GrammarState>()(
         // Only persist these fields
         currentSession: state.currentSession,
         sessionState: state.sessionState,
+        currentExercise: state.currentExercise, // Persist for seamless restore
         bookmarkedExercises: state.bookmarkedExercises,
         sessionNotes: state.sessionNotes,
         autoAdvanceEnabled: state.autoAdvanceEnabled,

@@ -100,14 +100,47 @@ export function PracticeSessionPage() {
     }
   }, []);
 
-  const loadSessionFromStore = async (_sessionId: number) => {
+  const loadSessionFromStore = async (restoredSessionId: number) => {
     setSessionState('loading');
     try {
-      // Note: We would need an API endpoint to get session info
-      // For now, we'll start a new session
-      // In a real implementation, you'd have a getSession endpoint
-      startSession();
-    } catch {
+      // Set the restored session ID
+      setSessionId(restoredSessionId);
+
+      // Restore current exercise from store (for immediate display)
+      const storedExercise = useGrammarStore.getState().currentExercise;
+      if (storedExercise) {
+        setLocalCurrentExercise(storedExercise);
+      }
+
+      // Initialize progress from store data
+      const grammarSession = useGrammarStore.getState().currentSession;
+      if (grammarSession) {
+        setProgress({
+          exercises_completed: grammarSession.answers.length,
+          exercises_correct: grammarSession.answers.filter((a) => a.isCorrect).length,
+          current_streak: 0, // Will be updated
+          total_points: 0, // Will be updated
+          accuracy_percentage:
+            grammarSession.answers.length > 0
+              ? Math.round(
+                  (grammarSession.answers.filter((a) => a.isCorrect).length /
+                    grammarSession.answers.length) *
+                    100
+                )
+              : 0,
+        });
+      }
+
+      // Try to load the next exercise from the restored session
+      await loadNextExercise(restoredSessionId);
+
+      addToast('success', 'Session restored', 'Continuing from where you left off');
+    } catch (error) {
+      // If the backend session no longer exists, start a new one
+      const apiError = error as ApiError;
+      addToast('warning', 'Could not restore session', 'Starting a new session instead');
+      console.error('Session restore failed:', apiError);
+      storeStartSession(0); // Temporary until we start new session
       startSession();
     }
   };
