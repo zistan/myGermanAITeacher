@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 
 interface SidebarProps {
@@ -7,6 +8,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const location = useLocation();
+  const [expandedItems, setExpandedItems] = useState<string[]>(['/vocabulary']);
   const navItems = [
     {
       name: 'Dashboard',
@@ -63,6 +66,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           />
         </svg>
       ),
+      subItems: [
+        { name: 'Browse Words', path: '/vocabulary' },
+        { name: 'Flashcards', path: '/vocabulary/flashcards' },
+        { name: 'My Lists', path: '/vocabulary/lists' },
+        { name: 'Quiz', path: '/vocabulary/quiz' },
+        { name: 'Progress', path: '/vocabulary/progress' },
+      ],
     },
     {
       name: 'Progress',
@@ -152,26 +162,95 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 overflow-y-auto">
-            <ul className="space-y-2">
-              {navItems.map((item) => (
-                <li key={item.path}>
-                  <NavLink
-                    to={item.path}
-                    onClick={() => onClose?.()}
-                    className={({ isActive }) =>
-                      clsx(
-                        'flex items-center px-4 py-3 rounded-lg transition-colors',
-                        isActive
-                          ? 'bg-primary-50 text-primary-700 font-medium'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      )
-                    }
-                  >
-                    <span className="flex-shrink-0">{item.icon}</span>
-                    <span className="ml-3">{item.name}</span>
-                  </NavLink>
-                </li>
-              ))}
+            <ul className="space-y-1">
+              {navItems.map((item) => {
+                const hasSubItems = item.subItems && item.subItems.length > 0;
+                const isExpanded = expandedItems.includes(item.path);
+                const isActive = location.pathname === item.path ||
+                  (hasSubItems && item.subItems!.some(sub => location.pathname === sub.path));
+
+                const toggleExpand = () => {
+                  if (hasSubItems) {
+                    setExpandedItems(prev =>
+                      prev.includes(item.path)
+                        ? prev.filter(p => p !== item.path)
+                        : [...prev, item.path]
+                    );
+                  }
+                };
+
+                return (
+                  <li key={item.path}>
+                    {hasSubItems ? (
+                      <>
+                        <button
+                          onClick={toggleExpand}
+                          className={clsx(
+                            'w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors',
+                            isActive
+                              ? 'bg-primary-50 text-primary-700 font-medium'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          )}
+                        >
+                          <span className="flex items-center">
+                            <span className="flex-shrink-0">{item.icon}</span>
+                            <span className="ml-3">{item.name}</span>
+                          </span>
+                          <svg
+                            className={clsx(
+                              'w-4 h-4 transition-transform',
+                              isExpanded && 'transform rotate-180'
+                            )}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {isExpanded && (
+                          <ul className="mt-1 ml-6 space-y-1">
+                            {item.subItems!.map((subItem) => (
+                              <li key={subItem.path}>
+                                <NavLink
+                                  to={subItem.path}
+                                  onClick={() => onClose?.()}
+                                  className={({ isActive }) =>
+                                    clsx(
+                                      'block px-4 py-2 text-sm rounded-lg transition-colors',
+                                      isActive
+                                        ? 'bg-primary-100 text-primary-700 font-medium'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                    )
+                                  }
+                                >
+                                  {subItem.name}
+                                </NavLink>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    ) : (
+                      <NavLink
+                        to={item.path}
+                        onClick={() => onClose?.()}
+                        className={({ isActive }) =>
+                          clsx(
+                            'flex items-center px-4 py-3 rounded-lg transition-colors',
+                            isActive
+                              ? 'bg-primary-50 text-primary-700 font-medium'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          )
+                        }
+                      >
+                        <span className="flex-shrink-0">{item.icon}</span>
+                        <span className="ml-3">{item.name}</span>
+                      </NavLink>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </nav>
 

@@ -10,6 +10,14 @@ import { RegisterPage } from './pages/auth/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { GrammarTopicsPage } from './pages/grammar/GrammarTopicsPage';
 import { PracticeSessionPage } from './pages/grammar/PracticeSessionPage';
+import {
+  VocabularyBrowserPage,
+  FlashcardSessionPage,
+  VocabularyListsPage,
+  VocabularyListDetailPage,
+  VocabularyQuizPage,
+  VocabularyProgressPage,
+} from './pages/vocabulary';
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -57,6 +65,68 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <PracticeSessionPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Vocabulary routes */}
+          <Route
+            path="/vocabulary"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <VocabularyBrowserPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vocabulary/flashcards"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <FlashcardSessionPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vocabulary/lists"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <VocabularyListsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vocabulary/lists/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <VocabularyListDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vocabulary/quiz"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <VocabularyQuizPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vocabulary/progress"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <VocabularyProgressPage />
                 </Layout>
               </ProtectedRoute>
             }
