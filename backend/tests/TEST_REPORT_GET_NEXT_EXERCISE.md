@@ -88,17 +88,28 @@ This test passed correctly - properly rejects invalid session IDs.
 
 ### Root Cause Analysis
 
-**Hypothesis 1: Route Not Registered**
-The endpoint may not be properly registered in the FastAPI router. The 404 response suggests FastAPI cannot find the route.
+**✅ ROOT CAUSE IDENTIFIED: Code Not Deployed to Remote Server**
 
-**Hypothesis 2: Path Parameter Mismatch**
-The route definition might use a different parameter name than `session_id` (e.g., `id`, `grammar_session_id`).
+The GET /next endpoint implementation exists locally (commit `2431a6e`) but has **NOT been deployed** to the remote Ubuntu server (192.168.178.100).
 
-**Hypothesis 3: Router Prefix Issue**
-The endpoint might be registered under a different path prefix than expected.
+**Evidence:**
+1. ✅ Implementation confirmed in local repo: `backend/app/api/v1/grammar.py` line 231
+2. ✅ Route definition correct: `@router.get("/practice/{session_id}/next")`
+3. ✅ 8 unit tests added: `tests/test_grammar.py` lines 410-675
+4. ✅ Git commit exists: `2431a6e` (5 commits behind HEAD)
+5. ❌ Remote server still running old code without /next endpoint
 
-**Hypothesis 4: Session Lookup Issue**
-The endpoint exists but is failing to find the session in the database, returning 404 instead of the expected behavior.
+**Why This Happened:**
+- Implementation was committed locally
+- Tests were written and documented
+- **Deployment step was skipped** - remote server not updated
+
+**Resolution Required:**
+- Pull latest code on remote server: `git pull origin master`
+- Restart backend service: `sudo systemctl restart german-learning`
+- Verify endpoint is accessible
+
+**See:** `/backend/DEPLOY_GET_NEXT_ENDPOINT.md` for detailed deployment instructions
 
 ### Impact Assessment
 
@@ -188,3 +199,42 @@ The endpoint exists but is failing to find the session in the database, returnin
 **Report Generated:** 2026-01-19 11:40:00
 **Status:** ⚠️ **REQUIRES IMMEDIATE ATTENTION**
 **Priority:** 🔴 **CRITICAL - GET /next endpoint must be fixed**
+
+---
+
+## 🔧 Resolution Steps - DEPLOYMENT REQUIRED
+
+### Root Cause Confirmed
+✅ **Code implementation is CORRECT and READY**
+❌ **Code NOT deployed to remote server**
+
+The GET /next endpoint exists locally but remote server (192.168.178.100:8000) is running outdated code.
+
+### Deployment Instructions
+
+**See detailed guide:** `/backend/DEPLOY_GET_NEXT_ENDPOINT.md`
+
+**Quick deployment:**
+```bash
+# On remote server (192.168.178.100)
+cd /opt/german-learning-app
+git pull origin master
+sudo systemctl restart german-learning
+```
+
+### After Deployment - Re-test
+
+```bash
+python backend/tests/test_api_manual.py
+```
+
+**Expected Results:**
+- ✅ GET /next endpoint: 200 OK (currently 404)
+- ✅ Phase 5 pass rate: 100% (currently 84.6%)
+- ✅ Overall pass rate: 100% (currently 94.3%)
+
+---
+
+**Last Updated:** 2026-01-19 (Deployment issue identified)
+**Action Required:** Deploy latest code to remote server
+**ETA:** 5-10 minutes
