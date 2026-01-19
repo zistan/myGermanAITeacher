@@ -1243,9 +1243,10 @@ gh pr create --title "feat: Authentication Module" --body "Implements login, reg
 - E2E tests for critical flows
 
 ### 6. Git Discipline
+- **ALWAYS commit AND push** after completing each bug fix or feature
 - Commit after each logical unit of work
 - Clear commit messages (feat:, fix:, docs:, test:, refactor:)
-- Push to remote regularly
+- **Never leave commits unpushed** - push immediately after committing
 - Create pull requests for review
 
 ---
