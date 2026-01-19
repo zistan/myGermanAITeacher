@@ -478,7 +478,7 @@ class TestGrammarPracticeEndpoints:
         assert data["feedback"]["points_earned"] == 1  # Partial points
 
     @patch('app.api.v1.grammar.GrammarAIService')
-    def test_submit_fill_blank_extra_words_not_partial(
+    def test_submit_fill_blank_full_sentence_correct(
         self,
         mock_ai_service,
         client,
@@ -487,7 +487,7 @@ class TestGrammarPracticeEndpoints:
         test_user,
         test_grammar_exercises
     ):
-        """Test that fill_blank with extra words is NOT partially correct."""
+        """Test that fill_blank accepts BOTH just the missing words OR the full correct sentence."""
         from app.models.grammar import GrammarSession
         session = GrammarSession(
             user_id=test_user.id,
@@ -499,14 +499,14 @@ class TestGrammarPracticeEndpoints:
         db_session.commit()
         db_session.refresh(session)
 
-        # Mock AI evaluation - adding extra words should NOT be partially correct
+        # Mock AI evaluation - full sentence with correct missing words should be CORRECT
         mock_ai_instance = MagicMock()
         mock_ai_instance.evaluate_answer.return_value = {
-            "is_correct": False,
-            "is_partially_correct": False,  # Should be False when extra words added
-            "feedback_de": "Die Grammatik ist korrekt, aber du hast zu viel geschrieben. Die Aufgabe verlangte nur 'den', nicht 'den Mann'.",
-            "specific_errors": ["Zusätzliche Wörter hinzugefügt, die nicht verlangt wurden"],
-            "suggestions": ["Schreibe nur die Wörter, die in die Lücke gehören"]
+            "is_correct": True,  # Should be True when full sentence is correct
+            "is_partially_correct": False,
+            "feedback_de": "Perfekt! Du hast entweder nur die fehlenden Wörter oder den kompletten richtigen Satz geschrieben.",
+            "specific_errors": [],
+            "suggestions": []
         }
         mock_ai_service.return_value = mock_ai_instance
 
@@ -516,7 +516,7 @@ class TestGrammarPracticeEndpoints:
             f"/api/grammar/practice/{session.id}/answer",
             json={
                 "exercise_id": exercise_id,
-                "user_answer": "den Mann",  # Correct grammar but extra words
+                "user_answer": "Ich sehe den Mann",  # Full correct sentence
                 "time_spent_seconds": 20
             },
             headers=auth_headers
@@ -530,10 +530,10 @@ class TestGrammarPracticeEndpoints:
         call_args = mock_ai_instance.evaluate_answer.call_args
         assert call_args[1]["exercise_type"] == "fill_blank"
 
-        # Verify response does NOT show partial correctness for extra words
-        assert data["feedback"]["is_correct"] is False
+        # Verify response shows CORRECT for full sentence with correct missing words
+        assert data["feedback"]["is_correct"] is True
         assert data["feedback"]["is_partially_correct"] is False
-        assert data["feedback"]["points_earned"] == 0  # No points for extra words
+        assert data["feedback"]["points_earned"] > 0  # Points for correct answer
 
     def test_end_grammar_session(self, client, auth_headers, db_session, test_user):
         """Test ending a grammar practice session."""

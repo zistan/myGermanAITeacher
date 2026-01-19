@@ -1,0 +1,206 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - complementary [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e8]:
+          - generic [ref=e10]: DE
+          - generic [ref=e11]: German Learning
+        - navigation [ref=e12]:
+          - list [ref=e13]:
+            - listitem [ref=e14]:
+              - link [ref=e15] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e17]
+                - generic [ref=e19]: Dashboard
+            - listitem [ref=e20]:
+              - link [ref=e21] [cursor=pointer]:
+                - /url: /conversation
+                - img [ref=e23]
+                - generic [ref=e25]: Conversation
+            - listitem [ref=e26]:
+              - button [ref=e27] [cursor=pointer]:
+                - generic [ref=e28]:
+                  - img [ref=e30]
+                  - generic [ref=e32]: Grammar
+                - img [ref=e33]
+              - list [ref=e35]:
+                - listitem [ref=e36]:
+                  - link [ref=e37] [cursor=pointer]:
+                    - /url: /grammar
+                    - text: Browse Topics
+                - listitem [ref=e38]:
+                  - link [ref=e39] [cursor=pointer]:
+                    - /url: /grammar/practice
+                    - text: Practice
+                - listitem [ref=e40]:
+                  - link [ref=e41] [cursor=pointer]:
+                    - /url: /grammar/progress
+                    - text: Progress
+                - listitem [ref=e42]:
+                  - link [ref=e43] [cursor=pointer]:
+                    - /url: /grammar/review-queue
+                    - text: Review Queue
+            - listitem [ref=e44]:
+              - button [ref=e45] [cursor=pointer]:
+                - generic [ref=e46]:
+                  - img [ref=e48]
+                  - generic [ref=e50]: Vocabulary
+                - img [ref=e51]
+              - list [ref=e53]:
+                - listitem [ref=e54]:
+                  - link [ref=e55] [cursor=pointer]:
+                    - /url: /vocabulary
+                    - text: Browse Words
+                - listitem [ref=e56]:
+                  - link [ref=e57] [cursor=pointer]:
+                    - /url: /vocabulary/flashcards
+                    - text: Flashcards
+                - listitem [ref=e58]:
+                  - link [ref=e59] [cursor=pointer]:
+                    - /url: /vocabulary/lists
+                    - text: My Lists
+                - listitem [ref=e60]:
+                  - link [ref=e61] [cursor=pointer]:
+                    - /url: /vocabulary/quiz
+                    - text: Quiz
+                - listitem [ref=e62]:
+                  - link [ref=e63] [cursor=pointer]:
+                    - /url: /vocabulary/progress
+                    - text: Progress
+            - listitem [ref=e64]:
+              - link [ref=e65] [cursor=pointer]:
+                - /url: /progress
+                - img [ref=e67]
+                - generic [ref=e69]: Progress
+            - listitem [ref=e70]:
+              - link [ref=e71] [cursor=pointer]:
+                - /url: /achievements
+                - img [ref=e73]
+                - generic [ref=e75]: Achievements
+            - listitem [ref=e76]:
+              - link [ref=e77] [cursor=pointer]:
+                - /url: /learning-path
+                - img [ref=e79]
+                - generic [ref=e81]: Learning Path
+        - generic [ref=e83]:
+          - img [ref=e84]
+          - generic [ref=e86]: v1.0.0 - Phase 7
+    - generic [ref=e87]:
+      - banner [ref=e88]:
+        - generic [ref=e90]:
+          - button [ref=e91] [cursor=pointer]:
+            - img [ref=e92]
+          - button [ref=e95] [cursor=pointer]:
+            - generic [ref=e97]: T
+            - generic [ref=e98]:
+              - generic [ref=e99]: test_engineer
+              - generic [ref=e101]: B2
+            - img [ref=e102]
+      - main [ref=e104]:
+        - generic [ref=e105]:
+          - generic [ref=e106]:
+            - heading [level=3] [ref=e108]: Notes
+            - button [ref=e109] [cursor=pointer]:
+              - img [ref=e110]
+          - generic [ref=e112]:
+            - generic [ref=e113]: "Exercise #113"
+            - textbox [ref=e114]:
+              - /placeholder: Add your notes here...
+            - generic [ref=e116]: 0/500
+          - generic [ref=e118]:
+            - generic [ref=e119]: "N"
+            - generic [ref=e120]: Toggle notes
+            - generic [ref=e121]: "|"
+            - generic [ref=e122]: Esc
+            - generic [ref=e123]: Close
+        - generic [ref=e124]:
+          - generic [ref=e127]:
+            - generic [ref=e128]:
+              - generic [ref=e130]:
+                - generic [ref=e131]: Question 1 of 10
+                - generic [ref=e133]: 0:01
+              - generic [ref=e136]:
+                - button [ref=e137] [cursor=pointer]:
+                  - img [ref=e138]
+                - button [ref=e140] [cursor=pointer]:
+                  - img [ref=e141]
+                - button [ref=e143] [cursor=pointer]:
+                  - img [ref=e144]
+                - button [ref=e146] [cursor=pointer]:
+                  - img [ref=e147]
+                - button [ref=e149] [cursor=pointer]: End
+            - generic [ref=e150]:
+              - generic [ref=e151]:
+                - generic [ref=e152]: 0%
+                - generic [ref=e153]: Accuracy
+              - generic [ref=e154]:
+                - generic [ref=e155]: "0"
+                - generic [ref=e156]: Correct
+              - generic [ref=e157]:
+                - generic [ref=e158]: "0"
+                - generic [ref=e159]: Points
+              - generic [ref=e160]:
+                - generic [ref=e161]: "0"
+                - generic [ref=e162]: Streak
+            - generic [ref=e163]:
+              - generic [ref=e164]: "Topics in this session:"
+              - generic [ref=e165]:
+                - generic [ref=e166]: Nominativ
+                - generic [ref=e167]: Reflexive Verben
+                - generic [ref=e168]: Negation
+                - generic [ref=e169]: Präpositionen mit Dativ
+                - generic [ref=e170]: Indirekte Rede (Konjunktiv I)
+                - generic [ref=e171]: Konjunktionen (koordinierend)
+                - generic [ref=e172]: Temporale Nebensätze
+          - generic [ref=e175]:
+            - generic [ref=e176]:
+              - generic [ref=e177]:
+                - generic [ref=e178]: fill blank
+                - generic [ref=e179]: C1
+              - button [ref=e181] [cursor=pointer]:
+                - img [ref=e182]
+            - generic [ref=e184]:
+              - generic [ref=e185]:
+                - paragraph [ref=e186]: Er sagt, er ____ müde. (sein)
+                - textbox [ref=e187]:
+                  - /placeholder: Type your answer...
+              - generic [ref=e189]:
+                - img [ref=e190]
+                - generic [ref=e192]:
+                  - generic [ref=e193]: "Hint:"
+                  - generic [ref=e194]: Konjunktiv I
+              - button [disabled] [ref=e196]: Check Answer
+          - generic [ref=e198]:
+            - generic [ref=e199]:
+              - generic [ref=e200]: Enter
+              - generic [ref=e201]: Submit answer
+              - generic [ref=e202]: "|"
+            - generic [ref=e203]:
+              - generic [ref=e204]: Esc
+              - generic [ref=e205]: End session
+              - generic [ref=e206]: "|"
+            - generic [ref=e207]:
+              - generic [ref=e208]: B
+              - generic [ref=e209]: Bookmark exercise
+              - generic [ref=e210]: "|"
+            - generic [ref=e211]:
+              - generic [ref=e212]: "N"
+              - generic [ref=e213]: Toggle notes panel
+  - generic:
+    - generic:
+      - generic:
+        - dialog "Resume Previous Session?" [active]:
+          - generic [ref=e217]:
+            - generic [ref=e218]:
+              - heading "Resume Previous Session?" [level=3] [ref=e219]
+              - button [ref=e220] [cursor=pointer]:
+                - img [ref=e221]
+            - generic [ref=e224]:
+              - paragraph [ref=e225]: You have an incomplete practice session. Would you like to resume where you left off?
+              - generic [ref=e226]:
+                - button "Start Fresh" [ref=e227] [cursor=pointer]
+                - button "Resume Session" [ref=e228] [cursor=pointer]
+```

@@ -1,0 +1,188 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - complementary [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e8]:
+          - generic [ref=e10]: DE
+          - generic [ref=e11]: German Learning
+        - navigation [ref=e12]:
+          - list [ref=e13]:
+            - listitem [ref=e14]:
+              - link [ref=e15] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e17]
+                - generic [ref=e19]: Dashboard
+            - listitem [ref=e20]:
+              - link [ref=e21] [cursor=pointer]:
+                - /url: /conversation
+                - img [ref=e23]
+                - generic [ref=e25]: Conversation
+            - listitem [ref=e26]:
+              - button [ref=e27] [cursor=pointer]:
+                - generic [ref=e28]:
+                  - img [ref=e30]
+                  - generic [ref=e32]: Grammar
+                - img [ref=e33]
+              - list [ref=e35]:
+                - listitem [ref=e36]:
+                  - link [ref=e37] [cursor=pointer]:
+                    - /url: /grammar
+                    - text: Browse Topics
+                - listitem [ref=e38]:
+                  - link [ref=e39] [cursor=pointer]:
+                    - /url: /grammar/practice
+                    - text: Practice
+                - listitem [ref=e40]:
+                  - link [ref=e41] [cursor=pointer]:
+                    - /url: /grammar/progress
+                    - text: Progress
+                - listitem [ref=e42]:
+                  - link [ref=e43] [cursor=pointer]:
+                    - /url: /grammar/review-queue
+                    - text: Review Queue
+            - listitem [ref=e44]:
+              - button [ref=e45] [cursor=pointer]:
+                - generic [ref=e46]:
+                  - img [ref=e48]
+                  - generic [ref=e50]: Vocabulary
+                - img [ref=e51]
+              - list [ref=e53]:
+                - listitem [ref=e54]:
+                  - link [ref=e55] [cursor=pointer]:
+                    - /url: /vocabulary
+                    - text: Browse Words
+                - listitem [ref=e56]:
+                  - link [ref=e57] [cursor=pointer]:
+                    - /url: /vocabulary/flashcards
+                    - text: Flashcards
+                - listitem [ref=e58]:
+                  - link [ref=e59] [cursor=pointer]:
+                    - /url: /vocabulary/lists
+                    - text: My Lists
+                - listitem [ref=e60]:
+                  - link [ref=e61] [cursor=pointer]:
+                    - /url: /vocabulary/quiz
+                    - text: Quiz
+                - listitem [ref=e62]:
+                  - link [ref=e63] [cursor=pointer]:
+                    - /url: /vocabulary/progress
+                    - text: Progress
+            - listitem [ref=e64]:
+              - link [ref=e65] [cursor=pointer]:
+                - /url: /progress
+                - img [ref=e67]
+                - generic [ref=e69]: Progress
+            - listitem [ref=e70]:
+              - link [ref=e71] [cursor=pointer]:
+                - /url: /achievements
+                - img [ref=e73]
+                - generic [ref=e75]: Achievements
+            - listitem [ref=e76]:
+              - link [ref=e77] [cursor=pointer]:
+                - /url: /learning-path
+                - img [ref=e79]
+                - generic [ref=e81]: Learning Path
+        - generic [ref=e83]:
+          - img [ref=e84]
+          - generic [ref=e86]: v1.0.0 - Phase 7
+    - generic [ref=e87]:
+      - banner [ref=e88]:
+        - generic [ref=e90]:
+          - button [ref=e91] [cursor=pointer]:
+            - img [ref=e92]
+          - button [ref=e95] [cursor=pointer]:
+            - generic [ref=e97]: T
+            - generic [ref=e98]:
+              - generic [ref=e99]: test_engineer
+              - generic [ref=e101]: B2
+            - img [ref=e102]
+      - main [ref=e104]:
+        - generic [ref=e105]:
+          - generic [ref=e108]:
+            - generic [ref=e109]:
+              - generic [ref=e111]:
+                - generic [ref=e112]: Question 1 of 10
+                - generic [ref=e114]: "||0:00"
+              - generic [ref=e117]:
+                - button [ref=e118] [cursor=pointer]:
+                  - img [ref=e119]
+                - button [ref=e122] [cursor=pointer]:
+                  - img [ref=e123]
+                - button [ref=e125] [cursor=pointer]:
+                  - img [ref=e126]
+                - button [ref=e128] [cursor=pointer]:
+                  - img [ref=e129]
+                - button [ref=e131] [cursor=pointer]: End
+            - generic [ref=e132]:
+              - generic [ref=e133]:
+                - generic [ref=e134]: 0%
+                - generic [ref=e135]: Accuracy
+              - generic [ref=e136]:
+                - generic [ref=e137]: "0"
+                - generic [ref=e138]: Correct
+              - generic [ref=e139]:
+                - generic [ref=e140]: "0"
+                - generic [ref=e141]: Points
+              - generic [ref=e142]:
+                - generic [ref=e143]: "0"
+                - generic [ref=e144]: Streak
+            - generic [ref=e145]:
+              - generic [ref=e146]: "Topics in this session:"
+              - generic [ref=e147]:
+                - generic [ref=e148]: Nominativ
+                - generic [ref=e149]: Akkusativ
+                - generic [ref=e150]: Perfekt (Vollendete Gegenwart)
+                - generic [ref=e151]: Konjunktiv II
+                - generic [ref=e152]: Reflexive Verben
+                - generic [ref=e153]: Wechselpräpositionen
+          - generic [ref=e156]:
+            - generic [ref=e157]:
+              - generic [ref=e158]:
+                - generic [ref=e159]: error correction
+                - generic [ref=e160]: B1
+              - button [ref=e162] [cursor=pointer]:
+                - img [ref=e163]
+            - generic [ref=e165]:
+              - generic [ref=e166]:
+                - generic [ref=e167]: "Find and correct the error:"
+                - paragraph [ref=e168]: Ich lege das Buch auf den Tisch. (Korrekt?)
+                - textbox [ref=e169]:
+                  - /placeholder: Type the corrected sentence...
+              - generic [ref=e171]:
+                - img [ref=e172]
+                - generic [ref=e174]:
+                  - generic [ref=e175]: "Hint:"
+                  - generic [ref=e176]: legen → Wohin? → Akkusativ
+              - button [disabled] [ref=e178]: Check Answer
+          - generic [ref=e180]:
+            - generic [ref=e181]:
+              - generic [ref=e182]: P
+              - generic [ref=e183]: Resume session
+              - generic [ref=e184]: "|"
+            - generic [ref=e185]:
+              - generic [ref=e186]: Space
+              - generic [ref=e187]: Resume session
+  - generic:
+    - generic:
+      - generic:
+        - dialog "Resume Previous Session?" [active]:
+          - generic [ref=e191]:
+            - generic [ref=e192]:
+              - heading "Resume Previous Session?" [level=3] [ref=e193]
+              - button [ref=e194] [cursor=pointer]:
+                - img [ref=e195]
+            - generic [ref=e198]:
+              - paragraph [ref=e199]: You have an incomplete practice session. Would you like to resume where you left off?
+              - generic [ref=e200]:
+                - button "Start Fresh" [ref=e201] [cursor=pointer]
+                - button "Resume Session" [ref=e202] [cursor=pointer]
+  - generic [ref=e204]:
+    - generic [ref=e205]: ⏸️
+    - heading "Paused" [level=2] [ref=e206]
+    - paragraph [ref=e207]: 0:00
+    - button "Resume" [ref=e208] [cursor=pointer]
+    - generic [ref=e209]: Press P or Space to resume
+```

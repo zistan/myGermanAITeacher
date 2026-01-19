@@ -153,17 +153,21 @@ Generiere jetzt die {count} Übungen als JSON-Array:"""
             partial_instruction = """  "is_partially_correct": true/false,  // nur true wenn die Antwort FAST richtig ist (z.B. kleine Rechtschreibfehler bei ansonsten korrekter Grammatik)"""
             evaluation_guidance = """
 **Bewertungsrichtlinien:**
-- is_correct: true nur wenn die Antwort vollständig korrekt ist UND keine zusätzlichen Wörter enthält
+- is_correct: true wenn EINE dieser Bedingungen erfüllt ist:
+  * Der Lernende hat NUR die fehlenden Wörter in der richtigen Reihenfolge geschrieben (z.B. "Die, der")
+  * Der Lernende hat den KOMPLETTEN RICHTIGEN SATZ geschrieben, wobei die fehlenden Wörter korrekt eingefügt sind
 - is_partially_correct: true NUR für kleine Fehler wie:
-  * Rechtschreibfehler (z.B. "denn" statt "den")
+  * Rechtschreibfehler (z.B. "denn" statt "den") in den fehlenden Wörtern
   * Akzentfehler
   * Kleinere grammatische Fehler bei ansonsten korrekter Struktur
 - is_partially_correct: false wenn:
-  * Der Lernende EXTRA Wörter hinzugefügt hat, die nicht verlangt wurden
-  * Der Lernende eine vollständige Antwort gegeben hat, wenn nur Teile verlangt wurden
+  * Die Grammatik komplett falsch ist
+  * Der Lernende FALSCHE zusätzliche Wörter hinzugefügt hat
   * Die Antwort komplett falsch ist
-- WICHTIG: Wenn die richtige Antwort nur "Die, der" ist, aber der Lernende "Die Lehrerin und der Schüler" schreibt → is_correct: false, is_partially_correct: false
-- Erkläre klar, was genau verlangt wurde vs. was der Lernende geschrieben hat
+- WICHTIG: Bei fill_blank Übungen:
+  * Wenn richtige Antwort "Die, der" ist und Lernender schreibt "Die, der" → is_correct: true
+  * Wenn richtige Antwort "Die, der" ist und Lernender schreibt "Die Lehrerin und der Schüler sind in der Schule" → is_correct: true (kompletter Satz mit korrekten fehlenden Wörtern!)
+  * Wenn richtige Antwort "Die, der" ist und Lernender schreibt "Der, Die" → is_correct: false (falsche Reihenfolge)
 - Sei ermutigend und konstruktiv
 - Erkläre WARUM etwas falsch oder richtig ist
 - Gib spezifische Hinweise zur Grammatikregel"""
