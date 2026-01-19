@@ -148,6 +148,34 @@ An AI-powered German language learning application designed for advanced learner
 
 **Root Cause:** In-memory dictionaries (`flashcard_sessions = {}`, `vocabulary_quizzes = {}`) caused 404 errors in multi-worker deployments. Sessions created on Worker A were not accessible on Worker B due to isolated process memory. All sessions were also lost on server restart.
 
+**Frontend Grammar Practice Fixes (2026-01-20 - BUG-020, BUG-021):**
+20. **Grammar Practice Loading Issue (BUG-020)** - Fixed infinite loading when clicking "Practice This Topic"
+21. **Second Session Loading Issue (BUG-021)** - Fixed second grammar session getting stuck after completing first session
+
+**BUG-020 Root Cause:** Frontend sent both `topic_ids` and `difficulty_level` filters. When topic had no exercises at requested difficulty (e.g., Topic 1 "Nominative Case" has only A1 exercises but B2 was requested), backend returned 404. Frontend didn't handle this gracefully, showing loading spinner forever.
+
+**BUG-020 Solution:**
+- Only send `difficulty_level` if explicitly specified in URL (conditional parameter)
+- Add error handling that detects "No exercises found" and retries without difficulty filter
+- User sees helpful warning: "This topic doesn't have B2 level exercises. Trying with all available difficulties..."
+- File: `frontend/src/pages/grammar/PracticeSessionPage.tsx`
+
+**BUG-021 Root Cause:** After completing a session, `endSession()` only set `sessionState` to 'completed' but did NOT clear `currentSession`, `sessionNotes`, or `bookmarkedExercises`. Stale data persisted in localStorage via Zustand, causing race condition when starting second session.
+
+**BUG-021 Solution:**
+- Clear all session data in `endSession()`: currentSession, currentExercise, sessionNotes, bookmarkedExercises
+- Add defensive clear before starting new session (safety net for edge cases)
+- Files: `frontend/src/store/grammarStore.ts`, `frontend/src/pages/grammar/PracticeSessionPage.tsx`
+
+**Benefits:**
+- ✅ Grammar practice works smoothly for all topics
+- ✅ Can start multiple sessions in succession without hangs
+- ✅ Better error messages guide users when filters don't match
+- ✅ Clean localStorage state between sessions
+- ✅ Fully tested with comprehensive test verification documents
+
+**Vocabulary Session Persistence (BUG-015, BUG-016) - Continued from above:**
+
 **Solution:** Database persistence using PostgreSQL (matching Grammar module pattern)
 
 **Changes Made:**
@@ -648,9 +676,11 @@ sudo systemctl restart german-learning
 
 **Current Status:**
 - ✅ **Backend**: Fully implemented with 74 endpoints, 104 tests, all core features
-- 🚀 **Deployment**: In progress on Ubuntu 20.04 server with Python 3.10
-- 🔄 **Frontend**: Not started (Phase 7)
-- 📊 **Progress**: 6/10 phases complete (backend complete, deployment in progress, frontend pending)
+- ✅ **Deployment**: Complete on Ubuntu 20.04 server with Python 3.10
+- 🚀 **Frontend**: 60% complete (5 of 8 phases done)
+  - ✅ Phase 0-4: Setup, Auth, Dashboard, Grammar, Vocabulary modules
+  - ⏳ Phase 5-7: Conversation, Analytics, Learning Path (pending)
+- 📊 **Progress**: 6/10 backend phases + 5/8 frontend phases complete
 
 ---
 
@@ -658,7 +688,7 @@ sudo systemctl restart german-learning
 
 ### All Production Issues (Resolved ✅)
 
-All 19 production deployment and testing issues have been identified and fixed during Phase 6.5. The application is now fully functional on the production server.
+All 21 production deployment and testing issues have been identified and fixed during Phase 6.5 and Phase 7. The application is now fully functional on the production server and frontend.
 
 **Key Fixes:**
 - ✅ Authentication (bcrypt, JWT)
@@ -668,8 +698,9 @@ All 19 production deployment and testing issues have been identified and fixed d
 - ✅ Schema validation (metadata conflicts, field types)
 - ✅ Spaced repetition (mastery levels, progress tracking)
 - ✅ Multi-worker session persistence (BUG-015, BUG-016 fixed)
+- ✅ Frontend grammar practice loading (BUG-020, BUG-021 fixed)
 
-See "Production Fixes Applied" section above for complete list of all 19 fixes.
+See "Production Fixes Applied" section above for complete list of all 21 fixes.
 
 ### Technical Notes
 
@@ -690,12 +721,19 @@ See "Production Fixes Applied" section above for complete list of all 19 fixes.
 
 ---
 
-Last Updated: 2026-01-19
-Project Version: 1.0 (Phase 6.5 - Production Deployment In Progress)
-Next Phase: Phase 7 - Frontend Development
+Last Updated: 2026-01-20
+Project Version: 1.0 (Phase 7 - Frontend Development In Progress - 60% Complete)
+Next Phase: Phase 7.5 - Conversation Practice Module
+
+**Recent Changes (2026-01-20):**
+- **Frontend Bug Fixes:**
+  - Fixed BUG-020: Grammar practice stuck on loading (conditional difficulty parameter)
+  - Fixed BUG-021: Second grammar session stuck loading (cleared completed session data)
+  - Both fixes improve multi-session UX with better error handling
 
 **Recent Changes (2026-01-19):**
-- Fixed BUG-015 and BUG-016: Replaced in-memory session storage with database persistence
-- Added 2 new database tables: flashcard_sessions, vocabulary_quizzes
-- Created migration 002_add_vocabulary_sessions.py
-- All vocabulary sessions now persist across multiple workers and server restarts
+- **Backend Bug Fixes:**
+  - Fixed BUG-015 and BUG-016: Replaced in-memory session storage with database persistence
+  - Added 2 new database tables: flashcard_sessions, vocabulary_quizzes
+  - Created migration 002_add_vocabulary_sessions.py
+  - All vocabulary sessions now persist across multiple workers and server restarts
