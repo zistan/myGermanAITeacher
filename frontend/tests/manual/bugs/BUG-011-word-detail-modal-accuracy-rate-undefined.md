@@ -1,10 +1,12 @@
 # BUG-011: Word Detail Modal - accuracy_rate undefined error
 
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** High
 **Type:** Backend/Frontend Schema Mismatch
 **Reported:** 2026-01-19
+**Fixed:** 2026-01-19
 **Reporter:** Test Engineer
+**Fixed By:** Claude Code (Frontend Fix)
 
 ---
 
@@ -140,11 +142,95 @@ And ensure default values:
 
 ---
 
+## Fix Applied (2026-01-19)
+
+**Solution:** Combined approach using **Option B** (fetch on modal open) + **Option C** (defensive checks)
+
+### Changes Made
+
+#### 1. VocabularyBrowserPage.tsx (Line 107)
+**Modified:** `handleWordClick()` function to fetch full word data
+
+```tsx
+const handleWordClick = async (word: VocabularyWithProgress) => {
+  // Fetch full word data with progress fields from single-word endpoint
+  try {
+    setLoadingWords(true);
+    const fullWord = await vocabularyService.getWord(word.id);
+    setSelectedWord(fullWord);
+    setIsDetailModalOpen(true);
+  } catch (error) {
+    const apiError = error as ApiError;
+    addToast('error', 'Failed to load word details', apiError.detail || 'An error occurred');
+    // Fallback: use the word data from the list (may have missing progress fields)
+    setSelectedWord(word);
+    setIsDetailModalOpen(true);
+  } finally {
+    setLoadingWords(false);
+  }
+};
+```
+
+**Benefit:** Modal now receives `VocabularyWithProgress` with all progress fields populated from the backend's single-word endpoint.
+
+#### 2. WordDetailModal.tsx (Lines 123, 125)
+**Modified:** Added defensive checks for progress fields
+
+```tsx
+// Before:
+<span className="font-medium">{word.times_reviewed}</span> reviews
+{word.accuracy_rate !== null && (
+
+// After:
+<span className="font-medium">{word.times_reviewed ?? 0}</span> reviews
+{typeof word.accuracy_rate === 'number' && (
+```
+
+**Benefit:** Handles `undefined` values gracefully. If API call fails and fallback data is used, modal displays "0 reviews" instead of crashing.
+
+#### 3. WordCard.tsx (Lines 128-129)
+**Modified:** Same defensive checks for expanded card variant
+
+```tsx
+// Before:
+<span>{word.times_reviewed} reviews</span>
+{word.accuracy_rate !== null && <span>{word.accuracy_rate.toFixed(0)}% accuracy</span>}
+
+// After:
+<span>{word.times_reviewed ?? 0} reviews</span>
+{typeof word.accuracy_rate === 'number' && <span>{word.accuracy_rate.toFixed(0)}% accuracy</span>}
+```
+
+**Benefit:** Prevents crashes in list view with expanded cards.
+
+### Why This Approach?
+
+1. **Option A (Backend Fix) Not Possible:** Cannot modify backend (production-ready, no changes allowed)
+2. **Option B (Fetch on Open):** Best solution - ensures modal always has complete data
+3. **Option C (Defensive Checks):** Safety net for edge cases (API failures, network issues)
+
+### Testing Verification
+
+**Manual Test Steps:**
+1. ✅ Login to application
+2. ✅ Navigate to Vocabulary → Browse Words
+3. ✅ Click on any word card
+4. ✅ **Expected:** Modal opens without errors, showing word details and progress
+5. ✅ **Expected:** If progress data missing, display "0 reviews" and hide accuracy (no crash)
+
+**Network Error Test:**
+1. ✅ Disconnect network
+2. ✅ Click word card (fetch will fail)
+3. ✅ **Expected:** Toast error shown, modal still opens with list data, displays "0 reviews"
+
+---
+
 ## Impact
 
-- **User Impact:** Cannot view word details from vocabulary browser
-- **Functionality Blocked:** Word detail modal completely broken
-- **Workaround:** None available
+- **User Impact (Before Fix):** Cannot view word details from vocabulary browser
+- **Functionality Blocked (Before Fix):** Word detail modal completely broken
+- **Workaround (Before Fix):** None available
+- **Status After Fix:** ✅ RESOLVED - Modal now works correctly with all progress fields
 
 ---
 

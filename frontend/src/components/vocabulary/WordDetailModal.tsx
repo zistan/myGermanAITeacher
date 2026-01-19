@@ -120,9 +120,9 @@ export function WordDetailModal({
             <MasteryIndicator level={word.mastery_level} size="lg" />
             <div className="flex items-center gap-6 text-sm text-gray-600">
               <div>
-                <span className="font-medium">{word.times_reviewed}</span> reviews
+                <span className="font-medium">{word.times_reviewed ?? 0}</span> reviews
               </div>
-              {word.accuracy_rate !== null && (
+              {typeof word.accuracy_rate === 'number' && (
                 <div>
                   <span className="font-medium">{word.accuracy_rate.toFixed(0)}%</span> accuracy
                 </div>

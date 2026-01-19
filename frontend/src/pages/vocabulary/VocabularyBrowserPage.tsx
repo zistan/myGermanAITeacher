@@ -104,9 +104,22 @@ export function VocabularyBrowserPage() {
     setFilteredWords(filtered);
   }, [words, filters]);
 
-  const handleWordClick = (word: VocabularyWithProgress) => {
-    setSelectedWord(word);
-    setIsDetailModalOpen(true);
+  const handleWordClick = async (word: VocabularyWithProgress) => {
+    // Fetch full word data with progress fields from single-word endpoint
+    try {
+      setLoadingWords(true);
+      const fullWord = await vocabularyService.getWord(word.id);
+      setSelectedWord(fullWord);
+      setIsDetailModalOpen(true);
+    } catch (error) {
+      const apiError = error as ApiError;
+      addToast('error', 'Failed to load word details', apiError.detail || 'An error occurred');
+      // Fallback: use the word data from the list (may have missing progress fields)
+      setSelectedWord(word);
+      setIsDetailModalOpen(true);
+    } finally {
+      setLoadingWords(false);
+    }
   };
 
   const handleCloseModal = () => {

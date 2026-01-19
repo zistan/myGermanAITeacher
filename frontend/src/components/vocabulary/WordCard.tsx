@@ -125,8 +125,8 @@ export function WordCard({
             <div className="flex items-center justify-between">
               <MasteryIndicator level={word.mastery_level} />
               <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span>{word.times_reviewed} reviews</span>
-                {word.accuracy_rate !== null && <span>{word.accuracy_rate.toFixed(0)}% accuracy</span>}
+                <span>{word.times_reviewed ?? 0} reviews</span>
+                {typeof word.accuracy_rate === 'number' && <span>{word.accuracy_rate.toFixed(0)}% accuracy</span>}
               </div>
             </div>
           </div>
