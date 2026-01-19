@@ -693,16 +693,47 @@ def test_phase5_grammar():
             result.name = f"Submit exercise answer (exercise {exercise_ids[0]})"
             report.add_test(result)
 
+            # BUG-010: Verify session_progress has correct field names
+            if result.passed and result.response_data and 'session_progress' in result.response_data:
+                progress = result.response_data['session_progress']
+
+                # Check for NEW correct field names
+                required_fields = ['exercises_completed', 'exercises_correct',
+                                  'current_streak', 'total_points', 'accuracy_percentage']
+                missing_fields = [f for f in required_fields if f not in progress]
+
+                # Check for OLD incorrect field names (should NOT be present)
+                old_fields = ['completed', 'correct', 'accuracy', 'total']
+                present_old_fields = [f for f in old_fields if f in progress]
+
+                if missing_fields:
+                    result.add_note(f"⚠️ BUG-010: Missing fields: {missing_fields}")
+                if present_old_fields:
+                    result.add_note(f"⚠️ BUG-010: Old fields still present: {present_old_fields}")
+                if not missing_fields and not present_old_fields:
+                    result.add_note(f"✓ BUG-010 FIX VERIFIED: All field names correct")
+                    result.add_note(f"  exercises_completed: {progress.get('exercises_completed')}")
+                    result.add_note(f"  exercises_correct: {progress.get('exercises_correct')}")
+                    result.add_note(f"  current_streak: {progress.get('current_streak')}")
+                    result.add_note(f"  total_points: {progress.get('total_points')}")
+                    result.add_note(f"  accuracy_percentage: {progress.get('accuracy_percentage')}%")
+
         # Submit another answer
         if len(exercise_ids) >= 2:
             answer_data2 = {
                 "exercise_id": exercise_ids[1],
                 "user_answer": "Sie haben gegessen"
             }
-            result = make_request("POST", f"/api/grammar/practice/{session_id}/answer",
+            result2 = make_request("POST", f"/api/grammar/practice/{session_id}/answer",
                                 data=answer_data2, use_auth=True, expected_status=200)
-            result.name = f"Submit second exercise answer (exercise {exercise_ids[1]})"
-            report.add_test(result)
+            result2.name = f"Submit second exercise answer (exercise {exercise_ids[1]})"
+            report.add_test(result2)
+
+            # BUG-010: Verify session_progress after second answer
+            if result2.passed and result2.response_data and 'session_progress' in result2.response_data:
+                progress = result2.response_data['session_progress']
+                if all(f in progress for f in ['exercises_completed', 'exercises_correct', 'current_streak', 'total_points', 'accuracy_percentage']):
+                    result2.add_note(f"✓ Progress after 2 answers: {progress.get('exercises_completed')} completed, {progress.get('exercises_correct')} correct, {progress.get('accuracy_percentage')}% accuracy")
 
     report.print_report()
 
