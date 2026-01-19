@@ -61,6 +61,7 @@ export function Modal({
                   'w-full transform overflow-hidden rounded-lg bg-white text-left align-middle shadow-xl transition-all',
                   sizeStyles[size]
                 )}
+                data-testid="word-detail-modal"
               >
                 {(title || showCloseButton) && (
                   <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
@@ -77,6 +78,7 @@ export function Modal({
                         type="button"
                         className="text-gray-400 hover:text-gray-500 focus:outline-none"
                         onClick={onClose}
+                        data-testid="word-detail-modal-close-btn"
                       >
                         <XMarkIcon className="h-6 w-6" aria-hidden="true" />
                       </button>

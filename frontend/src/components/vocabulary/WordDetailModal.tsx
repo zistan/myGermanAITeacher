@@ -123,7 +123,7 @@ export function WordDetailModal({
                 <span className="font-medium">{word.times_reviewed ?? 0}</span> reviews
               </div>
               {typeof word.accuracy_rate === 'number' && (
-                <div>
+                <div data-testid="word-accuracy">
                   <span className="font-medium">{word.accuracy_rate.toFixed(0)}%</span> accuracy
                 </div>
               )}
