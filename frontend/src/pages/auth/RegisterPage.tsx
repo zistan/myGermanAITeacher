@@ -72,7 +72,11 @@ export function RegisterPage() {
       const response = await authService.register(registerData);
       setUser(response.user);
       addToast('success', 'Registration successful', `Welcome, ${response.user.username}!`);
-      navigate('/dashboard');
+      // Use queueMicrotask to ensure state update is processed before navigation
+      // This fixes the race condition where ProtectedRoute might check auth before store is updated
+      queueMicrotask(() => {
+        navigate('/dashboard');
+      });
     } catch (error) {
       const apiError = error as ApiError;
       console.error('Registration error:', error);

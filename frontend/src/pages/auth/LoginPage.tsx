@@ -55,7 +55,11 @@ export function LoginPage() {
       const response = await authService.login(formData);
       setUser(response.user);
       addToast('success', 'Login successful', `Welcome back, ${response.user.username}!`);
-      navigate('/dashboard');
+      // Use queueMicrotask to ensure state update is processed before navigation
+      // This fixes the race condition where ProtectedRoute might check auth before store is updated
+      queueMicrotask(() => {
+        navigate('/dashboard');
+      });
     } catch (error) {
       const apiError = error as ApiError;
       addToast('error', 'Login failed', apiError.detail);
