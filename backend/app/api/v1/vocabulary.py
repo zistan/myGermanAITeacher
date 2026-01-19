@@ -296,7 +296,8 @@ def start_flashcard_session(
         })
 
     # Create session
-    session_id = len(flashcard_sessions) + 1
+    # Use max of existing keys to ensure unique, monotonically increasing IDs
+    session_id = max(flashcard_sessions.keys(), default=0) + 1
     flashcard_sessions[session_id] = {
         "user_id": current_user.id,
         "cards": cards,
@@ -702,7 +703,8 @@ def generate_vocabulary_quiz(
     )
 
     # Store quiz
-    quiz_id = len(vocabulary_quizzes) + 1
+    # Use max of existing keys to ensure unique, monotonically increasing IDs
+    quiz_id = max(vocabulary_quizzes.keys(), default=0) + 1
     vocabulary_quizzes[quiz_id] = {
         "user_id": current_user.id,
         "questions": quiz_questions,

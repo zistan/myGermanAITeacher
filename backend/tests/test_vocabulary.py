@@ -283,6 +283,63 @@ def test_start_flashcard_session_no_words(mock_ai_service, mock_db, test_user, m
     assert "no words found" in response.json()["detail"].lower()
 
 
+@patch('app.api.v1.vocabulary.VocabularyAIService')
+def test_start_multiple_flashcard_sessions_unique_ids(mock_ai_service, mock_db, test_user, test_word, mock_get_current_user):
+    """Test that starting multiple flashcard sessions creates unique IDs (BUG-015 fix)."""
+    # Mock AI service
+    mock_ai = Mock()
+    mock_ai.generate_flashcard_content.return_value = {
+        "front": "Test front",
+        "back": "Test back",
+        "hint": ""
+    }
+    mock_ai_service.return_value = mock_ai
+
+    # Mock database query
+    mock_query = Mock()
+    mock_query.filter.return_value = mock_query
+    mock_query.all.return_value = [test_word]
+    mock_query.offset.return_value = mock_query
+    mock_query.limit.return_value = mock_query
+    mock_db.query.return_value = mock_query
+
+    request_data = {
+        "card_count": 1,
+        "use_spaced_repetition": False
+    }
+
+    # Clear flashcard sessions first
+    from app.api.v1 import vocabulary
+    vocabulary.flashcard_sessions.clear()
+
+    # Start first session
+    with patch('app.api.v1.vocabulary.get_db', return_value=mock_db):
+        response1 = client.post(
+            "/api/v1/vocabulary/flashcards/start",
+            json=request_data,
+            headers={"Authorization": "Bearer test_token"}
+        )
+
+    assert response1.status_code == 200
+    session_id_1 = response1.json()["session_id"]
+
+    # Start second session
+    with patch('app.api.v1.vocabulary.get_db', return_value=mock_db):
+        response2 = client.post(
+            "/api/v1/vocabulary/flashcards/start",
+            json=request_data,
+            headers={"Authorization": "Bearer test_token"}
+        )
+
+    assert response2.status_code == 200
+    session_id_2 = response2.json()["session_id"]
+
+    # Verify IDs are unique and sequential
+    assert session_id_1 == 1
+    assert session_id_2 == 2
+    assert session_id_1 != session_id_2
+
+
 @patch('app.api.v1.vocabulary.flashcard_sessions', {1: {
     "user_id": 1,
     "cards": [{
@@ -658,6 +715,67 @@ def test_submit_quiz_answer_correct(mock_db, test_user, mock_get_current_user):
     data = response.json()
     assert data["is_correct"] is True
     assert data["points_earned"] == 10
+
+
+@patch('app.api.v1.vocabulary.VocabularyAIService')
+def test_generate_multiple_quizzes_unique_ids(mock_ai_service, mock_db, test_user, test_word, mock_get_current_user):
+    """Test that generating multiple quizzes creates unique IDs (BUG-016 fix)."""
+    # Mock AI service
+    mock_ai = Mock()
+    mock_ai.generate_vocabulary_quiz.return_value = [
+        {
+            "question": "Test question",
+            "correct_answer": "answer",
+            "options": ["a", "b", "c", "d"],
+            "explanation": "explanation",
+            "word_tested": "word"
+        }
+    ]
+    mock_ai_service.return_value = mock_ai
+
+    # Mock database query
+    mock_query = Mock()
+    mock_query.filter.return_value = mock_query
+    mock_query.limit.return_value.all.return_value = [test_word]
+    mock_db.query.return_value = mock_query
+
+    quiz_data = {
+        "word_ids": [1],
+        "quiz_type": "multiple_choice",
+        "question_count": 1,
+        "difficulty": "B2"
+    }
+
+    # Clear quiz dictionary first
+    from app.api.v1 import vocabulary
+    vocabulary.vocabulary_quizzes.clear()
+
+    # Generate first quiz
+    with patch('app.api.v1.vocabulary.get_db', return_value=mock_db):
+        response1 = client.post(
+            "/api/v1/vocabulary/quiz/generate",
+            json=quiz_data,
+            headers={"Authorization": "Bearer test_token"}
+        )
+
+    assert response1.status_code == 200
+    quiz_id_1 = response1.json()["quiz_id"]
+
+    # Generate second quiz
+    with patch('app.api.v1.vocabulary.get_db', return_value=mock_db):
+        response2 = client.post(
+            "/api/v1/vocabulary/quiz/generate",
+            json=quiz_data,
+            headers={"Authorization": "Bearer test_token"}
+        )
+
+    assert response2.status_code == 200
+    quiz_id_2 = response2.json()["quiz_id"]
+
+    # Verify IDs are unique and sequential
+    assert quiz_id_1 == 1
+    assert quiz_id_2 == 2
+    assert quiz_id_1 != quiz_id_2
 
 
 @patch('app.api.v1.vocabulary.vocabulary_quizzes', {1: {
