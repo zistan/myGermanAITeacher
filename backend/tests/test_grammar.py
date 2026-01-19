@@ -477,6 +477,64 @@ class TestGrammarPracticeEndpoints:
         assert data["feedback"]["is_partially_correct"] is True
         assert data["feedback"]["points_earned"] == 1  # Partial points
 
+    @patch('app.api.v1.grammar.GrammarAIService')
+    def test_submit_fill_blank_extra_words_not_partial(
+        self,
+        mock_ai_service,
+        client,
+        auth_headers,
+        db_session,
+        test_user,
+        test_grammar_exercises
+    ):
+        """Test that fill_blank with extra words is NOT partially correct."""
+        from app.models.grammar import GrammarSession
+        session = GrammarSession(
+            user_id=test_user.id,
+            session_type="practice",
+            target_level="A2",
+            total_exercises=3
+        )
+        db_session.add(session)
+        db_session.commit()
+        db_session.refresh(session)
+
+        # Mock AI evaluation - adding extra words should NOT be partially correct
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.evaluate_answer.return_value = {
+            "is_correct": False,
+            "is_partially_correct": False,  # Should be False when extra words added
+            "feedback_de": "Die Grammatik ist korrekt, aber du hast zu viel geschrieben. Die Aufgabe verlangte nur 'den', nicht 'den Mann'.",
+            "specific_errors": ["Zusätzliche Wörter hinzugefügt, die nicht verlangt wurden"],
+            "suggestions": ["Schreibe nur die Wörter, die in die Lücke gehören"]
+        }
+        mock_ai_service.return_value = mock_ai_instance
+
+        exercise_id = test_grammar_exercises[0].id
+
+        response = client.post(
+            f"/api/grammar/practice/{session.id}/answer",
+            json={
+                "exercise_id": exercise_id,
+                "user_answer": "den Mann",  # Correct grammar but extra words
+                "time_spent_seconds": 20
+            },
+            headers=auth_headers
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Verify AI was called with exercise_type parameter
+        mock_ai_instance.evaluate_answer.assert_called_once()
+        call_args = mock_ai_instance.evaluate_answer.call_args
+        assert call_args[1]["exercise_type"] == "fill_blank"
+
+        # Verify response does NOT show partial correctness for extra words
+        assert data["feedback"]["is_correct"] is False
+        assert data["feedback"]["is_partially_correct"] is False
+        assert data["feedback"]["points_earned"] == 0  # No points for extra words
+
     def test_end_grammar_session(self, client, auth_headers, db_session, test_user):
         """Test ending a grammar practice session."""
         from app.models.grammar import GrammarSession

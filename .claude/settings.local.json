@@ -39,7 +39,12 @@
       "Bash(git ls-files:*)",
       "Bash(paste:*)",
       "Bash(chmod:*)",
-      "Bash(python -m pytest:*)"
+      "Bash(python -m pytest:*)",
+      "Bash(python:*)",
+      "Bash(git reset:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []

@@ -153,13 +153,20 @@ Generiere jetzt die {count} Übungen als JSON-Array:"""
             partial_instruction = """  "is_partially_correct": true/false,  // nur true wenn die Antwort FAST richtig ist (z.B. kleine Rechtschreibfehler bei ansonsten korrekter Grammatik)"""
             evaluation_guidance = """
 **Bewertungsrichtlinien:**
-- is_correct: true nur wenn die Antwort vollständig korrekt ist
-- is_partially_correct: true nur wenn die Grammatik stimmt aber kleine Fehler vorliegen (z.B. Rechtschreibung, Akzent)
+- is_correct: true nur wenn die Antwort vollständig korrekt ist UND keine zusätzlichen Wörter enthält
+- is_partially_correct: true NUR für kleine Fehler wie:
+  * Rechtschreibfehler (z.B. "denn" statt "den")
+  * Akzentfehler
+  * Kleinere grammatische Fehler bei ansonsten korrekter Struktur
+- is_partially_correct: false wenn:
+  * Der Lernende EXTRA Wörter hinzugefügt hat, die nicht verlangt wurden
+  * Der Lernende eine vollständige Antwort gegeben hat, wenn nur Teile verlangt wurden
+  * Die Antwort komplett falsch ist
+- WICHTIG: Wenn die richtige Antwort nur "Die, der" ist, aber der Lernende "Die Lehrerin und der Schüler" schreibt → is_correct: false, is_partially_correct: false
+- Erkläre klar, was genau verlangt wurde vs. was der Lernende geschrieben hat
 - Sei ermutigend und konstruktiv
 - Erkläre WARUM etwas falsch oder richtig ist
-- Gib spezifische Hinweise zur Grammatikregel
-- Wenn fast richtig, erwähne was gut war
-- Wenn komplett falsch, zeige den Unterschied klar auf"""
+- Gib spezifische Hinweise zur Grammatikregel"""
         else:
             partial_instruction = """  "is_partially_correct": false,  // IMMER false bei diesem Übungstyp - es gibt nur richtig oder falsch"""
             evaluation_guidance = """
