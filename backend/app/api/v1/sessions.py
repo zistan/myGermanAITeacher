@@ -98,7 +98,7 @@ def start_session(
         # If AI fails, use fallback
         initial_message = "Guten Tag! Wie kann ich Ihnen heute helfen?"
 
-    # Prepare response
+    # Prepare response with flat context fields (matches frontend expectations)
     return SessionWithContext(
         id=new_session.id,
         user_id=new_session.user_id,
@@ -115,7 +115,13 @@ def start_session(
         ai_model_used=new_session.ai_model_used,
         session_summary=new_session.session_summary,
         session_metadata=new_session.session_metadata,
-        context={"name": context.name, "description": context.description} if context else None
+        # Flat context fields for frontend
+        context_name=context.name if context else "",
+        context_description=context.description if context else "",
+        context_category=context.category if context else "",
+        context_difficulty=context.difficulty_level if context else "",
+        grammar_corrections=new_session.grammar_errors,
+        vocabulary_used=0  # Will be calculated with vocabulary tracking
     )
 
 

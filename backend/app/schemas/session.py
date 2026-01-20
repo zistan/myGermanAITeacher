@@ -18,8 +18,8 @@ class SessionResponse(BaseModel):
     user_id: int
     context_id: Optional[int] = None
     session_type: str
-    started_at: datetime
-    ended_at: Optional[datetime] = None
+    start_time: datetime = Field(alias="started_at")  # Frontend expects start_time
+    end_time: Optional[datetime] = Field(default=None, alias="ended_at")  # Frontend expects end_time
     duration_minutes: Optional[int] = None
     total_turns: int = 0
     grammar_errors: int = 0
@@ -37,8 +37,13 @@ class SessionResponse(BaseModel):
 
 
 class SessionWithContext(SessionResponse):
-    """Session response with context details."""
-    context: Optional[Dict[str, Any]] = None
+    """Session response with context details - matches frontend expectations."""
+    context_name: str = ""
+    context_description: str = ""
+    context_category: str = ""
+    context_difficulty: str = ""
+    grammar_corrections: int = Field(default=0, description="Alias for grammar_errors")
+    vocabulary_used: int = Field(default=0, description="Count of vocabulary items detected")
 
 
 # ============ Conversation Turn Schemas ============
