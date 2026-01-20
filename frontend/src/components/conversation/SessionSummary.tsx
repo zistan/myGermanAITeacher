@@ -3,6 +3,12 @@ import type { SessionSummary as SessionSummaryType } from '../../api/types/conve
 
 interface SessionSummaryProps {
   summary: SessionSummaryType;
+  grammarTopics?: Array<{  // Separate prop - from SessionEndResponse
+    error_type: string;
+    error_count: number;
+    recommendation: string;
+    practice_available: boolean;
+  }>;
   onClose: () => void;
   onViewDetails: () => void;
   onStartNew: () => void;
@@ -10,10 +16,14 @@ interface SessionSummaryProps {
 
 export function SessionSummary({
   summary,
+  grammarTopics = [],
   onClose,
   onViewDetails,
   onStartNew,
 }: SessionSummaryProps) {
+  // Convert backend scores (0.0-1.0) to percentages (0-100)
+  const overallScorePercent = Math.round(summary.overall_score * 100);
+  const grammarAccuracyPercent = Math.round(summary.grammar_accuracy * 100);
   /**
    * Get score color
    */
@@ -60,12 +70,12 @@ export function SessionSummary({
           <div className="text-center">
             <div
               className={`inline-flex items-center justify-center w-32 h-32 rounded-full border-4 ${getScoreBadgeColor(
-                summary.overall_score
+                overallScorePercent
               )}`}
             >
               <div>
-                <div className={`text-4xl font-bold ${getScoreColor(summary.overall_score)}`}>
-                  {summary.overall_score}
+                <div className={`text-4xl font-bold ${getScoreColor(overallScorePercent)}`}>
+                  {overallScorePercent}
                 </div>
                 <div className="text-sm text-gray-600">Overall Score</div>
               </div>
@@ -89,13 +99,13 @@ export function SessionSummary({
             <StatCard
               icon={<Target className="h-5 w-5" />}
               label="Grammar Accuracy"
-              value={`${summary.grammar_accuracy}%`}
+              value={`${grammarAccuracyPercent}%`}
               color="purple"
             />
             <StatCard
               icon={<BookOpen className="h-5 w-5" />}
               label="Vocabulary Used"
-              value={summary.unique_vocabulary_count.toString()}
+              value={summary.vocabulary_used_count.toString()}
               color="orange"
             />
           </div>
@@ -108,10 +118,14 @@ export function SessionSummary({
                 Areas for Improvement
               </h3>
               <ul className="space-y-2">
-                {summary.areas_for_improvement.slice(0, 3).map((area, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                {summary.areas_for_improvement.slice(0, 3).map((item, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm">
                     <span className="text-blue-600 font-medium">{index + 1}.</span>
-                    <span>{area}</span>
+                    <div>
+                      <div className="font-medium text-gray-900">{item.area}</div>
+                      <div className="text-gray-600">{item.recommendation}</div>
+                      <div className="text-xs text-gray-500">{item.error_count} error{item.error_count !== 1 ? 's' : ''}</div>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -119,33 +133,34 @@ export function SessionSummary({
           )}
 
           {/* Grammar Topics to Practice */}
-          {summary.grammar_topics_to_practice &&
-            summary.grammar_topics_to_practice.length > 0 && (
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-green-600" />
-                  Recommended Grammar Topics
-                </h3>
-                <div className="space-y-2">
-                  {summary.grammar_topics_to_practice.map((topic) => (
-                    <div
-                      key={topic.topic_id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div>
-                        <div className="font-medium text-gray-900">{topic.topic_name}</div>
-                        <div className="text-sm text-gray-600">
-                          {topic.error_count} error{topic.error_count !== 1 ? 's' : ''}
-                        </div>
+          {grammarTopics && grammarTopics.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-green-600" />
+                Recommended Grammar Topics
+              </h3>
+              <div className="space-y-2">
+                {grammarTopics.map((topic, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div>
+                      <div className="font-medium text-gray-900">{topic.error_type}</div>
+                      <div className="text-sm text-gray-600">
+                        {topic.error_count} error{topic.error_count !== 1 ? 's' : ''} - {topic.recommendation}
                       </div>
+                    </div>
+                    {topic.practice_available && (
                       <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded">
                         Practice
                       </span>
-                    </div>
-                  ))}
-                </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}

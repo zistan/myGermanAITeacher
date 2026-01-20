@@ -29,6 +29,7 @@ export function PracticePage() {
     showGrammarPanel,
     pendingFeedback,
     sessionSummary,
+    grammarTopicsToPractice,
     startSession,
     sendMessage,
     endSession,
@@ -351,6 +352,7 @@ export function PracticePage() {
       {showSummaryModal && sessionSummary && (
         <SessionSummary
           summary={sessionSummary}
+          grammarTopics={grammarTopicsToPractice}
           onClose={handleCloseSummary}
           onViewDetails={handleViewDetails}
           onStartNew={handleStartNew}

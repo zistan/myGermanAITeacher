@@ -90,20 +90,27 @@ export interface MessageResponse {
 export interface SessionSummary {
   total_turns: number;
   duration_minutes: number;
-  grammar_accuracy: number;
-  unique_vocabulary_count: number;
-  overall_score: number;
-  areas_for_improvement: string[];
-  grammar_topics_to_practice: Array<{
-    topic_id: number;
-    topic_name: string;
+  grammar_accuracy: number;  // Backend returns 0.0-1.0 (convert to 0-100 for display)
+  vocabulary_used_count: number;  // Backend field name
+  new_vocabulary_count: number;
+  overall_score: number;  // Backend returns 0.0-1.0 (convert to 0-100 for display)
+  achievements: string[];
+  areas_for_improvement: Array<{  // Backend returns objects, not strings
+    area: string;
     error_count: number;
+    recommendation: string;
   }>;
 }
 
 export interface SessionEndResponse {
   session_id: number;
   summary: SessionSummary;
+  grammar_topics_to_practice: Array<{  // Backend returns this in SessionEndResponse, not SessionSummary
+    error_type: string;
+    error_count: number;
+    recommendation: string;
+    practice_available: boolean;
+  }>;
 }
 
 export interface SessionHistoryResponse {

@@ -45,6 +45,12 @@ interface ConversationState {
 
   // Session summary (after end)
   sessionSummary: SessionSummary | null;
+  grammarTopicsToPractice: Array<{
+    error_type: string;
+    error_count: number;
+    recommendation: string;
+    practice_available: boolean;
+  }>;
 
   // Loading states
   isLoadingContexts: boolean;
@@ -115,6 +121,7 @@ export const useConversationStore = create<ConversationState>()(
       availableContexts: [],
       sessionHistory: [],
       sessionSummary: null,
+      grammarTopicsToPractice: [],
       isLoadingContexts: false,
       isLoadingHistory: false,
       isSendingMessage: false,
@@ -240,6 +247,7 @@ export const useConversationStore = create<ConversationState>()(
           set({
             sessionState: 'completed',
             sessionSummary: response.summary,
+            grammarTopicsToPractice: response.grammar_topics_to_practice || [],
             // Clear session data (similar to Grammar BUG-021 fix)
             currentSession: null,
             messages: [],
@@ -263,6 +271,7 @@ export const useConversationStore = create<ConversationState>()(
           pendingFeedback: [],
           detectedVocabulary: [],
           sessionSummary: null,
+          grammarTopicsToPractice: [],
           error: null,
         }),
 
