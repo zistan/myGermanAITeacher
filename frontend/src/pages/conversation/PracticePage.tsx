@@ -215,7 +215,8 @@ export function PracticePage() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (!currentSession && !showRestorePrompt) {
+  // Don't show loading if session is completed (summary modal will show)
+  if (!currentSession && !showRestorePrompt && sessionState !== 'completed') {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">

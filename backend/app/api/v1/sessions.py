@@ -369,6 +369,7 @@ def end_session(
     )
 
     return SessionEndResponse(
+        session_id=session_id,
         session_summary=summary,
         grammar_topics_to_practice=grammar_topics_to_practice
     )

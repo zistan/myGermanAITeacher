@@ -117,9 +117,14 @@ class SessionSummary(BaseModel):
 
 
 class SessionEndResponse(BaseModel):
-    """Schema for session end response."""
-    session_summary: SessionSummary
+    """Schema for session end response - matches frontend expectations."""
+    session_id: int  # Session ID for reference
+    session_summary: SessionSummary = Field(serialization_alias="summary")  # Serialize as 'summary' for frontend
     grammar_topics_to_practice: List[Dict[str, Any]] = []
+
+    model_config = ConfigDict(
+        populate_by_name=True
+    )
 
 
 # ============ Session History Schemas ============
