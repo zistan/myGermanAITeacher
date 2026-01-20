@@ -359,7 +359,11 @@ export function PracticeSessionPage() {
   }, [sessionId]);
 
   const handleEndSession = useCallback(async () => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      // No session, just navigate back to topics
+      navigate('/grammar');
+      return;
+    }
 
     try {
       const results = await grammarService.endPracticeSession(sessionId);
@@ -368,6 +372,9 @@ export function PracticeSessionPage() {
     } catch (error) {
       const apiError = error as ApiError;
       addToast('error', 'Failed to end session', apiError.detail);
+      // Navigate back to topics instead of staying stuck
+      storeEndSession(); // Clear session data
+      navigate('/grammar');
     }
   }, [sessionId, navigate, addToast, storeEndSession]);
 
@@ -412,6 +419,7 @@ export function PracticeSessionPage() {
 
   const feedbackContext = createFeedbackContext({
     onNext: handleNext,
+    onEndSession: handleEndSession,
     onToggleBookmark: handleToggleBookmark,
     onToggleNotes: handleToggleNotes,
   });

@@ -223,6 +223,7 @@ export function createPracticeContext(handlers: {
  */
 export function createFeedbackContext(handlers: {
   onNext: () => void;
+  onEndSession?: () => void;
   onToggleBookmark?: () => void;
   onToggleNotes?: () => void;
 }): ShortcutContext {
@@ -240,6 +241,16 @@ export function createFeedbackContext(handlers: {
       allowInInput: false,
     },
   ];
+
+  // Add ESC to end session from feedback state
+  if (handlers.onEndSession) {
+    shortcuts.push({
+      key: 'Escape',
+      action: handlers.onEndSession,
+      description: 'End session',
+      allowInInput: true,
+    });
+  }
 
   if (handlers.onToggleBookmark) {
     shortcuts.push({
