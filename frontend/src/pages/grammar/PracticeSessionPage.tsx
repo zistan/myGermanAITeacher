@@ -143,20 +143,28 @@ export function PracticeSessionPage() {
 
       addToast('success', 'Session restored', 'Continuing from where you left off');
     } catch (error) {
-      // If the backend session no longer exists, start a new one
-      const apiError = error as ApiError;
-      addToast('warning', 'Could not restore session', 'Starting a new session instead');
-      console.error('Session restore failed:', apiError);
-      storeStartSession(0); // Temporary until we start new session
-      startSession();
+      // Re-throw error to be handled by caller
+      throw error;
     }
   };
 
-  const handleRestoreSession = () => {
+  const handleRestoreSession = async () => {
     setShowRestoreModal(false);
     const session = restoreSession();
     if (session) {
-      loadSessionFromStore(session.sessionId);
+      try {
+        await loadSessionFromStore(session.sessionId);
+      } catch (error) {
+        // Session no longer exists in backend - start fresh
+        const apiError = error as ApiError;
+        console.error('Failed to restore session:', apiError);
+        addToast(
+          'info',
+          'Session Expired',
+          'Your previous session has expired. Starting a fresh session...'
+        );
+        handleStartFresh();
+      }
     } else {
       startSession();
     }
