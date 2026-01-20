@@ -75,7 +75,9 @@ class VocabularyItem(BaseModel):
 class MessageResponse(BaseModel):
     """Schema for AI response to user message."""
     turn_id: int
+    user_message: str  # Echo back the user's message for frontend display
     ai_response: str
+    turn_number: int  # Current turn number in the conversation
     grammar_feedback: List[GrammarFeedbackItem] = []
     vocabulary_detected: List[VocabularyItem] = []
     suggestions: List[str] = []

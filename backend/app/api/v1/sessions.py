@@ -267,7 +267,9 @@ def send_message(
 
     return MessageResponse(
         turn_id=ai_turn.id,
+        user_message=message_data.message,  # Echo back user's message
         ai_response=ai_response,
+        turn_number=user_turn_number + 1,  # AI's turn number
         grammar_feedback=grammar_feedback,
         vocabulary_detected=vocabulary_detected,
         suggestions=[]
