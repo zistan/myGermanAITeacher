@@ -63,10 +63,20 @@ export function PracticePage() {
     let interval: NodeJS.Timeout | null = null;
 
     if (sessionState === 'active' && currentSession) {
+      // Validate startTime exists and is parseable
+      const startTime = currentSession.startTime
+        ? new Date(currentSession.startTime).getTime()
+        : Date.now(); // Fallback to current time if invalid
+
+      // Check if date parsing resulted in NaN
+      if (isNaN(startTime)) {
+        console.error('Invalid session startTime:', currentSession.startTime);
+        setSessionTimer(0);
+        return;
+      }
+
       interval = setInterval(() => {
-        const elapsed = Math.floor(
-          (Date.now() - new Date(currentSession.startTime).getTime()) / 1000
-        );
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
         setSessionTimer(elapsed);
       }, 1000);
     }
