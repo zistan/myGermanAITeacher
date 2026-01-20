@@ -210,8 +210,8 @@ def send_message(
 
             grammar_feedback.append(GrammarFeedbackItem(
                 error_type=error.get("error_type", "other"),
-                incorrect=error.get("incorrect_text", ""),  # Use frontend field name
-                corrected=error.get("corrected_text", ""),  # Use frontend field name
+                incorrect_text=error.get("incorrect_text", ""),  # From AI service
+                corrected_text=error.get("corrected_text", ""),  # From AI service
                 explanation=error.get("explanation", ""),
                 severity=error.get("severity", "minor"),
                 rule=error.get("rule"),

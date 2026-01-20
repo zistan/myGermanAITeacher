@@ -57,8 +57,8 @@ class MessageSend(BaseModel):
 class GrammarFeedbackItem(BaseModel):
     """Schema for individual grammar correction."""
     error_type: str
-    incorrect: str = Field(alias="incorrect_text")  # Frontend expects 'incorrect'
-    corrected: str = Field(alias="corrected_text")  # Frontend expects 'corrected'
+    incorrect_text: str = Field(serialization_alias="incorrect")  # Serialize as 'incorrect' for frontend
+    corrected_text: str = Field(serialization_alias="corrected")  # Serialize as 'corrected' for frontend
     explanation: str
     severity: str
     rule: Optional[str] = None
