@@ -57,12 +57,16 @@ class MessageSend(BaseModel):
 class GrammarFeedbackItem(BaseModel):
     """Schema for individual grammar correction."""
     error_type: str
-    incorrect_text: str
-    corrected_text: str
+    incorrect: str = Field(alias="incorrect_text")  # Frontend expects 'incorrect'
+    corrected: str = Field(alias="corrected_text")  # Frontend expects 'corrected'
     explanation: str
     severity: str
     rule: Optional[str] = None
     grammar_topic_hint: Optional[str] = None
+
+    model_config = ConfigDict(
+        populate_by_name=True  # Allow both field names
+    )
 
 
 class VocabularyItem(BaseModel):
