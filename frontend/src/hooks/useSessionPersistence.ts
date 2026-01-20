@@ -61,18 +61,6 @@ export function useSessionPersistence(
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  // Helper function to validate if backend session still exists
-  const validateBackendSession = async (sessionId: number): Promise<boolean> => {
-    try {
-      // Try to fetch next exercise - if session exists, this will succeed
-      await grammarService.getNextExercise(sessionId);
-      return true;
-    } catch (error) {
-      // 404 or any error means session doesn't exist or is invalid
-      return false;
-    }
-  };
-
   // Check for incomplete session on mount
   useEffect(() => {
     const hasIncomplete = storeHasIncomplete();
@@ -86,38 +74,19 @@ export function useSessionPersistence(
         return;
       }
 
-      // Validate backend session before showing restore prompt
-      const currentSession = useGrammarStore.getState().currentSession;
-      if (currentSession?.sessionId) {
-        // Async validation
-        validateBackendSession(currentSession.sessionId).then((isValid) => {
-          if (!isValid) {
-            // Backend session doesn't exist - clear localStorage
-            console.log(
-              `Session ${currentSession.sessionId} not found in backend, clearing localStorage`
-            );
-            storeClearSession();
-            onSessionExpired?.();
-          } else {
-            // Valid session - proceed with restore logic
-            if (autoRestore) {
-              // Auto-restore the session
-              const session = storeRestoreSession();
-              if (session) {
-                onSessionRestored?.(session);
-              }
-            } else {
-              // Show restore prompt
-              setShowRestorePrompt(true);
-            }
-          }
-        });
+      // Show restore prompt immediately (don't block on validation)
+      // Validation will happen when user clicks "Resume Session"
+      if (autoRestore) {
+        // Auto-restore the session
+        const session = storeRestoreSession();
+        if (session) {
+          onSessionRestored?.(session);
+        }
       } else {
-        // No sessionId in stored session - shouldn't happen, but clear it
-        storeClearSession();
+        // Show restore prompt
+        setShowRestorePrompt(true);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     storeHasIncomplete,
     storeGetSessionAge,

@@ -37,10 +37,14 @@ When a bug report is provided:
    - Note: Testing will be performed on the remote server by the user
 
 4. **Commit and push**
-   - **MANDATORY**: Commit ALL changes to Git
+   - **MANDATORY**: Commit AND push ALL changes to Git
    - Write clear, descriptive commit messages
    - Push to remote repository immediately after committing
    - User will deploy and test on remote server
+
+5. **Bug report finalization**
+   - update bug report with fixes implemented
+   - move bug report to /backend/tests/bugs/solved/ folder
 
 ### 3. Git Commit Requirements
 

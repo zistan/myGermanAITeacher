@@ -97,6 +97,8 @@ export function PracticeSessionPage() {
   useEffect(() => {
     if (hasIncompleteSession) {
       setShowRestoreModal(true);
+      // CRITICAL: Set sessionState to 'idle' so modal is visible (not stuck on loading spinner)
+      setSessionState('idle');
     } else {
       // Only start session if we haven't checked for incomplete session yet
       // and modal is not showing

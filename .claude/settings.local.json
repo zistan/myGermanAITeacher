@@ -49,7 +49,10 @@
       "Bash(git checkout:*)",
       "Bash(/tmp/test-quiz-persistence.sh:*)",
       "Bash(bash:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(lsof:*)",
+      "Bash(pytest:*)",
+      "Bash(npm run type-check:*)"
     ],
     "deny": [],
     "ask": []
