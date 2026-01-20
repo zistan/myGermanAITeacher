@@ -21,6 +21,12 @@ import {
   VocabularyQuizPage,
   VocabularyProgressPage,
 } from './pages/vocabulary';
+import {
+  ContextsPage,
+  PracticePage,
+  HistoryPage,
+  SessionDetailPage,
+} from './pages/conversation';
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -160,6 +166,48 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <VocabularyProgressPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Conversation routes */}
+          <Route
+            path="/conversation"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ContextsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/conversation/practice"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PracticePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/conversation/history"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <HistoryPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/conversation/session/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <SessionDetailPage />
                 </Layout>
               </ProtectedRoute>
             }
