@@ -26,7 +26,7 @@ class Vocabulary(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Translations
-    word = Column(String(255), nullable=False, index=True)  # German word with article if noun
+    word = Column(String(255), nullable=False, unique=True, index=True)  # German word with article if noun
     translation_it = Column(String(255), nullable=False)
     word_en = Column(String(255), nullable=True)  # Keep English translation
 
