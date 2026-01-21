@@ -412,6 +412,9 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
             if self.verbose:
                 print(f"✓ Successfully parsed {len(words)} words")
 
+            # Fix common issues with synonyms/antonyms fields
+            words = self._fix_json_array_fields(words)
+
             return words
 
         except json.JSONDecodeError as e:
@@ -428,6 +431,8 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
                     words = json.loads(repaired_json)
                     if isinstance(words, list):
                         print(f"✓ JSON repaired successfully! Parsed {len(words)} words")
+                        # Fix common issues with synonyms/antonyms fields
+                        words = self._fix_json_array_fields(words)
                         return words
                 except json.JSONDecodeError:
                     print(f"✗ JSON repair failed")
@@ -477,6 +482,44 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
                 json_text += '\n]' * (open_brackets - close_brackets)
 
         return json_text
+
+    def _fix_json_array_fields(self, words: List[VocabularyWord]) -> List[VocabularyWord]:
+        """
+        Fix common issues with synonyms/antonyms JSON array fields.
+
+        Args:
+            words: List of vocabulary words
+
+        Returns:
+            Fixed list of vocabulary words
+        """
+        for word in words:
+            for field in ['synonyms', 'antonyms']:
+                if field in word and word[field]:
+                    value = word[field]
+
+                    # If empty string or "none" or "N/A", remove field
+                    if value.lower() in ['', 'none', 'n/a', 'null', '-']:
+                        del word[field]
+                        continue
+
+                    # If already valid JSON array, skip
+                    if value.startswith('[') and value.endswith(']'):
+                        try:
+                            json.loads(value)
+                            continue
+                        except:
+                            pass
+
+                    # If plain text without brackets, wrap in JSON array
+                    # Common cases: "word" or "word1, word2"
+                    if not value.startswith('['):
+                        # Split by comma if present
+                        items = [item.strip() for item in value.split(',')]
+                        # Wrap each item in quotes and create JSON array
+                        word[field] = json.dumps(items, ensure_ascii=False)
+
+        return words
 
     def save_to_file(
         self,
