@@ -403,7 +403,9 @@ class VocabularyGenerator:
 **For Nouns**:
 - Always include article (der/die/das) - NO EXCEPTIONS
 - This includes acronyms: "das CC" not "cc", "das BCC" not "bcc", "die URL" not "URL"
-- Gender must match article (masculine/feminine/neuter)
+- Gender must match article: der=masculine, die=feminine, das=neuter
+- Gender field must be: "masculine", "feminine", or "neuter" (NEVER "plural")
+- For plural-only nouns (e.g., "die Daten"), use gender based on article: die="feminine"
 - Provide plural forms
 - Set gender and plural_form fields
 
