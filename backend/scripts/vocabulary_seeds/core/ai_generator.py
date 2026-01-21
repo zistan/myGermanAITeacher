@@ -401,7 +401,8 @@ class VocabularyGenerator:
 **CRITICAL REQUIREMENTS**:
 
 **For Nouns**:
-- Always include article (der/die/das)
+- Always include article (der/die/das) - NO EXCEPTIONS
+- This includes acronyms: "das CC" not "cc", "das BCC" not "bcc", "die URL" not "URL"
 - Gender must match article (masculine/feminine/neuter)
 - Provide plural forms
 - Set gender and plural_form fields
@@ -433,7 +434,10 @@ class VocabularyGenerator:
 - Idioms/expressions: Use part_of_speech: "idiom", set is_idiom to 1, explain literal vs. figurative meaning
 - Technical terms: Include English equivalents if commonly used
 
-Generate exactly {count} words. Return ONLY the JSON array, no additional text."""
+**FINAL REQUIREMENTS**:
+- Generate exactly {count} UNIQUE words (NO DUPLICATES)
+- Each word must appear only once in the output
+- Return ONLY the JSON array, no additional text."""
 
         return prompt
 
