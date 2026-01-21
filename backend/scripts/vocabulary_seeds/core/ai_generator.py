@@ -296,6 +296,12 @@ class VocabularyGenerator:
 **Subcategory**: {subcategory}
 {f"**Context**: {context}" if context else ""}
 
+**Part of Speech Distribution**:
+- Nouns: ~60% (include articles: der/die/das)
+- Verbs: ~25% (include separable verbs, common in business contexts)
+- Adjectives/Adverbs: ~10%
+- Expressions/Idioms: ~5% (mark with is_idiom: 1)
+
 **Quality Requirements** (PREMIUM TIER):
 - All 14 fields must be populated for each word
 - Accurate German-Italian translations
@@ -310,7 +316,7 @@ class VocabularyGenerator:
 
 **Target User**: Italian native speaker, fluent in English, working in payments/finance in Switzerland, learning business German (B2/C1 level).
 
-**Output Format** (JSON array):
+**Output Format** (JSON array with examples of different parts of speech):
 ```json
 [
   {{
@@ -331,29 +337,82 @@ class VocabularyGenerator:
     "is_idiom": 0,
     "is_compound": 1,
     "is_separable_verb": 0
+  }},
+  {{
+    "word": "überweisen",
+    "translation_it": "fare un bonifico",
+    "part_of_speech": "verb",
+    "gender": null,
+    "plural_form": null,
+    "difficulty": "B2",
+    "category": "{category}",
+    "example_de": "Ich überweise das Geld morgen auf Ihr Konto.",
+    "example_it": "Domani farò un bonifico sul suo conto.",
+    "pronunciation": "ü-ber-VAI-zen",
+    "definition_de": "Geld elektronisch von einem Bankkonto auf ein anderes übertragen",
+    "usage_notes": "Inseparable verb (nicht trennbar). Common in business context. Conjugation: ich überweise, du überweist, er überweist. Past: überwies, hat überwiesen.",
+    "synonyms": "[\\"transferieren\\", \\"senden\\"]",
+    "antonyms": "[\\"empfangen\\", \\"erhalten\\"]",
+    "is_idiom": 0,
+    "is_compound": 0,
+    "is_separable_verb": 0
+  }},
+  {{
+    "word": "bargeldlos",
+    "translation_it": "senza contanti",
+    "part_of_speech": "adjective",
+    "gender": null,
+    "plural_form": null,
+    "difficulty": "B2",
+    "category": "{category}",
+    "example_de": "Die bargeldlose Zahlung ist in der Schweiz sehr verbreitet.",
+    "example_it": "Il pagamento senza contanti è molto diffuso in Svizzera.",
+    "pronunciation": "BAR-gelt-lohs",
+    "definition_de": "Ohne Verwendung von physischem Geld; durch elektronische Zahlungsmittel",
+    "usage_notes": "Common in business/finance contexts. Collocations: bargeldlose Zahlung, bargeldloser Verkehr, bargeldlose Gesellschaft. Register: formal/neutral.",
+    "synonyms": "[\\"elektronisch\\", \\"digital\\"]",
+    "antonyms": "[\\"bar\\", \\"in bar\\"]",
+    "is_idiom": 0,
+    "is_compound": 1,
+    "is_separable_verb": 0
   }}
 ]
 ```
 
 **CRITICAL REQUIREMENTS**:
-1. **Articles for Nouns**: Always include der/die/das with nouns
-2. **Gender**: Must match article (masculine/feminine/neuter)
-3. **Plural Forms**: Provide for all nouns
-4. **Boolean Fields**: Use 0 or 1 (not true/false)
-5. **JSON Arrays**: Synonyms/antonyms as JSON strings: "[\\"word1\\", \\"word2\\"]"
-6. **Pronunciation**: Simplified phonetic (not IPA): "dee ü-ber-VAI-zung"
-7. **Usage Notes**: Real-world context, not just definitions. Include:
-   - When/where it's used
-   - Common collocations
-   - Register (formal/informal)
-   - Related terms or concepts
-   - Any regional variations (Germany/Austria/Switzerland)
 
-**Examples of Premium Quality**:
-- Technical terms: Include English equivalents if commonly used
+**For Nouns**:
+- Always include article (der/die/das)
+- Gender must match article (masculine/feminine/neuter)
+- Provide plural forms
+- Set gender and plural_form fields
+
+**For Verbs**:
+- Include infinitive form without "zu"
+- Set is_separable_verb to 1 for separable verbs (e.g., "abbuchen" = ab|buchen)
+- In usage_notes, mention: conjugation pattern, common tenses, prepositions used with verb
+- Set gender and plural_form to null
+
+**For Adjectives/Adverbs**:
+- Provide base form (not declined)
+- In usage_notes, mention: typical collocations, comparative/superlative if irregular
+- Set gender and plural_form to null
+
+**For All Parts of Speech**:
+- **Boolean Fields**: Use 0 or 1 (not true/false)
+- **JSON Arrays**: Synonyms/antonyms as JSON strings: "[\\"word1\\", \\"word2\\"]"
+- **Pronunciation**: Simplified phonetic (not IPA): "dee ü-ber-VAI-zung"
+- **Usage Notes**: Real-world context with:
+  - Common collocations
+  - Register (formal/informal/technical)
+  - Regional variations (Germany/Austria/Switzerland)
+  - When/where it's used in business contexts
+
+**Special Cases**:
 - Compound words: Set is_compound to 1
 - Separable verbs: Set is_separable_verb to 1
-- Idioms: Set is_idiom to 1, explain literal vs. figurative meaning
+- Idioms/expressions: Set is_idiom to 1, explain literal vs. figurative meaning
+- Technical terms: Include English equivalents if commonly used
 
 Generate exactly {count} words. Return ONLY the JSON array, no additional text."""
 
