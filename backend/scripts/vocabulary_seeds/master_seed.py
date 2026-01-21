@@ -19,6 +19,14 @@ import importlib
 from typing import List, Dict
 from datetime import datetime
 
+# Load environment variables from .env file
+# CRITICAL: Must load before importing any app modules
+from dotenv import load_dotenv
+
+# Load .env from backend directory (2 levels up from vocabulary_seeds)
+env_path = os.path.join(os.path.dirname(__file__), "../../.env")
+load_dotenv(dotenv_path=env_path)
+
 # Add parent directories to path
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 
