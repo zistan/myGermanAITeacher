@@ -7,8 +7,11 @@ Claude AI, with automatic validation and export to seed file format.
 
 Usage:
     python ai_generator.py --category finance --subcategory "payment methods" --count 50
-    python ai_generator.py --category business --subcategory "meetings" --count 100
+    python ai_generator.py --category business --subcategory "meetings" --count 40
     python ai_generator.py --batch-file batches.json
+
+Note: Recommended batch size is 30-50 words for premium quality (14 fields).
+      Larger batches may be truncated due to token limits (8192 max).
 """
 
 import os
@@ -101,6 +104,13 @@ class VocabularyGenerator:
             print(f"Difficulty: {difficulty}")
             print(f"{'='*60}\n")
 
+        # Warn if batch size is too large
+        if count > 50:
+            print(f"⚠ WARNING: Batch size of {count} words is large")
+            print(f"⚠ Recommended: 30-50 words per batch for premium quality")
+            print(f"⚠ Risk: Response may be truncated due to token limits")
+            print()
+
         # Build AI prompt
         prompt = self._build_generation_prompt(
             category, subcategory, count, difficulty, context
@@ -113,7 +123,7 @@ class VocabularyGenerator:
         try:
             response = self.client.messages.create(
                 model=self.model,  # Configurable from .env (AI_MODEL)
-                max_tokens=16000,
+                max_tokens=8192,  # Claude Sonnet 4.5 max output limit
                 temperature=0.7,
                 messages=[{
                     "role": "user",
@@ -124,8 +134,15 @@ class VocabularyGenerator:
             # Extract response
             response_text = response.content[0].text
 
+            # Check if response was truncated
+            if response.stop_reason == "max_tokens":
+                print(f"⚠ WARNING: Response truncated due to token limit!")
+                print(f"⚠ Reduce batch size (current: {count} words)")
+                print(f"⚠ Recommended: 30-50 words per batch for premium quality")
+
             if self.verbose:
                 print(f"✓ Received response ({len(response_text)} chars)")
+                print(f"  Stop reason: {response.stop_reason}")
 
         except Exception as e:
             print(f"✗ Error calling Claude API: {str(e)}")
@@ -416,9 +433,11 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s --category finance --subcategory "payment methods" --count 80
-  %(prog)s --category business --subcategory "meetings and presentations" --count 100 --difficulty B2
-  %(prog)s --category finance --subcategory "blockchain" --count 50 --output blockchain.json
+  %(prog)s --category finance --subcategory "payment methods" --count 40
+  %(prog)s --category business --subcategory "meetings and presentations" --count 50 --difficulty B2
+  %(prog)s --category finance --subcategory "blockchain" --count 30 --output blockchain.json
+
+Note: Recommended batch size is 30-50 words. Larger batches risk truncation.
         """
     )
 
@@ -439,8 +458,8 @@ Examples:
     parser.add_argument(
         "--count",
         type=int,
-        default=50,
-        help="Number of words to generate (default: 50)"
+        default=40,
+        help="Number of words to generate (default: 40, recommended: 30-50)"
     )
 
     parser.add_argument(
