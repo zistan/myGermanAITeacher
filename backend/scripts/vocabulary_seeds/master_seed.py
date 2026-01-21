@@ -28,7 +28,10 @@ env_path = os.path.join(os.path.dirname(__file__), "../../.env")
 load_dotenv(dotenv_path=env_path)
 
 # Add parent directories to path
+# Add backend/ for app imports (database, models, etc.)
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
+# Add scripts/ for vocabulary_seeds imports
+sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 
 from core.validation import VocabularyValidator
 from core.bulk_insert import bulk_insert_vocabulary, get_vocabulary_count
