@@ -14,6 +14,7 @@ Usage:
 
 import sys
 import os
+import json
 import argparse
 import importlib
 from typing import List, Dict
@@ -93,6 +94,46 @@ CATEGORY_REGISTRY = {
 PRIORITY_CATEGORIES = ["business"]
 
 
+def fix_json_array_fields(words: List[VocabularyWord]) -> List[VocabularyWord]:
+    """
+    Fix common issues with synonyms/antonyms JSON array fields.
+
+    This fixes legacy files that may have incorrect formats.
+
+    Args:
+        words: List of vocabulary words
+
+    Returns:
+        Fixed list of vocabulary words
+    """
+    for word in words:
+        for field in ['synonyms', 'antonyms']:
+            if field in word and word[field]:
+                value = word[field]
+
+                # If empty string or "none" or "N/A", remove field
+                if isinstance(value, str) and value.lower() in ['', 'none', 'n/a', 'null', '-', 'keine']:
+                    del word[field]
+                    continue
+
+                # If already valid JSON array, skip
+                if isinstance(value, str) and value.startswith('[') and value.endswith(']'):
+                    try:
+                        json.loads(value)
+                        continue
+                    except:
+                        pass
+
+                # If plain text without brackets, wrap in JSON array
+                if isinstance(value, str) and not value.startswith('['):
+                    # Split by comma if present
+                    items = [item.strip() for item in value.split(',')]
+                    # Wrap each item in quotes and create JSON array
+                    word[field] = json.dumps(items, ensure_ascii=False)
+
+    return words
+
+
 def load_seed_module(module_path: str, verbose: bool = False):
     """
     Dynamically load a seed module and get its words.
@@ -116,6 +157,9 @@ def load_seed_module(module_path: str, verbose: bool = False):
         # Call get_vocabulary_words() function
         if hasattr(module, "get_vocabulary_words"):
             words = module.get_vocabulary_words()
+
+            # Fix common issues with synonyms/antonyms fields
+            words = fix_json_array_fields(words)
 
             if verbose:
                 print(f"  ✓ Loaded {len(words)} words from {module_path}")
