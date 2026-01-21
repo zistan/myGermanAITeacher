@@ -644,7 +644,12 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
                 f.write('    words = ')
 
                 # Write words as Python list
-                f.write(json.dumps(words, indent=4, ensure_ascii=False))
+                json_output = json.dumps(words, indent=4, ensure_ascii=False)
+
+                # Replace JSON null with Python None
+                json_output = json_output.replace(': null', ': None')
+
+                f.write(json_output)
 
                 f.write('\n\n    return words\n')
 
