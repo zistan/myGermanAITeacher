@@ -154,12 +154,12 @@ def _insert_batch(
             word, translation_it, part_of_speech, gender, plural_form,
             difficulty, category, example_de, example_it,
             pronunciation, definition_de, synonyms, antonyms, usage_notes,
-            is_idiom, is_compound, is_separable_verb
+            is_idiom, is_compound, is_separable_verb, review_count
         ) VALUES (
             :word, :translation_it, :part_of_speech, :gender, :plural_form,
             :difficulty, :category, :example_de, :example_it,
             :pronunciation, :definition_de, :synonyms, :antonyms, :usage_notes,
-            :is_idiom, :is_compound, :is_separable_verb
+            :is_idiom, :is_compound, :is_separable_verb, :review_count
         )
         ON CONFLICT (word) DO NOTHING
         RETURNING id
@@ -247,7 +247,10 @@ def _prepare_word_for_insert(word: VocabularyWord) -> Dict:
         # Boolean fields (convert to 0/1)
         "is_idiom": bool_to_int(word.get("is_idiom")),
         "is_compound": bool_to_int(word.get("is_compound")),
-        "is_separable_verb": bool_to_int(word.get("is_separable_verb"))
+        "is_separable_verb": bool_to_int(word.get("is_separable_verb")),
+
+        # Tracking fields (default values)
+        "review_count": 0  # New words start with 0 reviews
     }
 
 
