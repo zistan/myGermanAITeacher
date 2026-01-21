@@ -261,25 +261,32 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
         # Claude sometimes wraps JSON in markdown code blocks
         json_text = response_text.strip()
 
-        # Try multiple extraction strategies
-
-        # Strategy 1: Remove markdown code blocks (most common)
+        # Strategy 1: Remove markdown code blocks using string operations
+        # Look for ```json or ``` markers and remove them
         if "```json" in json_text:
-            # Extract content between ```json and ```
-            match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
-            if match:
-                json_text = match.group(1).strip()
-        elif "```" in json_text:
-            # Extract content between ``` and ```
-            match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
-            if match:
-                json_text = match.group(1).strip()
+            # Split by ```json and take the part after it
+            parts = json_text.split("```json", 1)
+            if len(parts) > 1:
+                json_text = parts[1]
+                # Now remove trailing ``` if present
+                if "```" in json_text:
+                    json_text = json_text.split("```")[0]
+        elif json_text.startswith("```"):
+            # Remove leading ```
+            json_text = json_text[3:]
+            # Remove trailing ``` if present
+            if "```" in json_text:
+                json_text = json_text.split("```")[0]
 
-        # Strategy 2: Find JSON array directly (look for [ ... ])
+        json_text = json_text.strip()
+
+        # Strategy 2: If still doesn't start with [, try to find JSON array
         if not json_text.startswith('['):
-            match = re.search(r'\[\s*\{.*?\}\s*\]', json_text, re.DOTALL)
-            if match:
-                json_text = match.group(0)
+            # Find the first [ and last ] in the text
+            start_idx = json_text.find('[')
+            end_idx = json_text.rfind(']')
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                json_text = json_text[start_idx:end_idx + 1]
 
         json_text = json_text.strip()
 
@@ -290,12 +297,23 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
                 print(f"✗ Error: Expected JSON array, got {type(words)}")
                 return []
 
+            if self.verbose:
+                print(f"✓ Successfully parsed {len(words)} words")
+
             return words
 
         except json.JSONDecodeError as e:
             print(f"✗ Error parsing JSON: {str(e)}")
             print(f"Response preview: {response_text[:500]}...")
             print(f"Extracted text preview: {json_text[:500]}...")
+            print(f"\nTrying to save raw response for debugging...")
+            # Save raw response to file for debugging
+            try:
+                with open("/tmp/claude_response_debug.txt", "w", encoding="utf-8") as f:
+                    f.write(response_text)
+                print(f"✓ Raw response saved to /tmp/claude_response_debug.txt")
+            except Exception:
+                pass
             return []
 
     def save_to_file(
