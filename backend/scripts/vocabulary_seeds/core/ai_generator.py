@@ -19,7 +19,10 @@ from typing import List, Dict, Optional
 from datetime import datetime
 
 # Add parent directories to path
+# Add backend directory (3 levels up)
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
+# Add vocabulary_seeds directory (1 level up) for core imports
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 try:
     from anthropic import Anthropic
