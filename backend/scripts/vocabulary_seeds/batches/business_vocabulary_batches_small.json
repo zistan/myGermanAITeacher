@@ -1,0 +1,26 @@
+{
+  "description": "Phase 2: Business Vocabulary Generation Batches (3,500 words total)",
+  "batches": [
+    {
+      "name": "finance_payments",
+      "category": "finance",
+      "subcategory": "payment methods",
+      "count": 80,
+      "difficulty": "B2",
+      "context": "Payment methods used in Switzerland, Germany and EU: cards, transfers, direct debit, mobile payments",
+      "output_file": "business/generated_payments_01_methods.py"
+    }
+  ],
+  "summary": {
+    "total_batches": 32,
+    "total_words": 3500,
+    "breakdown": {
+      "finance_payments": 800,
+      "business_general": 1500,
+      "finance_banking": 400,
+      "finance_accounting": 300,
+      "business_legal": 300,
+      "business_hr": 200
+    }
+  }
+}
