@@ -14,6 +14,7 @@ Usage:
 import os
 import sys
 import json
+import re
 import argparse
 from typing import List, Dict, Optional
 from datetime import datetime
@@ -260,13 +261,25 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
         # Claude sometimes wraps JSON in markdown code blocks
         json_text = response_text.strip()
 
-        # Remove markdown code blocks if present
-        if json_text.startswith("```json"):
-            json_text = json_text[7:]
-        if json_text.startswith("```"):
-            json_text = json_text[3:]
-        if json_text.endswith("```"):
-            json_text = json_text[:-3]
+        # Try multiple extraction strategies
+
+        # Strategy 1: Remove markdown code blocks (most common)
+        if "```json" in json_text:
+            # Extract content between ```json and ```
+            match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
+            if match:
+                json_text = match.group(1).strip()
+        elif "```" in json_text:
+            # Extract content between ``` and ```
+            match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
+            if match:
+                json_text = match.group(1).strip()
+
+        # Strategy 2: Find JSON array directly (look for [ ... ])
+        if not json_text.startswith('['):
+            match = re.search(r'\[\s*\{.*?\}\s*\]', json_text, re.DOTALL)
+            if match:
+                json_text = match.group(0)
 
         json_text = json_text.strip()
 
@@ -282,6 +295,7 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
         except json.JSONDecodeError as e:
             print(f"✗ Error parsing JSON: {str(e)}")
             print(f"Response preview: {response_text[:500]}...")
+            print(f"Extracted text preview: {json_text[:500]}...")
             return []
 
     def save_to_file(
