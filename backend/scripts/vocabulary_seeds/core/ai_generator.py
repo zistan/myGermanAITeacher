@@ -56,6 +56,13 @@ class VocabularyGenerator:
         self.client = Anthropic(api_key=api_key)
         self.validator = VocabularyValidator(verbose=verbose)
 
+        # Get AI model from environment or use default
+        # Matches backend app configuration (backend/app/config.py)
+        self.model = os.getenv("AI_MODEL", "claude-sonnet-4-5")
+
+        if self.verbose:
+            print(f"Using AI model: {self.model}")
+
     def generate_vocabulary(
         self,
         category: str,
@@ -94,7 +101,7 @@ class VocabularyGenerator:
 
         try:
             response = self.client.messages.create(
-                model="claude-sonnet-4-5-20250929",  # Latest Claude Sonnet
+                model=self.model,  # Configurable from .env (AI_MODEL)
                 max_tokens=16000,
                 temperature=0.7,
                 messages=[{
