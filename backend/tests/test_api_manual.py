@@ -495,14 +495,28 @@ def test_phase4_conversations():
         state.session_ids.append(session_id)
         report.add_db_change(f"Created session ID: {session_id}")
 
+        # BUG-023 FIX VERIFICATION: Check new schema field names
+        data = result.response_data
+        if "start_time" in data:
+            result.add_note("✓ BUG-023: start_time field present (not started_at)")
+        else:
+            result.add_note("⚠️ BUG-023: start_time field missing")
+
+        # Check flat context fields (not nested context object)
+        if "context_name" in data and "context_description" in data:
+            result.add_note("✓ BUG-023: Flat context fields present (context_name, context_description)")
+        else:
+            result.add_note("⚠️ BUG-023: Flat context fields missing")
+
     report.print_report()
 
     # Test 2: POST /api/sessions/{id}/message - Send message
     report = EndpointTestReport("Send Message", "POST", "/api/sessions/{id}/message")
 
     if session_id:
+        user_msg1 = "Hallo, wie geht es Ihnen?"
         message_data = {
-            "message": "Hallo, wie geht es Ihnen?",
+            "message": user_msg1,
             "request_feedback": False
         }
         result = make_request("POST", f"/api/sessions/{session_id}/message",
@@ -510,15 +524,41 @@ def test_phase4_conversations():
         result.name = "Send message to AI"
         report.add_test(result)
 
+        # BUG-023 FIX VERIFICATION: Check MessageResponse new fields
+        if result.passed and result.response_data:
+            data = result.response_data
+            if "user_message" in data and data["user_message"] == user_msg1:
+                result.add_note("✓ BUG-023: user_message field present and echoed correctly")
+            else:
+                result.add_note("⚠️ BUG-023: user_message field missing or incorrect")
+
+            if "turn_number" in data and isinstance(data["turn_number"], int):
+                result.add_note(f"✓ BUG-023: turn_number field present (value: {data['turn_number']})")
+            else:
+                result.add_note("⚠️ BUG-023: turn_number field missing")
+
         # Send another with feedback
+        user_msg2 = "Ich bin heute zur Arbeit gegangen."
         message_data2 = {
-            "message": "Ich bin heute zur Arbeit gegangen.",
+            "message": user_msg2,
             "request_feedback": True
         }
-        result = make_request("POST", f"/api/sessions/{session_id}/message",
+        result2 = make_request("POST", f"/api/sessions/{session_id}/message",
                             data=message_data2, use_auth=True, expected_status=200)
-        result.name = "Send message with grammar feedback"
-        report.add_test(result)
+        result2.name = "Send message with grammar feedback"
+        report.add_test(result2)
+
+        # BUG-023 FIX VERIFICATION: Check grammar feedback field names
+        if result2.passed and result2.response_data:
+            data2 = result2.response_data
+            if "grammar_feedback" in data2 and len(data2["grammar_feedback"]) > 0:
+                feedback = data2["grammar_feedback"][0]
+                if "incorrect" in feedback and "corrected" in feedback:
+                    result2.add_note("✓ BUG-023: Grammar feedback uses 'incorrect' and 'corrected' fields")
+                elif "incorrect_text" in feedback and "corrected_text" in feedback:
+                    result2.add_note("⚠️ BUG-023: Grammar feedback still uses old field names (incorrect_text, corrected_text)")
+                else:
+                    result2.add_note("⚠️ Grammar feedback fields not found")
 
     report.print_report()
 

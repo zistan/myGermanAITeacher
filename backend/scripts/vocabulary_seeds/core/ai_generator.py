@@ -506,13 +506,14 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
             # Save as Python code for seed module
             with open(filename, "w", encoding="utf-8") as f:
                 f.write('"""Generated vocabulary words."""\n\n')
-                f.write('from typing import List, Dict, Any\n\n\n')
-                f.write('def get_vocabulary_words() -> List[Dict[str, Any]]:\n')
+                f.write('from typing import List\n')
+                f.write('from vocabulary_seeds.core.data_format import VocabularyWord\n\n\n')
+                f.write('def get_vocabulary_words() -> List[VocabularyWord]:\n')
                 f.write('    """\n')
                 f.write('    Get generated vocabulary words.\n')
                 f.write('    \n')
                 f.write('    Returns:\n')
-                f.write('        List of vocabulary word dictionaries\n')
+                f.write('        List of VocabularyWord dictionaries with proper type hints\n')
                 f.write('    """\n')
                 f.write('    words = ')
 

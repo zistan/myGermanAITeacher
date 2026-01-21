@@ -48,7 +48,9 @@ class TestSessionEndpoints:
         assert "id" in data
         assert data["session_type"] == "conversation"
         assert data["total_turns"] == 1  # Initial AI message
-        assert data["context"] is None
+        # Schema change: context is now flat fields, not nested object
+        assert "context_name" in data
+        assert data["context_name"] == ""  # Empty when no context
 
     @patch('app.api.v1.sessions.ConversationAI')
     def test_start_session_with_context(self, mock_ai, client, auth_headers, test_context):
@@ -66,8 +68,14 @@ class TestSessionEndpoints:
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["context_id"] == test_context.id
-        assert data["context"] is not None
-        assert data["context"]["name"] == "Test Context"
+        # Schema change: context fields are now flat, not nested
+        assert "context_name" in data
+        assert "context_description" in data
+        assert "context_category" in data
+        assert "context_difficulty" in data
+        assert data["context_name"] == "Test Context"
+        assert data["context_category"] == "business"
+        assert data["context_difficulty"] == "B2"
 
     def test_start_session_invalid_context(self, client, auth_headers):
         """Test starting session with non-existent context."""
@@ -108,16 +116,24 @@ class TestSessionEndpoints:
         mock_ai_instance.detect_vocabulary.return_value = []
         mock_ai.return_value = mock_ai_instance
 
+        user_msg = "Hallo, wie geht es dir?"
         response = client.post(
             f"/api/sessions/{session.id}/message",
-            json={"message": "Hallo, wie geht es dir?", "request_feedback": True},
+            json={"message": user_msg, "request_feedback": True},
             headers=auth_headers
         )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
+        # Schema change: MessageResponse now includes user_message and turn_number
+        assert "turn_id" in data
+        assert "user_message" in data
         assert "ai_response" in data
+        assert "turn_number" in data
+        assert data["user_message"] == user_msg  # Echo back user message
         assert data["ai_response"] == "Das ist interessant!"
+        assert isinstance(data["turn_number"], int)
+        assert data["turn_number"] > 0
         assert "grammar_feedback" in data
         assert isinstance(data["grammar_feedback"], list)
 
@@ -135,8 +151,8 @@ class TestSessionEndpoints:
         mock_ai_instance.analyze_grammar.return_value = [
             {
                 "error_type": "case",
-                "incorrect_text": "der Mann",
-                "corrected_text": "den Mann",
+                "incorrect_text": "der Mann",  # AI service returns old field names
+                "corrected_text": "den Mann",  # AI service returns old field names
                 "explanation": "Accusativo necessario",
                 "severity": "moderate",
                 "rule": "Akkusativ nach sehen"
@@ -145,16 +161,27 @@ class TestSessionEndpoints:
         mock_ai_instance.detect_vocabulary.return_value = []
         mock_ai.return_value = mock_ai_instance
 
+        user_msg = "Ich sehe der Mann"
         response = client.post(
             f"/api/sessions/{session.id}/message",
-            json={"message": "Ich sehe der Mann", "request_feedback": True},
+            json={"message": user_msg, "request_feedback": True},
             headers=auth_headers
         )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
+        # Schema change: Check new field names in MessageResponse
+        assert "user_message" in data
+        assert "turn_number" in data
+        assert data["user_message"] == user_msg
         assert len(data["grammar_feedback"]) == 1
-        assert data["grammar_feedback"][0]["error_type"] == "case"
+        # Schema change: Grammar feedback uses 'incorrect' and 'corrected' now
+        feedback = data["grammar_feedback"][0]
+        assert feedback["error_type"] == "case"
+        assert "incorrect" in feedback  # New field name
+        assert "corrected" in feedback  # New field name
+        assert feedback["incorrect"] == "der Mann"
+        assert feedback["corrected"] == "den Mann"
 
         # Verify session was updated
         db_session.refresh(session)

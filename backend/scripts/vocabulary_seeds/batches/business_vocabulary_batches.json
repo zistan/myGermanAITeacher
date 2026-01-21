@@ -7,7 +7,7 @@
       "subcategory": "payment methods",
       "count": 80,
       "difficulty": "B2",
-      "context": "Payment methods used in Germany and EU: cards, transfers, direct debit, mobile payments",
+      "context": "Payment methods used in Switzerland, Germany and EU: cards, transfers, direct debit, mobile payments",
       "output_file": "business/generated_payments_01_methods.py"
     },
     {
