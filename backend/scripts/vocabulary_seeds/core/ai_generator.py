@@ -499,14 +499,19 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
                     value = word[field]
 
                     # If empty string or "none" or "N/A", remove field
-                    if value.lower() in ['', 'none', 'n/a', 'null', '-']:
+                    if value.lower() in ['', 'none', 'n/a', 'null', '-', 'keine']:
                         del word[field]
                         continue
 
-                    # If already valid JSON array, skip
+                    # If already valid JSON array, check if empty
                     if value.startswith('[') and value.endswith(']'):
                         try:
-                            json.loads(value)
+                            parsed = json.loads(value)
+                            # If empty array, remove field
+                            if isinstance(parsed, list) and len(parsed) == 0:
+                                del word[field]
+                                continue
+                            # If valid non-empty array, keep it
                             continue
                         except:
                             pass

@@ -116,10 +116,15 @@ def fix_json_array_fields(words: List[VocabularyWord]) -> List[VocabularyWord]:
                     del word[field]
                     continue
 
-                # If already valid JSON array, skip
+                # If already valid JSON array, check if empty
                 if isinstance(value, str) and value.startswith('[') and value.endswith(']'):
                     try:
-                        json.loads(value)
+                        parsed = json.loads(value)
+                        # If empty array, remove field
+                        if isinstance(parsed, list) and len(parsed) == 0:
+                            del word[field]
+                            continue
+                        # If valid non-empty array, keep it
                         continue
                     except:
                         pass
