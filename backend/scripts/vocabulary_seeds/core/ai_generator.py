@@ -18,6 +18,13 @@ import argparse
 from typing import List, Dict, Optional
 from datetime import datetime
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+
+# Load .env from backend directory (3 levels up)
+env_path = os.path.join(os.path.dirname(__file__), "../../../.env")
+load_dotenv(dotenv_path=env_path)
+
 # Add parent directories to path
 # Add backend directory (3 levels up)
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
