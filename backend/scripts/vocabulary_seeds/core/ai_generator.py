@@ -297,10 +297,10 @@ class VocabularyGenerator:
 {f"**Context**: {context}" if context else ""}
 
 **Part of Speech Distribution**:
-- Nouns: ~60% (include articles: der/die/das)
-- Verbs: ~25% (include separable verbs, common in business contexts)
-- Adjectives/Adverbs: ~10%
-- Expressions/Idioms: ~5% (mark with is_idiom: 1)
+- Nouns: ~60% (include articles: der/die/das, use part_of_speech: "noun")
+- Verbs: ~25% (include separable verbs, use part_of_speech: "verb")
+- Adjectives/Adverbs: ~10% (use part_of_speech: "adjective" or "adverb")
+- Idioms/Expressions: ~5% (use part_of_speech: "idiom", set is_idiom: 1)
 
 **Quality Requirements** (PREMIUM TIER):
 - All 14 fields must be populated for each word
@@ -375,6 +375,25 @@ class VocabularyGenerator:
     "is_idiom": 0,
     "is_compound": 1,
     "is_separable_verb": 0
+  }},
+  {{
+    "word": "Geld auf den Kopf hauen",
+    "translation_it": "sperperare denaro",
+    "part_of_speech": "idiom",
+    "gender": null,
+    "plural_form": null,
+    "difficulty": "B2",
+    "category": "{category}",
+    "example_de": "Er hat sein ganzes Gehalt auf den Kopf gehauen.",
+    "example_it": "Ha sperperato tutto il suo stipendio.",
+    "pronunciation": "gelt owf deyn kopf HOW-en",
+    "definition_de": "Viel Geld schnell und unüberlegt ausgeben",
+    "usage_notes": "Informal/colloquial idiom. Literal: 'hit money on the head'. Figurative: spend money recklessly. Common in everyday speech, not in formal business contexts. Synonym idiom: 'Geld zum Fenster hinauswerfen'.",
+    "synonyms": "[\\"verschwenden\\", \\"verprassen\\"]",
+    "antonyms": "[\\"sparen\\", \\"zurücklegen\\"]",
+    "is_idiom": 1,
+    "is_compound": 0,
+    "is_separable_verb": 0
   }}
 ]
 ```
@@ -410,8 +429,8 @@ class VocabularyGenerator:
 
 **Special Cases**:
 - Compound words: Set is_compound to 1
-- Separable verbs: Set is_separable_verb to 1
-- Idioms/expressions: Set is_idiom to 1, explain literal vs. figurative meaning
+- Separable verbs: Set is_separable_verb to 1 (e.g., "abbuchen" - separable prefix "ab")
+- Idioms/expressions: Use part_of_speech: "idiom", set is_idiom to 1, explain literal vs. figurative meaning
 - Technical terms: Include English equivalents if commonly used
 
 Generate exactly {count} words. Return ONLY the JSON array, no additional text."""
