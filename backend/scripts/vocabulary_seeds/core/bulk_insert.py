@@ -179,8 +179,13 @@ def _insert_batch(
             else:
                 skipped += 1  # Duplicate, skipped by ON CONFLICT
 
+            # Commit after each successful insert to prevent transaction abort cascade
+            db.commit()
+
         except Exception as e:
             errors += 1
+            # Rollback the failed transaction so subsequent inserts can continue
+            db.rollback()
             error_msg = f"Error inserting word '{word.get('word', 'UNKNOWN')}': {str(e)}"
             error_messages.append(error_msg)
 
