@@ -7,11 +7,14 @@ Claude AI, with automatic validation and export to seed file format.
 
 Usage:
     python ai_generator.py --category finance --subcategory "payment methods" --count 50
-    python ai_generator.py --category business --subcategory "meetings" --count 40
-    python ai_generator.py --batch-file batches.json
+    python ai_generator.py --category business --subcategory "meetings" --count 80
+    python ai_generator.py --category finance --subcategory "banking" --count 150 --chunk-size 50
 
-Note: Recommended batch size is 30-50 words for premium quality (14 fields).
-      Larger batches may be truncated due to token limits (8192 max).
+Features:
+    - Auto-chunking: Large batches are automatically split into smaller chunks
+    - Example: --count 80 will be split into 2 chunks of 40 words each
+    - Results are aggregated into a single output file
+    - Default chunk size: 40 words (configurable with --chunk-size)
 """
 
 import os
@@ -83,17 +86,23 @@ class VocabularyGenerator:
         subcategory: str,
         count: int,
         difficulty: str = "mixed",
-        context: str = ""
+        context: str = "",
+        auto_chunk: bool = True,
+        chunk_size: int = 40
     ) -> List[VocabularyWord]:
         """
         Generate vocabulary words for a specific category/subcategory.
 
+        Automatically splits large batches into smaller chunks to avoid token limits.
+
         Args:
             category: Main category (finance, business, etc.)
             subcategory: Subcategory description (e.g., "payment methods", "meetings")
-            count: Number of words to generate
+            count: Number of words to generate (total)
             difficulty: CEFR level or "mixed" (default: mixed)
             context: Additional context for generation
+            auto_chunk: Automatically split into smaller batches (default: True)
+            chunk_size: Words per chunk when auto_chunk enabled (default: 40)
 
         Returns:
             List of validated VocabularyWord dictionaries
@@ -104,10 +113,17 @@ class VocabularyGenerator:
             print(f"Difficulty: {difficulty}")
             print(f"{'='*60}\n")
 
-        # Warn if batch size is too large
-        if count > 50:
+        # Auto-chunk large batches to avoid truncation
+        if auto_chunk and count > chunk_size:
+            print(f"🔄 Auto-chunking: Splitting {count} words into chunks of {chunk_size}")
+            return self._generate_with_chunking(
+                category, subcategory, count, difficulty, context, chunk_size
+            )
+
+        # Warn if batch size is too large and auto_chunk is disabled
+        if not auto_chunk and count > 50:
             print(f"⚠ WARNING: Batch size of {count} words is large")
-            print(f"⚠ Recommended: 30-50 words per batch for premium quality")
+            print(f"⚠ Recommended: Enable auto_chunk or use 30-50 words per batch")
             print(f"⚠ Risk: Response may be truncated due to token limits")
             print()
 
@@ -175,6 +191,85 @@ class VocabularyGenerator:
         ]
 
         return valid_words
+
+    def _generate_with_chunking(
+        self,
+        category: str,
+        subcategory: str,
+        total_count: int,
+        difficulty: str,
+        context: str,
+        chunk_size: int
+    ) -> List[VocabularyWord]:
+        """
+        Generate vocabulary in chunks and aggregate results.
+
+        Args:
+            category: Main category
+            subcategory: Subcategory description
+            total_count: Total number of words to generate
+            difficulty: CEFR level or "mixed"
+            context: Additional context
+            chunk_size: Words per chunk
+
+        Returns:
+            Aggregated list of validated VocabularyWord dictionaries
+        """
+        import math
+        import time
+
+        # Calculate number of chunks
+        num_chunks = math.ceil(total_count / chunk_size)
+        all_words = []
+
+        print(f"📦 Generating {total_count} words in {num_chunks} chunks of ~{chunk_size} words each\n")
+
+        for i in range(num_chunks):
+            # Calculate words for this chunk
+            remaining = total_count - len(all_words)
+            words_in_chunk = min(chunk_size, remaining)
+
+            print(f"{'='*60}")
+            print(f"Chunk {i+1}/{num_chunks}: Generating {words_in_chunk} words")
+            print(f"Progress: {len(all_words)}/{total_count} words completed ({len(all_words)/total_count*100:.1f}%)")
+            print(f"{'='*60}")
+
+            # Generate chunk (recursive call without auto_chunk)
+            chunk_words = self.generate_vocabulary(
+                category=category,
+                subcategory=subcategory,
+                count=words_in_chunk,
+                difficulty=difficulty,
+                context=context,
+                auto_chunk=False  # Disable auto_chunk for recursive call
+            )
+
+            if not chunk_words:
+                print(f"⚠ WARNING: Chunk {i+1} generated 0 words")
+                continue
+
+            # Add to aggregated list
+            all_words.extend(chunk_words)
+            print(f"✓ Chunk {i+1} complete: {len(chunk_words)} words generated")
+            print(f"✓ Total so far: {len(all_words)}/{total_count} words\n")
+
+            # Add delay between chunks to avoid rate limits
+            if i < num_chunks - 1:  # Don't delay after last chunk
+                delay = 2  # 2 seconds between chunks
+                if self.verbose:
+                    print(f"⏳ Waiting {delay}s before next chunk...")
+                time.sleep(delay)
+
+        # Final summary
+        print(f"\n{'='*60}")
+        print(f"✓ CHUNKING COMPLETE")
+        print(f"{'='*60}")
+        print(f"Requested: {total_count} words")
+        print(f"Generated: {len(all_words)} words")
+        print(f"Success rate: {len(all_words)/total_count*100:.1f}%")
+        print(f"{'='*60}\n")
+
+        return all_words
 
     def _build_generation_prompt(
         self,
@@ -433,11 +528,18 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s --category finance --subcategory "payment methods" --count 40
-  %(prog)s --category business --subcategory "meetings and presentations" --count 50 --difficulty B2
-  %(prog)s --category finance --subcategory "blockchain" --count 30 --output blockchain.json
+  # Auto-chunking enabled by default (recommended)
+  %(prog)s --category finance --subcategory "payment methods" --count 80
+  %(prog)s --category business --subcategory "meetings" --count 150 --chunk-size 50
 
-Note: Recommended batch size is 30-50 words. Larger batches risk truncation.
+  # Custom chunk size
+  %(prog)s --category finance --subcategory "banking" --count 200 --chunk-size 40
+
+  # Disable auto-chunking (not recommended for large batches)
+  %(prog)s --category finance --subcategory "blockchain" --count 30 --no-auto-chunk
+
+Note: Auto-chunking splits large batches into smaller chunks (default: 40 words)
+      and aggregates results into a single file. This prevents truncation.
         """
     )
 
@@ -501,6 +603,19 @@ Note: Recommended batch size is 30-50 words. Larger batches risk truncation.
         help="Print detailed progress"
     )
 
+    parser.add_argument(
+        "--no-auto-chunk",
+        action="store_true",
+        help="Disable automatic batch chunking (not recommended for large batches)"
+    )
+
+    parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=40,
+        help="Words per chunk when auto-chunking (default: 40)"
+    )
+
     args = parser.parse_args()
 
     # Initialize generator
@@ -519,7 +634,9 @@ Note: Recommended batch size is 30-50 words. Larger batches risk truncation.
         subcategory=args.subcategory,
         count=args.count,
         difficulty=args.difficulty,
-        context=args.context
+        context=args.context,
+        auto_chunk=not args.no_auto_chunk,  # Enable by default
+        chunk_size=args.chunk_size
     )
 
     if not words:
