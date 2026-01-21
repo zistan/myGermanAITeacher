@@ -9,6 +9,13 @@ Usage:
     python run_batch_generation.py business_vocabulary_batches.json
     python run_batch_generation.py business_vocabulary_batches.json --start-from 5
     python run_batch_generation.py business_vocabulary_batches.json --only 0,1,2
+    python run_batch_generation.py business_vocabulary_batches.json --chunk-size 50
+
+Features:
+    - Auto-chunking: Large batches automatically split into smaller chunks (default: ON)
+    - Each batch can specify any count (e.g., 80, 150, 200 words)
+    - Chunks are aggregated into single output file per batch
+    - Default chunk size: 40 words (configurable with --chunk-size)
 """
 
 import os
@@ -36,7 +43,9 @@ def run_batch_generation(
     start_from: int = 0,
     only_batches: List[int] = None,
     delay_seconds: int = 2,
-    verbose: bool = False
+    verbose: bool = False,
+    auto_chunk: bool = True,
+    chunk_size: int = 40
 ):
     """
     Run batch vocabulary generation.
@@ -47,6 +56,8 @@ def run_batch_generation(
         only_batches: Only generate specific batch numbers
         delay_seconds: Delay between API calls (rate limiting)
         verbose: Print detailed progress
+        auto_chunk: Enable automatic batch chunking (default: True)
+        chunk_size: Words per chunk when auto-chunking (default: 40)
     """
     # Load configuration
     config = load_batch_config(config_file)
@@ -58,6 +69,9 @@ def run_batch_generation(
     print(f"Configuration: {config.get('description', 'No description')}")
     print(f"Total batches: {len(batches)}")
     print(f"Total words: {config.get('summary', {}).get('total_words', 'Unknown')}")
+    print(f"Auto-chunking: {'ENABLED' if auto_chunk else 'DISABLED'}")
+    if auto_chunk:
+        print(f"Chunk size: {chunk_size} words per chunk")
     print(f"{'='*70}\n")
 
     # Filter batches
@@ -99,7 +113,9 @@ def run_batch_generation(
                 subcategory=batch['subcategory'],
                 count=batch['count'],
                 difficulty=batch.get('difficulty', 'mixed'),
-                context=batch.get('context', '')
+                context=batch.get('context', ''),
+                auto_chunk=auto_chunk,
+                chunk_size=chunk_size
             )
 
             if not words:
@@ -156,7 +172,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Generate all batches
+  # Generate all batches (auto-chunking enabled by default)
   %(prog)s business_vocabulary_batches.json
 
   # Start from batch 5 (if previous batches already done)
@@ -165,8 +181,17 @@ Examples:
   # Generate only specific batches
   %(prog)s business_vocabulary_batches.json --only 0,1,2
 
-  # Verbose mode with custom delay
-  %(prog)s business_vocabulary_batches.json --verbose --delay 5
+  # Custom chunk size (larger = fewer API calls but risk truncation)
+  %(prog)s business_vocabulary_batches.json --chunk-size 50
+
+  # Disable auto-chunking (not recommended for batches with count > 50)
+  %(prog)s business_vocabulary_batches.json --no-auto-chunk
+
+  # Verbose mode with custom delay and chunk size
+  %(prog)s business_vocabulary_batches.json --verbose --delay 5 --chunk-size 40
+
+Note: Auto-chunking splits large batches (e.g., count=80) into smaller chunks
+      (default: 40 words) and aggregates results. This prevents truncation errors.
         """
     )
 
@@ -201,6 +226,19 @@ Examples:
         help="Print detailed progress"
     )
 
+    parser.add_argument(
+        "--no-auto-chunk",
+        action="store_true",
+        help="Disable automatic batch chunking (not recommended for large batches)"
+    )
+
+    parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=40,
+        help="Words per chunk when auto-chunking (default: 40)"
+    )
+
     args = parser.parse_args()
 
     # Parse --only argument
@@ -218,7 +256,9 @@ Examples:
         start_from=args.start_from,
         only_batches=only_batches,
         delay_seconds=args.delay,
-        verbose=args.verbose
+        verbose=args.verbose,
+        auto_chunk=not args.no_auto_chunk,
+        chunk_size=args.chunk_size
     )
 
 
