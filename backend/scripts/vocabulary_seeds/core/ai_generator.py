@@ -306,15 +306,65 @@ Generate exactly {count} words. Return ONLY the JSON array, no additional text."
             print(f"✗ Error parsing JSON: {str(e)}")
             print(f"Response preview: {response_text[:500]}...")
             print(f"Extracted text preview: {json_text[:500]}...")
-            print(f"\nTrying to save raw response for debugging...")
+
+            # Try to repair common JSON issues
+            print(f"\n⚙ Attempting to repair JSON...")
+            repaired_json = self._repair_json(json_text)
+
+            if repaired_json != json_text:
+                try:
+                    words = json.loads(repaired_json)
+                    if isinstance(words, list):
+                        print(f"✓ JSON repaired successfully! Parsed {len(words)} words")
+                        return words
+                except json.JSONDecodeError:
+                    print(f"✗ JSON repair failed")
+
             # Save raw response to file for debugging
+            print(f"\nTrying to save raw response for debugging...")
             try:
                 with open("/tmp/claude_response_debug.txt", "w", encoding="utf-8") as f:
                     f.write(response_text)
+                with open("/tmp/claude_extracted_debug.txt", "w", encoding="utf-8") as f:
+                    f.write(json_text)
                 print(f"✓ Raw response saved to /tmp/claude_response_debug.txt")
+                print(f"✓ Extracted JSON saved to /tmp/claude_extracted_debug.txt")
             except Exception:
                 pass
             return []
+
+    def _repair_json(self, json_text: str) -> str:
+        """
+        Attempt to repair common JSON issues.
+
+        Args:
+            json_text: Potentially malformed JSON string
+
+        Returns:
+            Repaired JSON string
+        """
+        # Remove trailing commas before } or ]
+        json_text = re.sub(r',(\s*[}\]])', r'\1', json_text)
+
+        # Fix truncated JSON - if doesn't end with ], try to close it
+        json_text = json_text.rstrip()
+        if not json_text.endswith(']'):
+            # Count open brackets vs close brackets
+            open_brackets = json_text.count('[')
+            close_brackets = json_text.count(']')
+            open_braces = json_text.count('{')
+            close_braces = json_text.count('}')
+
+            # Try to close incomplete structures
+            if open_braces > close_braces:
+                # Close any incomplete objects
+                json_text += '\n}' * (open_braces - close_braces)
+
+            if open_brackets > close_brackets:
+                # Close any incomplete arrays
+                json_text += '\n]' * (open_brackets - close_brackets)
+
+        return json_text
 
     def save_to_file(
         self,
