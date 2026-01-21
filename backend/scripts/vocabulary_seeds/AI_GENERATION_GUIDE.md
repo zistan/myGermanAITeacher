@@ -24,9 +24,21 @@ This system uses Claude Sonnet 4.5 to generate premium-quality German vocabulary
 
 ### Prerequisites
 
-1. **Anthropic API Key**
+1. **Anthropic API Key** (Already Configured ✅)
+
+   The API key is already configured in `/backend/.env`:
    ```bash
-   export ANTHROPIC_API_KEY="sk-ant-your-key-here"
+   ANTHROPIC_API_KEY=sk-ant-your-api-key-here
+   ```
+
+   Scripts automatically read this via `os.getenv("ANTHROPIC_API_KEY")`.
+
+   **No manual export needed** - the `.env` file is already in place.
+
+   To verify configuration:
+   ```bash
+   cd /opt/german-learning-app/backend
+   grep ANTHROPIC_API_KEY .env
    ```
 
 2. **Install Dependencies**
@@ -395,14 +407,23 @@ pip install anthropic
 
 ### Issue: "No API key provided"
 
+**Root Cause**: The `/backend/.env` file is missing or doesn't contain `ANTHROPIC_API_KEY`.
+
 **Solution**:
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-your-key-here"
+# Check if .env file exists and has the key
+cd /opt/german-learning-app/backend
+cat .env | grep ANTHROPIC_API_KEY
 
-# Or add to ~/.bashrc (persistent)
-echo 'export ANTHROPIC_API_KEY="sk-ant-your-key-here"' >> ~/.bashrc
-source ~/.bashrc
+# If missing, add it to .env file:
+echo "ANTHROPIC_API_KEY=sk-ant-your-actual-key" >> .env
+chmod 600 .env  # Secure the file
+
+# Verify it's there:
+grep ANTHROPIC_API_KEY .env
 ```
+
+**Note**: The API key is shared by both the backend application and vocabulary seed scripts. Both read from `/backend/.env` automatically via `os.getenv("ANTHROPIC_API_KEY")`. No need to manually export environment variables.
 
 ### Issue: "Rate limit exceeded"
 

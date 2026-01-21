@@ -48,16 +48,22 @@ git pull origin master
 cd backend
 source venv/bin/activate
 
-# 3. Dry run (validate without inserting)
+# 3. Verify environment configuration (optional - already configured)
+# The Anthropic API key is in /backend/.env and automatically used by scripts
+grep ANTHROPIC_API_KEY .env  # Should show: ANTHROPIC_API_KEY=sk-ant-...
+
+# 4. Dry run (validate without inserting)
 cd scripts/vocabulary_seeds
 python3 master_seed.py --priority --dry-run --verbose
 
-# 4. Insert priority business vocabulary
+# 5. Insert priority business vocabulary
 python3 master_seed.py --priority
 
-# 5. Verify in database
+# 6. Verify in database
 psql -d german_learning -c "SELECT COUNT(*) FROM vocabulary WHERE category IN ('finance', 'business');"
 ```
+
+**Note**: The Anthropic API key is configured in `/backend/.env` and shared by both the backend FastAPI application and vocabulary seed scripts. All scripts automatically read it via `os.getenv("ANTHROPIC_API_KEY")` - no manual configuration needed.
 
 ## Usage
 
@@ -200,6 +206,12 @@ Vocabulary table fields:
 ### "Module not found" during dry run
 - Module not yet implemented - expected for incomplete phases
 - Check module path in CATEGORY_REGISTRY
+
+### "No API key provided" for AI generation
+- Check `/backend/.env` has `ANTHROPIC_API_KEY` configured
+- Verify with: `grep ANTHROPIC_API_KEY /opt/german-learning-app/backend/.env`
+- If missing, add it: `echo "ANTHROPIC_API_KEY=sk-ant-your-key" >> .env`
+- API key is shared by backend app and seed scripts (automatic via `os.getenv()`)
 
 ### Validation errors
 - Check required fields are present

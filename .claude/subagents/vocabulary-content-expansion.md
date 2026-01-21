@@ -106,7 +106,35 @@ The backend application runs on a **remote Ubuntu server** at `192.168.178.100:8
 - Running database migrations
 - Executing master_seed.py on the server
 - Managing server deployment
-- Configuring environment variables
+- Configuring environment variables (already set up in `.env`)
+
+### 🔑 Environment Configuration (API Key)
+
+**IMPORTANT**: The Anthropic API key is already configured on the server.
+
+**API Key Location**: `/backend/.env` file contains:
+```bash
+ANTHROPIC_API_KEY=sk-ant-your-api-key-here
+```
+
+**How It Works**:
+- Both the backend FastAPI application AND vocabulary seed scripts share the same `.env` file
+- Scripts automatically read the API key using `os.getenv("ANTHROPIC_API_KEY")`
+- No manual export or configuration needed - the key is already available
+
+**What This Means For You**:
+- ✅ API key is already configured by user (Igor)
+- ✅ No additional setup required for AI-assisted generation
+- ✅ Scripts will automatically find and use the key
+- ✅ Same key used by backend (ConversationAI, GrammarAI, VocabularyAI) and seed scripts
+
+**If AI Generation Fails with "No API key" Error**:
+This should not happen, but if it does, notify user (Igor) to verify:
+```bash
+# On server - check if .env has API key
+cd /opt/german-learning-app/backend
+grep ANTHROPIC_API_KEY .env
+```
 
 ### 📁 File Modification Restrictions
 
@@ -607,7 +635,7 @@ Create JSON configuration file in `batches/` directory:
 - **Quality consistency**: All batches same tier within category
 
 #### Step 3: Generate with AI (Server-Side)
-**Note**: This step requires Anthropic API key and must be run by user (Igor) on the server.
+**Note**: This step must be run by user (Igor) on the server. The Anthropic API key is automatically read from `/backend/.env` (already configured).
 
 ```bash
 # User runs on server (YOU DO NOT RUN THIS)
@@ -1628,8 +1656,29 @@ Categories registered in `/backend/scripts/vocabulary_seeds/master_seed.py`:
 - Server management and monitoring
 
 **API Keys**:
-- Anthropic API key for AI-assisted generation (stored on server)
-- You do NOT have access to API key
+- Anthropic API key configured in `/backend/.env` file
+- Automatically read by scripts via `os.getenv("ANTHROPIC_API_KEY")`
+- Shared by backend application and vocabulary seed scripts
+- You do NOT need to configure or manage the API key
+
+### API Key Verification
+
+If AI-assisted generation fails with "No API key" error, notify user (Igor) to verify:
+
+```bash
+# On server - check if .env has API key
+cd /opt/german-learning-app/backend
+grep ANTHROPIC_API_KEY .env
+
+# If missing, user needs to add it:
+echo "ANTHROPIC_API_KEY=sk-ant-your-actual-key" >> .env
+chmod 600 .env  # Secure the file
+```
+
+**API Key Usage**:
+- Backend FastAPI application (ConversationAI, GrammarAI, VocabularyAI services)
+- Vocabulary seed scripts (AI-assisted batch generation via `ai_generator.py`)
+- Both read from the same `/backend/.env` file
 
 ### Your Responsibilities
 
