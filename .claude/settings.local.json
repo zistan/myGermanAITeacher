@@ -52,7 +52,8 @@
       "Bash(tee:*)",
       "Bash(lsof:*)",
       "Bash(pytest:*)",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []
