@@ -27,6 +27,13 @@ import {
   HistoryPage,
   SessionDetailPage,
 } from './pages/conversation';
+import {
+  ProgressOverviewPage,
+  AchievementsPage,
+  HeatmapPage,
+  LeaderboardPage,
+  ErrorAnalysisPage,
+} from './pages/analytics';
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -212,6 +219,62 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Analytics routes */}
+          <Route
+            path="/analytics/progress"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProgressOverviewPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics/achievements"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AchievementsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics/heatmaps"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <HeatmapPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics/leaderboards"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <LeaderboardPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics/errors"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ErrorAnalysisPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Backward compatibility redirects */}
+          <Route path="/progress" element={<Navigate to="/analytics/progress" replace />} />
+          <Route path="/achievements" element={<Navigate to="/analytics/achievements" replace />} />
 
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
