@@ -28,7 +28,7 @@ export function ResultsPage() {
 
   useEffect(() => {
     // If no results or invalid results structure, redirect to grammar page
-    if (!results || typeof safeResults.accuracy_percentage === 'undefined') {
+    if (!results || typeof results.accuracy_percentage === 'undefined') {
       console.error('Invalid results structure:', results);
       addToast('error', 'Invalid session results', 'Unable to display results. Please try again.');
       navigate('/grammar');
@@ -108,14 +108,14 @@ export function ResultsPage() {
   // Provide safe defaults for missing fields
   const safeResults = {
     session_id: results.session_id || 0,
-    total_exercises: safeResults.total_exercises || 0,
-    exercises_correct: safeResults.exercises_correct || 0,
-    accuracy_percentage: safeResults.accuracy_percentage ?? 0,
-    total_points: safeResults.total_points || 0,
-    duration_minutes: safeResults.duration_minutes || 0,
-    topics_practiced: safeResults.topics_practiced || [],
-    improvements: safeResults.improvements || [],
-    next_recommended_topics: safeResults.next_recommended_topics || [],
+    total_exercises: results.total_exercises || 0,
+    exercises_correct: results.exercises_correct || 0,
+    accuracy_percentage: results.accuracy_percentage ?? 0,
+    total_points: results.total_points || 0,
+    duration_minutes: results.duration_minutes || 0,
+    topics_practiced: results.topics_practiced || [],
+    improvements: results.improvements || [],
+    next_recommended_topics: results.next_recommended_topics || [],
   };
 
   return (
