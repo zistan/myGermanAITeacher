@@ -24,15 +24,17 @@ export function ProgressPage() {
   } = useGrammarStore();
 
   // Local state
-  const [recommendations, setRecommendations] = useState<any>(null);
-  const [isLoadingRecs, setIsLoadingRecs] = useState(false);
+  // TODO: Uncomment when recommendations endpoint is implemented
+  // const [recommendations, setRecommendations] = useState<any>(null);
+  // const [isLoadingRecs, setIsLoadingRecs] = useState(false);
 
   useEffect(() => {
     loadAllData();
   }, []);
 
   const loadAllData = async () => {
-    await Promise.all([loadProgress(), loadWeakAreas(), loadRecommendations()]);
+    await Promise.all([loadProgress(), loadWeakAreas()]);
+    // Note: recommendations endpoint not yet implemented in backend
   };
 
   const loadProgress = async () => {
@@ -57,17 +59,18 @@ export function ProgressPage() {
     }
   };
 
-  const loadRecommendations = async () => {
-    setIsLoadingRecs(true);
-    try {
-      const data = await grammarService.getRecommendations();
-      setRecommendations(data);
-    } catch (error) {
-      console.error('Failed to load recommendations:', error);
-    } finally {
-      setIsLoadingRecs(false);
-    }
-  };
+  // TODO: Implement recommendations endpoint in backend
+  // const loadRecommendations = async () => {
+  //   setIsLoadingRecs(true);
+  //   try {
+  //     const data = await grammarService.getRecommendations();
+  //     setRecommendations(data);
+  //   } catch (error) {
+  //     console.error('Failed to load recommendations:', error);
+  //   } finally {
+  //     setIsLoadingRecs(false);
+  //   }
+  // };
 
   const handleStartPractice = (topicId?: number) => {
     const params = topicId ? `?topics=${topicId}` : '';
@@ -354,8 +357,9 @@ export function ProgressPage() {
             </Card>
           )}
 
-          {/* Recommendations */}
-          {recommendations && (
+          {/* Recommendations - TODO: Implement backend endpoint */}
+          {/* Uncomment when /api/grammar/recommendations endpoint is implemented */}
+          {/* {recommendations && (
             <Card>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommendations</h3>
               {isLoadingRecs ? (
@@ -393,7 +397,7 @@ export function ProgressPage() {
                 </div>
               )}
             </Card>
-          )}
+          )} */}
         </div>
       </div>
 
