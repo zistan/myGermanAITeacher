@@ -550,19 +550,34 @@ def end_grammar_session(
     # Get next recommended topics (topics with low accuracy or not yet practiced)
     user_progress = db.query(UserGrammarProgress).filter(
         UserGrammarProgress.user_id == current_user.id,
-        UserGrammarProgress.mastery_level < 3.0
+        UserGrammarProgress.mastery_level < 0.80
     ).order_by(
         UserGrammarProgress.mastery_level.asc()
     ).limit(5).all()
 
     next_recommended_topics = [p.topic_id for p in user_progress]
 
+    # Calculate total points from correct attempts
+    all_attempts = db.query(GrammarExerciseAttempt).filter(
+        GrammarExerciseAttempt.grammar_session_id == session_id,
+        GrammarExerciseAttempt.is_correct == True
+    ).all()
+
+    total_points = 0
+    for attempt in all_attempts:
+        exercise = db.query(GrammarExercise).filter(
+            GrammarExercise.id == attempt.exercise_id
+        ).first()
+        if exercise:
+            difficulty_points = {"A1": 1, "A2": 1, "B1": 2, "B2": 2, "C1": 3, "C2": 3}
+            total_points += difficulty_points.get(exercise.difficulty_level, 1)
+
     return {
         "session_id": session_id,
         "total_exercises": session.total_exercises,
         "exercises_correct": session.exercises_correct,
         "accuracy_percentage": round(session.accuracy_rate, 1),
-        "total_points": session.points_earned or 0,
+        "total_points": total_points,
         "duration_minutes": round(duration, 1),
         "topics_practiced": topics_practiced,
         "improvements": improvements,
