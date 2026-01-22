@@ -520,15 +520,53 @@ def end_grammar_session(
 
     duration = (session.ended_at - session.started_at).total_seconds() / 60
 
+    # Get topics practiced in this session
+    attempts = db.query(GrammarExerciseAttempt).join(
+        GrammarExercise
+    ).filter(
+        GrammarExerciseAttempt.grammar_session_id == session_id
+    ).all()
+
+    topic_ids = set()
+    for attempt in attempts:
+        if attempt.exercise:
+            topic_ids.add(attempt.exercise.topic_id)
+
+    topics_practiced = []
+    for topic_id in topic_ids:
+        topic = db.query(GrammarTopic).filter(GrammarTopic.id == topic_id).first()
+        if topic:
+            topics_practiced.append(topic.name_en)
+
+    # Generate improvements based on performance
+    improvements = []
+    if session.accuracy_rate >= 90:
+        improvements.append("Excellent understanding of the material")
+    if session.accuracy_rate >= 80:
+        improvements.append("Strong grasp of grammar concepts")
+    if session.total_exercises >= 10:
+        improvements.append(f"Completed {session.total_exercises} exercises in one session")
+
+    # Get next recommended topics (topics with low accuracy or not yet practiced)
+    user_progress = db.query(UserGrammarProgress).filter(
+        UserGrammarProgress.user_id == current_user.id,
+        UserGrammarProgress.mastery_level < 3.0
+    ).order_by(
+        UserGrammarProgress.mastery_level.asc()
+    ).limit(5).all()
+
+    next_recommended_topics = [p.topic_id for p in user_progress]
+
     return {
         "session_id": session_id,
-        "summary": {
-            "total_exercises": session.total_exercises,
-            "completed": session.total_exercises,
-            "correct": session.exercises_correct,
-            "accuracy": session.accuracy_rate,
-            "duration_minutes": round(duration, 1)
-        }
+        "total_exercises": session.total_exercises,
+        "exercises_correct": session.exercises_correct,
+        "accuracy_percentage": round(session.accuracy_rate, 1),
+        "total_points": session.points_earned or 0,
+        "duration_minutes": round(duration, 1),
+        "topics_practiced": topics_practiced,
+        "improvements": improvements,
+        "next_recommended_topics": next_recommended_topics
     }
 
 
