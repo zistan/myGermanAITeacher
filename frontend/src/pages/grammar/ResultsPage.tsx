@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import grammarService from '../../api/services/grammarService';
 import type { EndSessionResponse } from '../../api/types/grammar.types';
 import { useGrammarStore } from '../../store/grammarStore';
+import { useNotificationStore } from '../../store/notificationStore';
 import { Loading, Button, Card, Badge, ProgressBar } from '../../components/common';
 
 interface LocationState {
@@ -12,6 +13,7 @@ interface LocationState {
 export function ResultsPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const addToast = useNotificationStore((state) => state.addToast);
 
   // Get results from navigation state
   const locationState = location.state as LocationState | null;
@@ -25,20 +27,22 @@ export function ResultsPage() {
   const [isLoadingRecs, setIsLoadingRecs] = useState(false);
 
   useEffect(() => {
-    // If no results, redirect to grammar page
-    if (!results) {
+    // If no results or invalid results structure, redirect to grammar page
+    if (!results || typeof safeResults.accuracy_percentage === 'undefined') {
+      console.error('Invalid results structure:', results);
+      addToast('error', 'Invalid session results', 'Unable to display results. Please try again.');
       navigate('/grammar');
       return;
     }
 
-    // Load recommendations
-    loadRecommendations();
+    // Load recommendations (commented out - endpoint doesn't exist)
+    // loadRecommendations();
 
     // Clear session from store after results are shown
     return () => {
       clearSession();
     };
-  }, [results, navigate, clearSession]);
+  }, [results, navigate, clearSession, addToast]);
 
   const loadRecommendations = async () => {
     setIsLoadingRecs(true);
@@ -101,14 +105,27 @@ export function ResultsPage() {
     return <Loading fullScreen />;
   }
 
+  // Provide safe defaults for missing fields
+  const safeResults = {
+    session_id: results.session_id || 0,
+    total_exercises: safeResults.total_exercises || 0,
+    exercises_correct: safeResults.exercises_correct || 0,
+    accuracy_percentage: safeResults.accuracy_percentage ?? 0,
+    total_points: safeResults.total_points || 0,
+    duration_minutes: safeResults.duration_minutes || 0,
+    topics_practiced: safeResults.topics_practiced || [],
+    improvements: safeResults.improvements || [],
+    next_recommended_topics: safeResults.next_recommended_topics || [],
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Results Header */}
       <Card className="mb-6">
         <div className="text-center">
-          <div className="text-6xl mb-4">{getScoreEmoji(results.accuracy_percentage)}</div>
+          <div className="text-6xl mb-4">{getScoreEmoji(safeResults.accuracy_percentage)}</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Session Complete!</h1>
-          <p className="text-lg text-gray-600">{getScoreMessage(results.accuracy_percentage)}</p>
+          <p className="text-lg text-gray-600">{getScoreMessage(safeResults.accuracy_percentage)}</p>
         </div>
       </Card>
 
@@ -118,8 +135,8 @@ export function ResultsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {/* Accuracy */}
           <div className="text-center">
-            <div className={`text-4xl font-bold ${getScoreColor(results.accuracy_percentage)}`}>
-              {results.accuracy_percentage.toFixed(0)}%
+            <div className={`text-4xl font-bold ${getScoreColor(safeResults.accuracy_percentage)}`}>
+              {safeResults.accuracy_percentage.toFixed(0)}%
             </div>
             <div className="text-sm text-gray-600">Accuracy</div>
           </div>
@@ -127,7 +144,7 @@ export function ResultsPage() {
           {/* Correct */}
           <div className="text-center">
             <div className="text-4xl font-bold text-green-600">
-              {results.exercises_correct}
+              {safeResults.exercises_correct}
             </div>
             <div className="text-sm text-gray-600">Correct</div>
           </div>
@@ -135,7 +152,7 @@ export function ResultsPage() {
           {/* Total */}
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-700">
-              {results.total_exercises}
+              {safeResults.total_exercises}
             </div>
             <div className="text-sm text-gray-600">Total</div>
           </div>
@@ -143,7 +160,7 @@ export function ResultsPage() {
           {/* Points */}
           <div className="text-center">
             <div className="text-4xl font-bold text-primary-600">
-              {results.total_points}
+              {safeResults.total_points}
             </div>
             <div className="text-sm text-gray-600">Points</div>
           </div>
@@ -152,11 +169,11 @@ export function ResultsPage() {
         {/* Progress Bar */}
         <div className="mt-6">
           <ProgressBar
-            value={results.accuracy_percentage}
+            value={safeResults.accuracy_percentage}
             color={
-              results.accuracy_percentage >= 80
+              safeResults.accuracy_percentage >= 80
                 ? 'success'
-                : results.accuracy_percentage >= 60
+                : safeResults.accuracy_percentage >= 60
                 ? 'warning'
                 : 'danger'
             }
@@ -173,23 +190,23 @@ export function ResultsPage() {
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="text-sm text-gray-600">Duration</div>
             <div className="text-xl font-semibold text-gray-900">
-              {results.duration_minutes} minutes
+              {safeResults.duration_minutes} minutes
             </div>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="text-sm text-gray-600">Topics Practiced</div>
             <div className="text-xl font-semibold text-gray-900">
-              {results.topics_practiced.length}
+              {safeResults.topics_practiced.length}
             </div>
           </div>
         </div>
 
         {/* Topics List */}
-        {results.topics_practiced.length > 0 && (
+        {safeResults.topics_practiced.length > 0 && (
           <div className="mt-4">
             <div className="text-sm font-medium text-gray-700 mb-2">Topics covered:</div>
             <div className="flex flex-wrap gap-2">
-              {results.topics_practiced.map((topic, index) => (
+              {safeResults.topics_practiced.map((topic, index) => (
                 <Badge key={index} variant="gray" size="sm">
                   {topic}
                 </Badge>
@@ -200,11 +217,11 @@ export function ResultsPage() {
       </Card>
 
       {/* Improvements */}
-      {results.improvements && results.improvements.length > 0 && (
+      {safeResults.improvements && safeResults.improvements.length > 0 && (
         <Card className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">What You Improved</h2>
           <ul className="space-y-2">
-            {results.improvements.map((improvement, index) => (
+            {safeResults.improvements.map((improvement, index) => (
               <li
                 key={index}
                 className="flex items-start p-3 bg-green-50 rounded-lg text-green-800"
@@ -272,14 +289,14 @@ export function ResultsPage() {
       )}
 
       {/* Recommendations */}
-      {results.next_recommended_topics && results.next_recommended_topics.length > 0 && (
+      {safeResults.next_recommended_topics && safeResults.next_recommended_topics.length > 0 && (
         <Card className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Recommended Next</h2>
           <p className="text-sm text-gray-600 mb-4">
             Based on your performance, we recommend practicing these topics:
           </p>
           <div className="flex flex-wrap gap-3">
-            {results.next_recommended_topics.slice(0, 5).map((topicId) => (
+            {safeResults.next_recommended_topics.slice(0, 5).map((topicId) => (
               <Button
                 key={topicId}
                 onClick={() => handlePracticeTopics([topicId])}
@@ -290,10 +307,10 @@ export function ResultsPage() {
               </Button>
             ))}
           </div>
-          {results.next_recommended_topics.length > 0 && (
+          {safeResults.next_recommended_topics.length > 0 && (
             <div className="mt-4">
               <Button
-                onClick={() => handlePracticeTopics(results.next_recommended_topics)}
+                onClick={() => handlePracticeTopics(safeResults.next_recommended_topics)}
                 variant="primary"
               >
                 Practice All Recommended
