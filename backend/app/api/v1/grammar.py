@@ -521,16 +521,17 @@ def end_grammar_session(
     duration = (session.ended_at - session.started_at).total_seconds() / 60
 
     # Get topics practiced in this session
-    attempts = db.query(GrammarExerciseAttempt).join(
-        GrammarExercise
-    ).filter(
+    attempts = db.query(GrammarExerciseAttempt).filter(
         GrammarExerciseAttempt.grammar_session_id == session_id
     ).all()
 
     topic_ids = set()
     for attempt in attempts:
-        if attempt.exercise:
-            topic_ids.add(attempt.exercise.topic_id)
+        exercise = db.query(GrammarExercise).filter(
+            GrammarExercise.id == attempt.exercise_id
+        ).first()
+        if exercise:
+            topic_ids.add(exercise.topic_id)
 
     topics_practiced = []
     for topic_id in topic_ids:
