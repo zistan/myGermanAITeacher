@@ -87,18 +87,20 @@ export interface ActivityStats {
 
 // Learning Path (from IntegrationService.get_personalized_learning_path)
 export interface LearningPath {
+  user_id: number;
+  generated_at: string; // ISO datetime
   focus_areas: FocusArea[];
   daily_plan: DailyPlan;
-  weekly_goals: WeeklyGoals;
+  weekly_plan: WeeklyPlan;
   recommended_contexts: RecommendedContext[];
   motivation_message: string;
 }
 
 export interface FocusArea {
-  module: string; // "grammar" | "vocabulary" | "conversation"
-  area: string; // Area name
+  module: 'grammar' | 'vocabulary' | 'conversation';
+  area: string; // Area name (topic name, word, or context)
   reason: string; // Why focus on this
-  priority: string; // "high" | "medium" | "low"
+  priority: 'critical' | 'high' | 'medium' | 'low';
 }
 
 export interface DailyPlan {
@@ -107,20 +109,21 @@ export interface DailyPlan {
 }
 
 export interface DailyActivity {
+  time_of_day?: string; // "morning" | "midday" | "evening"
   activity: string; // "vocabulary_review" | "grammar_practice" | "conversation"
   duration_minutes: number;
   description: string;
+  priority?: string; // "high" | "medium" | "low"
 }
 
-export interface WeeklyGoals {
-  target_sessions: number;
-  target_exercises: number;
-  target_vocabulary_reviews: number;
-  progress: {
-    sessions_completed: number;
-    exercises_completed: number;
-    reviews_completed: number;
+export interface WeeklyPlan {
+  goal_sessions: number;
+  focus_distribution: {
+    conversation: number;
+    grammar: number;
+    vocabulary: number;
   };
+  milestones: string[];
 }
 
 export interface RecommendedContext {
@@ -128,6 +131,8 @@ export interface RecommendedContext {
   name: string;
   category: string;
   difficulty_level: string;
+  times_practiced: number;
+  priority: 'high' | 'medium' | 'low';
   reason: string;
 }
 

@@ -8,6 +8,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { LearningPathPage } from './pages/LearningPathPage';
 import { GrammarTopicsPage } from './pages/grammar/GrammarTopicsPage';
 import { PracticeSessionPage } from './pages/grammar/PracticeSessionPage';
 import { ProgressPage as GrammarProgressPage } from './pages/grammar/ProgressPage';
@@ -59,6 +60,18 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <DashboardPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Learning Path route */}
+          <Route
+            path="/learning-path"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <LearningPathPage />
                 </Layout>
               </ProtectedRoute>
             }
