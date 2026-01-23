@@ -146,7 +146,10 @@ class BatchConfig:
             grammar_check_duplicates=os.getenv('BATCH_GRAMMAR_CHECK_DUPLICATES', 'true').lower() == 'true',
 
             # Execution Tracking
-            execution_log_path=os.getenv('BATCH_EXECUTION_LOG_PATH', 'logs/batch_execution.json'),
+            execution_log_path=os.path.join(
+                backend_dir,
+                os.getenv('BATCH_EXECUTION_LOG_PATH', 'logs/batch_execution.json')
+            ),
             history_retention_days=int(os.getenv('BATCH_HISTORY_RETENTION_DAYS', '90')),
 
             # Content Priority
