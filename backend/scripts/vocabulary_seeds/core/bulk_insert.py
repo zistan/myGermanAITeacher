@@ -51,6 +51,48 @@ class BulkInsertResult:
         return "\n".join(lines)
 
 
+class VocabularyInserter:
+    """Wrapper class for vocabulary bulk insertion."""
+
+    def __init__(self, db_session: Session, dry_run: bool = False):
+        """
+        Initialize inserter.
+
+        Args:
+            db_session: SQLAlchemy database session
+            dry_run: If True, don't actually insert (for testing)
+        """
+        self.db = db_session
+        self.dry_run = dry_run
+
+    def insert_words(self, words: List[Dict], batch_size: int = 1000) -> Dict:
+        """
+        Insert vocabulary words into database.
+
+        Args:
+            words: List of word dictionaries
+            batch_size: Number of words per batch
+
+        Returns:
+            Dictionary with insertion results
+        """
+        if self.dry_run:
+            return {
+                'inserted': len(words),
+                'skipped': 0,
+                'errors': []
+            }
+
+        # Use the bulk_insert_vocabulary function
+        result = bulk_insert_vocabulary(words, batch_size=batch_size, verbose=False)
+
+        return {
+            'inserted': result.inserted_count,
+            'skipped': result.skipped_count,
+            'errors': result.errors
+        }
+
+
 def bulk_insert_vocabulary(
     words: List[VocabularyWord],
     batch_size: int = 1000,
