@@ -163,11 +163,15 @@ class BatchExecutionTracker:
         Args:
             execution_data: Execution details to log
         """
+        # CRITICAL: Reload from file to avoid overwriting concurrent executions
+        # Multiple feeders may have been initialized with stale state
+        self.executions = self._load_executions()
+
         # Add timestamp if not present
         if 'timestamp' not in execution_data:
             execution_data['timestamp'] = datetime.now().isoformat()
 
-        # Add daily/weekly totals snapshot
+        # Add daily/weekly totals snapshot (calculated from refreshed executions)
         execution_data['daily_totals'] = self.get_daily_totals()
         execution_data['weekly_totals'] = self.get_weekly_totals()
 
