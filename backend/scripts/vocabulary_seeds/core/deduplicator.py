@@ -73,7 +73,7 @@ class VocabularyDeduplicator:
         """
         self.db = db_session
         self.threshold = similarity_threshold
-        logger.info(f"Initialized VocabularyDeduplicator with threshold={threshold}")
+        logger.info(f"Initialized VocabularyDeduplicator with threshold={similarity_threshold}")
 
     def get_existing_words(self, category: str = None, difficulty: str = None) -> Set[str]:
         """
@@ -195,7 +195,7 @@ class GrammarDeduplicator:
         """
         self.db = db_session
         self.threshold = similarity_threshold
-        logger.info(f"Initialized GrammarDeduplicator with threshold={threshold}")
+        logger.info(f"Initialized GrammarDeduplicator with threshold={similarity_threshold}")
 
     def get_existing_exercises(self, topic_id: int) -> List[str]:
         """
