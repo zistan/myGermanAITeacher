@@ -184,11 +184,13 @@ class VocabularyGenerator:
             print(f"✓ Validation complete: {validation_result.valid_count} valid, "
                   f"{validation_result.invalid_count} invalid")
 
-        # Return only valid words
-        valid_words = [
-            word for i, word in enumerate(words)
-            if i < validation_result.valid_count
-        ]
+        # Return only valid words (filter by re-validating each word individually)
+        valid_words = []
+        for word in words:
+            # Validate each word individually
+            word_errors = self.validator._validate_single_word(word, 0)
+            if not word_errors:  # No errors = valid
+                valid_words.append(word)
 
         return valid_words
 
