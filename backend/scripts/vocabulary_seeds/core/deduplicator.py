@@ -217,7 +217,7 @@ class GrammarDeduplicator:
             from app.models.grammar import GrammarExercise
 
             # Query exercises for this topic
-            results = self.db.query(GrammarExercise.question).filter(
+            results = self.db.query(GrammarExercise.question_text).filter(
                 GrammarExercise.topic_id == topic_id
             ).all()
 
@@ -262,7 +262,7 @@ class GrammarDeduplicator:
         Filter duplicate exercises
 
         Args:
-            exercises: List of exercise dictionaries (must have 'question' field)
+            exercises: List of exercise dictionaries (must have 'question_text' field)
             existing: Optional list of existing questions (will query if not provided)
             topic_id: Topic ID (required if existing not provided)
 
@@ -281,10 +281,10 @@ class GrammarDeduplicator:
         batch_questions = []
 
         for exercise in exercises:
-            question = exercise.get('question', '')
+            question = exercise.get('question_text', '')
 
             if not question:
-                logger.warning(f"Exercise missing question field: {exercise}")
+                logger.warning(f"Exercise missing question_text field: {exercise}")
                 duplicate_exercises.append(exercise)
                 continue
 
