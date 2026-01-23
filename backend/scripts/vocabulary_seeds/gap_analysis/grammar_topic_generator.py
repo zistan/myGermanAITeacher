@@ -221,7 +221,7 @@ if __name__ == "__main__":
     import os
 
     # Add backend to path
-    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     sys.path.insert(0, backend_dir)
 
     from app.services.grammar_ai_service import GrammarAIService

@@ -90,7 +90,7 @@ class VocabularyDeduplicator:
             # Import here to avoid circular dependency
             import sys
             import os
-            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
             sys.path.insert(0, backend_dir)
 
             from app.models.vocabulary import Vocabulary
@@ -211,7 +211,7 @@ class GrammarDeduplicator:
             # Import here to avoid circular dependency
             import sys
             import os
-            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
             sys.path.insert(0, backend_dir)
 
             from app.models.grammar import GrammarExercise

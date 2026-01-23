@@ -51,7 +51,7 @@ class GrammarGapAnalyzer:
             # Import models
             import sys
             import os
-            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
             sys.path.insert(0, backend_dir)
 
             from app.models.grammar import GrammarTopic, GrammarExercise
@@ -120,7 +120,7 @@ class GrammarGapAnalyzer:
             # Import models
             import sys
             import os
-            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
             sys.path.insert(0, backend_dir)
 
             from app.models.grammar import GrammarTopic
@@ -289,7 +289,7 @@ class GrammarGapAnalyzer:
         try:
             import sys
             import os
-            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
             sys.path.insert(0, backend_dir)
 
             from app.models.grammar import GrammarExercise
@@ -306,7 +306,7 @@ class GrammarGapAnalyzer:
         try:
             import sys
             import os
-            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
             sys.path.insert(0, backend_dir)
 
             from app.models.grammar import GrammarTopic
@@ -327,7 +327,7 @@ if __name__ == "__main__":
     import os
 
     # Add backend to path
-    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     sys.path.insert(0, backend_dir)
 
     from app.database import SessionLocal

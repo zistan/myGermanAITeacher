@@ -78,7 +78,9 @@ class BatchConfig:
         # Load .env file
         if env_path is None:
             # Default to backend/.env
-            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            # Path: backend/scripts/vocabulary_seeds/core/batch_config.py -> backend/
+            # Need 4 levels up: core -> vocabulary_seeds -> scripts -> backend
+            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
             env_path = os.path.join(backend_dir, '.env')
 
         if not os.path.exists(env_path):
