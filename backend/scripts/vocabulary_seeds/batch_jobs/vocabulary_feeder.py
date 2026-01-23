@@ -33,13 +33,13 @@ class VocabularyBatchFeeder:
         self.db = db_session
         self.config = config
 
-        # Import components
-        from ..core.batch_tracker import BatchExecutionTracker
-        from ..gap_analysis.vocabulary_gaps import VocabularyGapAnalyzer
-        from ..core.deduplicator import VocabularyDeduplicator
-        from ..core.ai_generator import VocabularyGenerator
-        from ..core.validation import VocabularyValidator
-        from ..core.bulk_insert import VocabularyInserter
+        # Import components (absolute imports since script is run directly)
+        from scripts.vocabulary_seeds.core.batch_tracker import BatchExecutionTracker
+        from scripts.vocabulary_seeds.gap_analysis.vocabulary_gaps import VocabularyGapAnalyzer
+        from scripts.vocabulary_seeds.core.deduplicator import VocabularyDeduplicator
+        from scripts.vocabulary_seeds.core.ai_generator import VocabularyGenerator
+        from scripts.vocabulary_seeds.core.validation import VocabularyValidator
+        from scripts.vocabulary_seeds.core.bulk_insert import VocabularyInserter
 
         # Initialize components
         self.tracker = BatchExecutionTracker(
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     )
 
     from app.database import SessionLocal
-    from ..core.batch_config import BatchConfig
+    from scripts.vocabulary_seeds.core.batch_config import BatchConfig
 
     # Load config
     config = BatchConfig.load()

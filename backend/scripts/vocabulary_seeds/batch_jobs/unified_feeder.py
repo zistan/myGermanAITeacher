@@ -131,7 +131,7 @@ class UnifiedBatchFeeder:
 
     def get_summary(self) -> str:
         """Get formatted execution summary"""
-        from ..core.batch_tracker import BatchExecutionTracker
+        from scripts.vocabulary_seeds.core.batch_tracker import BatchExecutionTracker
 
         tracker = BatchExecutionTracker(
             self.config.execution_log_path,
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     )
 
     from app.database import SessionLocal
-    from ..core.batch_config import BatchConfig
+    from scripts.vocabulary_seeds.core.batch_config import BatchConfig
 
     # Load config
     config = BatchConfig.load()

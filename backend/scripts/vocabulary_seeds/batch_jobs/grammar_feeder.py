@@ -33,11 +33,11 @@ class GrammarBatchFeeder:
         self.db = db_session
         self.config = config
 
-        # Import components
-        from ..core.batch_tracker import BatchExecutionTracker
-        from ..gap_analysis.grammar_gaps import GrammarGapAnalyzer
-        from ..core.deduplicator import GrammarDeduplicator
-        from ..gap_analysis.grammar_topic_generator import GrammarTopicGenerator
+        # Import components (absolute imports since script is run directly)
+        from scripts.vocabulary_seeds.core.batch_tracker import BatchExecutionTracker
+        from scripts.vocabulary_seeds.gap_analysis.grammar_gaps import GrammarGapAnalyzer
+        from scripts.vocabulary_seeds.core.deduplicator import GrammarDeduplicator
+        from scripts.vocabulary_seeds.gap_analysis.grammar_topic_generator import GrammarTopicGenerator
         from app.services.grammar_ai_service import GrammarAIService
         from app.models.grammar import GrammarTopic, GrammarExercise
 
@@ -509,7 +509,7 @@ if __name__ == "__main__":
     )
 
     from app.database import SessionLocal
-    from ..core.batch_config import BatchConfig
+    from scripts.vocabulary_seeds.core.batch_config import BatchConfig
 
     # Load config
     config = BatchConfig.load()

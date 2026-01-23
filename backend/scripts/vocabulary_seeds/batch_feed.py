@@ -39,9 +39,9 @@ logger = logging.getLogger(__name__)
 
 def show_status(db, config):
     """Show current batch feeding status"""
-    from core.batch_tracker import BatchExecutionTracker
-    from gap_analysis.vocabulary_gaps import VocabularyGapAnalyzer
-    from gap_analysis.grammar_gaps import GrammarGapAnalyzer
+    from scripts.vocabulary_seeds.core.batch_tracker import BatchExecutionTracker
+    from scripts.vocabulary_seeds.gap_analysis.vocabulary_gaps import VocabularyGapAnalyzer
+    from scripts.vocabulary_seeds.gap_analysis.grammar_gaps import GrammarGapAnalyzer
     from app.models.vocabulary import Vocabulary
     from app.models.grammar import GrammarExercise
     from sqlalchemy import func
@@ -106,8 +106,8 @@ def show_status(db, config):
 
 def show_gaps(db, config):
     """Show gap analysis for both vocabulary and grammar"""
-    from gap_analysis.vocabulary_gaps import VocabularyGapAnalyzer
-    from gap_analysis.grammar_gaps import GrammarGapAnalyzer
+    from scripts.vocabulary_seeds.gap_analysis.vocabulary_gaps import VocabularyGapAnalyzer
+    from scripts.vocabulary_seeds.gap_analysis.grammar_gaps import GrammarGapAnalyzer
 
     vocab_analyzer = VocabularyGapAnalyzer(db, config)
     grammar_analyzer = GrammarGapAnalyzer(db, config)
@@ -119,7 +119,7 @@ def show_gaps(db, config):
 
 def show_history(config):
     """Show execution history"""
-    from core.batch_tracker import BatchExecutionTracker
+    from scripts.vocabulary_seeds.core.batch_tracker import BatchExecutionTracker
 
     tracker = BatchExecutionTracker(config.execution_log_path, config.history_retention_days)
 
@@ -133,7 +133,7 @@ def show_config(config):
 
 def execute_batch(db, config, mode, force, verbose):
     """Execute batch feeding"""
-    from batch_jobs.unified_feeder import UnifiedBatchFeeder
+    from scripts.vocabulary_seeds.batch_jobs.unified_feeder import UnifiedBatchFeeder
 
     # Set logging level based on verbose flag
     if verbose:
@@ -263,7 +263,7 @@ Examples:
 
     try:
         # Load configuration
-        from core.batch_config import BatchConfig
+        from scripts.vocabulary_seeds.core.batch_config import BatchConfig
         config = BatchConfig.load()
 
         # Setup database session
