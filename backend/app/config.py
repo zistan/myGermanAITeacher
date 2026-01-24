@@ -3,6 +3,7 @@ Application configuration management.
 Loads settings from environment variables.
 """
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from typing import List
 
 
@@ -38,9 +39,11 @@ class Settings(BaseSettings):
         """Parse CORS origins from comma-separated string."""
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = ConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra='ignore'  # Ignore unknown environment variables (e.g., BATCH_* vars)
+    )
 
 
 # Global settings instance
