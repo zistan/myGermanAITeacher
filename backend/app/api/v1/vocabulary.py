@@ -457,6 +457,35 @@ def get_current_flashcard(
     return cards[db_session.current_index]
 
 
+@router.post("/v1/vocabulary/flashcards/{session_id}/complete")
+def complete_flashcard_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Mark a flashcard session as completed."""
+    # Query session from database
+    db_session = db.query(FlashcardSession).filter(
+        FlashcardSession.id == session_id
+    ).first()
+
+    if not db_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    if db_session.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your session")
+
+    # Update ended_at timestamp
+    db_session.ended_at = datetime.utcnow()
+    db.commit()
+
+    return {
+        "session_id": session_id,
+        "ended_at": db_session.ended_at,
+        "message": "Flashcard session completed successfully"
+    }
+
+
 # ========== PERSONAL VOCABULARY LIST ENDPOINTS ==========
 
 @router.post("/v1/vocabulary/lists", response_model=PersonalVocabularyListResponse)

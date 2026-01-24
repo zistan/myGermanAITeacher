@@ -112,6 +112,17 @@ class VocabularyService {
     return response.data;
   }
 
+  /**
+   * POST /api/v1/vocabulary/flashcards/{session_id}/complete
+   * Mark a flashcard session as completed
+   */
+  async completeFlashcardSession(sessionId: number): Promise<{ session_id: number; ended_at: string; message: string }> {
+    const response = await apiClient.post<{ session_id: number; ended_at: string; message: string }>(
+      `/api/v1/vocabulary/flashcards/${sessionId}/complete`
+    );
+    return response.data;
+  }
+
   // ========== PERSONAL LIST ENDPOINTS ==========
 
   /**

@@ -143,7 +143,16 @@ export function FlashcardSessionPage() {
         updateFlashcardCard(result.next_card, flashcardSession.currentCardNumber + 1);
         setCardStartTime(Date.now());
       } else {
-        // Session complete
+        // Session complete - mark in database
+        try {
+          await vocabularyService.completeFlashcardSession(sessionId);
+          console.log('[Flashcard] Marked session as completed in database');
+        } catch (error) {
+          const apiError = error as ApiError;
+          console.error('[Flashcard] Failed to mark session as completed:', apiError);
+          addToast('warning', 'Session completed', 'Unable to save completion status');
+        }
+
         completeFlashcardSession();
       }
     } catch (error) {
@@ -154,8 +163,17 @@ export function FlashcardSessionPage() {
     }
   };
 
-  const handleEndSession = () => {
-    if (flashcardSession) {
+  const handleEndSession = async () => {
+    if (flashcardSession && sessionId) {
+      // Mark session as completed in database
+      try {
+        await vocabularyService.completeFlashcardSession(sessionId);
+        console.log('[Flashcard] Marked session as completed in database (early end)');
+      } catch (error) {
+        const apiError = error as ApiError;
+        console.error('[Flashcard] Failed to mark session as completed:', apiError);
+      }
+
       completeFlashcardSession();
     } else {
       navigate('/vocabulary');
