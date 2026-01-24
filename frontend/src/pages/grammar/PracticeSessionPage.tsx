@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import grammarService from '../../api/services/grammarService';
 import type {
@@ -35,6 +35,9 @@ export function PracticeSessionPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const addToast = useNotificationStore((state) => state.addToast);
+
+  // Prevent duplicate session creation (React StrictMode protection)
+  const sessionInitialized = useRef(false);
 
   // Grammar store
   const {
@@ -95,6 +98,11 @@ export function PracticeSessionPage() {
 
   // Check for incomplete session on mount
   useEffect(() => {
+    // Prevent duplicate session creation (React StrictMode causes double execution)
+    if (sessionInitialized.current) {
+      return;
+    }
+
     if (hasIncompleteSession) {
       setShowRestoreModal(true);
       // CRITICAL: Set sessionState to 'idle' so modal is visible (not stuck on loading spinner)
@@ -103,6 +111,7 @@ export function PracticeSessionPage() {
       // Only start session if we haven't checked for incomplete session yet
       // and modal is not showing
       if (!showRestoreModal) {
+        sessionInitialized.current = true; // Mark as initialized before API call
         startSession();
       }
     }
@@ -152,6 +161,7 @@ export function PracticeSessionPage() {
 
   const handleRestoreSession = async () => {
     setShowRestoreModal(false);
+    sessionInitialized.current = true; // Mark as initialized
     const session = restoreSession();
     if (session) {
       try {
@@ -175,10 +185,17 @@ export function PracticeSessionPage() {
   const handleStartFresh = () => {
     setShowRestoreModal(false);
     clearPersistedSession();
+    sessionInitialized.current = true; // Mark as initialized
     startSession();
   };
 
   const startSession = async () => {
+    // Prevent duplicate session creation
+    if (sessionState === 'loading' || sessionState === 'active') {
+      console.warn('Session already starting or active, ignoring duplicate call');
+      return;
+    }
+
     setSessionState('loading');
 
     // BUG-021: Clear any completed session from store before starting new one
