@@ -367,8 +367,24 @@ export function PracticeSessionPage() {
 
     try {
       const results = await grammarService.endPracticeSession(sessionId);
+
+      // Calculate actual duration from frontend session data (accounts for pauses)
+      const currentSession = useGrammarStore.getState().currentSession;
+      let actualDurationMinutes = results.duration_minutes;
+
+      if (currentSession) {
+        const totalElapsedMs = Date.now() - currentSession.startTime;
+        const activeDurationMs = totalElapsedMs - currentSession.totalPausedTime;
+        actualDurationMinutes = activeDurationMs / (1000 * 60); // Convert to minutes
+      }
+
       storeEndSession();
-      navigate('/grammar/results', { state: { results } });
+      navigate('/grammar/results', {
+        state: {
+          results,
+          actualDurationMinutes // Pass corrected duration
+        }
+      });
     } catch (error) {
       const apiError = error as ApiError;
       addToast('error', 'Failed to end session', apiError.detail);

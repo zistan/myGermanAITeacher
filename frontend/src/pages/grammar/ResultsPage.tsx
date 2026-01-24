@@ -8,6 +8,7 @@ import { Loading, Button, Card, Badge, ProgressBar } from '../../components/comm
 
 interface LocationState {
   results?: EndSessionResponse;
+  actualDurationMinutes?: number; // Accurate duration from frontend (excludes pauses)
 }
 
 export function ResultsPage() {
@@ -18,6 +19,7 @@ export function ResultsPage() {
   // Get results from navigation state
   const locationState = location.state as LocationState | null;
   const results = locationState?.results;
+  const actualDurationMinutes = locationState?.actualDurationMinutes;
 
   // Store state
   const { bookmarkedExercises, sessionNotes, clearSession } = useGrammarStore();
@@ -131,8 +133,10 @@ export function ResultsPage() {
     exercises_correct: results.exercises_correct || 0,
     accuracy_percentage: results.accuracy_percentage ?? 0,
     total_points: results.total_points || 0,
-    // Fix negative duration: take absolute value and format properly
-    duration_minutes: Math.abs(results.duration_minutes || 0),
+    // Use accurate frontend duration (excludes pauses) if available, otherwise fallback to backend
+    duration_minutes: actualDurationMinutes !== undefined
+      ? Math.abs(actualDurationMinutes)
+      : Math.abs(results.duration_minutes || 0),
     topics_practiced: results.topics_practiced || [],
     improvements: results.improvements || [],
     next_recommended_topics: results.next_recommended_topics || [],
