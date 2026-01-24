@@ -96,6 +96,25 @@ export function ResultsPage() {
     return "Keep practicing! Every session makes you stronger.";
   };
 
+  const formatDuration = (minutes: number): string => {
+    const absMinutes = Math.abs(minutes);
+
+    // Less than 1 minute
+    if (absMinutes < 1) {
+      return '< 1 minute';
+    }
+
+    // Round to 1 decimal place for better readability
+    const rounded = Math.round(absMinutes * 10) / 10;
+
+    // Format as "X.Y minutes" or "X minutes" if whole number
+    if (rounded === Math.floor(rounded)) {
+      return `${rounded} minute${rounded !== 1 ? 's' : ''}`;
+    }
+
+    return `${rounded} minutes`;
+  };
+
   // Get notes count
   const notesCount = Object.values(sessionNotes).filter(
     (note) => note.trim().length > 0
@@ -112,7 +131,8 @@ export function ResultsPage() {
     exercises_correct: results.exercises_correct || 0,
     accuracy_percentage: results.accuracy_percentage ?? 0,
     total_points: results.total_points || 0,
-    duration_minutes: results.duration_minutes || 0,
+    // Fix negative duration: take absolute value and format properly
+    duration_minutes: Math.abs(results.duration_minutes || 0),
     topics_practiced: results.topics_practiced || [],
     improvements: results.improvements || [],
     next_recommended_topics: results.next_recommended_topics || [],
@@ -190,7 +210,7 @@ export function ResultsPage() {
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="text-sm text-gray-600">Duration</div>
             <div className="text-xl font-semibold text-gray-900">
-              {safeResults.duration_minutes} minutes
+              {formatDuration(safeResults.duration_minutes)}
             </div>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg">
