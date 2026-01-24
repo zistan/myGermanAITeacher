@@ -799,6 +799,35 @@ def submit_quiz_answer(
     }
 
 
+@router.post("/v1/vocabulary/quiz/{quiz_id}/complete")
+def complete_quiz(
+    quiz_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Mark a vocabulary quiz as completed."""
+    # Query quiz from database
+    db_quiz = db.query(VocabularyQuiz).filter(
+        VocabularyQuiz.id == quiz_id
+    ).first()
+
+    if not db_quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    if db_quiz.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your quiz")
+
+    # Update completed_at timestamp
+    db_quiz.completed_at = datetime.utcnow()
+    db.commit()
+
+    return {
+        "quiz_id": quiz_id,
+        "completed_at": db_quiz.completed_at,
+        "message": "Quiz completed successfully"
+    }
+
+
 # ========== VOCABULARY PROGRESS ENDPOINTS ==========
 
 @router.get("/v1/vocabulary/progress/summary", response_model=VocabularyProgressSummary)

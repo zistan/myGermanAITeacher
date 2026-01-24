@@ -201,6 +201,17 @@ class VocabularyService {
     return response.data;
   }
 
+  /**
+   * POST /api/v1/vocabulary/quiz/{quiz_id}/complete
+   * Mark a vocabulary quiz as completed
+   */
+  async completeQuiz(quizId: number): Promise<{ quiz_id: number; completed_at: string; message: string }> {
+    const response = await apiClient.post<{ quiz_id: number; completed_at: string; message: string }>(
+      `/api/v1/vocabulary/quiz/${quizId}/complete`
+    );
+    return response.data;
+  }
+
   // ========== PROGRESS ENDPOINTS ==========
 
   /**

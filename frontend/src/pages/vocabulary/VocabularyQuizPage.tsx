@@ -136,11 +136,22 @@ export function VocabularyQuizPage() {
     }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (!quiz) return;
 
     const nextIndex = currentQuestionIndex + 1;
     if (nextIndex >= quiz.questions.length) {
+      // Quiz is complete - mark it as completed in the database
+      try {
+        await vocabularyService.completeQuiz(quiz.quiz_id);
+        console.log('[Quiz] Marked quiz as completed in database');
+      } catch (error) {
+        const apiError = error as ApiError;
+        console.error('[Quiz] Failed to mark quiz as completed:', apiError);
+        // Don't block UI - show warning but still display results
+        addToast('warning', 'Quiz completed', 'Unable to save completion status');
+      }
+
       setLocalState('completed');
       setQuizState('completed');
     } else {
@@ -254,9 +265,19 @@ export function VocabularyQuizPage() {
           </p>
         </div>
         <Button
-          onClick={() => {
+          onClick={async () => {
             if (confirm('Are you sure you want to end this quiz?')) {
+              // Mark quiz as completed in database
+              try {
+                await vocabularyService.completeQuiz(quiz.quiz_id);
+                console.log('[Quiz] Marked quiz as completed in database (early end)');
+              } catch (error) {
+                const apiError = error as ApiError;
+                console.error('[Quiz] Failed to mark quiz as completed:', apiError);
+              }
+
               setLocalState('completed');
+              setQuizState('completed');
             }
           }}
           variant="ghost"
