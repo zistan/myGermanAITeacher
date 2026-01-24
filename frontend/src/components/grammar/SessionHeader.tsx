@@ -51,7 +51,7 @@ export function SessionHeader({
           <div className="flex-1">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700">
-                Question {progress.exercises_completed + 1} of {sessionInfo.total_exercises}
+                Question {Math.min(progress.exercises_completed + 1, sessionInfo.total_exercises)} of {sessionInfo.total_exercises}
               </span>
               <div className="flex items-center gap-2">
                 {/* Timer */}
