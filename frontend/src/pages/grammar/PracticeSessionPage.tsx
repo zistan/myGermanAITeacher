@@ -482,13 +482,16 @@ export function PracticeSessionPage() {
   // Cleanup on unmount: reset to idle if not actively practicing
   useEffect(() => {
     return () => {
+      // Only runs on actual unmount - check current state from store
+      const currentState = useGrammarStore.getState().sessionState;
       // Preserve active sessions for "back navigation" scenarios
-      if (storeSessionState !== 'active' && storeSessionState !== 'paused') {
-        console.log('[Practice] Cleaning up session on unmount, state:', storeSessionState);
-        clearSession(); // Sets storeSessionState = 'idle' and clears data
+      if (currentState !== 'active' && currentState !== 'paused') {
+        console.log('[Practice] Cleaning up session on unmount, state:', currentState);
+        useGrammarStore.getState().clearSession(); // Sets state = 'idle' and clears data
       }
     };
-  }, [storeSessionState, clearSession]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - cleanup only on unmount, not on state changes
 
   // Render loading state
   if (storeSessionState === 'loading') {
