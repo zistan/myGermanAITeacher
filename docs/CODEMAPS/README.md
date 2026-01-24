@@ -1,6 +1,6 @@
 # Architecture Codemaps
 
-**Last Updated:** 2026-01-22
+**Last Updated:** 2026-01-24
 
 This directory will contain architectural documentation and code structure maps generated from the actual codebase.
 
@@ -16,14 +16,17 @@ Codemaps provide:
 ## Available Codemaps
 
 ### Frontend (3 codemaps) ✅
-- **[frontend.md](./frontend.md)** - React application structure, routing, build configuration, and module organization
-- **[frontend-components.md](./frontend-components.md)** - Component architecture, design patterns, and UI organization (73 components, 23 pages)
+- **[frontend.md](./frontend.md)** - React application structure, routing, build configuration, and module organization (135 files, 26 pages)
+- **[frontend-components.md](./frontend-components.md)** - Component architecture, design patterns, and UI organization (81 components including Learning Path)
 - **[frontend-state.md](./frontend-state.md)** - Zustand stores, API integration, and data flow (6 stores, 7 services)
 
 ### Backend (3 codemaps) ✅
 - **[backend.md](./backend.md)** - FastAPI application structure, models, services, and overall architecture
 - **[backend-database.md](./backend-database.md)** - Database schema, 20 models, relationships, and migrations
 - **[backend-api.md](./backend-api.md)** - API endpoint organization and structure (74 endpoints across 7 modules)
+
+### System Overview ✅
+- **[INDEX.md](./INDEX.md)** - Comprehensive architecture overview with system diagrams, module interactions, and technology stack
 
 ### Future Codemaps
 - **integrations.md** - External services (Anthropic Claude AI, PostgreSQL) integration patterns

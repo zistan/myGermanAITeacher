@@ -1,6 +1,6 @@
 # Frontend Architecture Codemap
 
-**Last Updated:** 2026-01-22
+**Last Updated:** 2026-01-24
 **Entry Points:** `frontend/src/main.tsx`, `frontend/src/App.tsx`, `frontend/vite.config.ts`
 
 ## Architecture Overview
@@ -12,9 +12,9 @@
 └────────────────────┬────────────────────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────────────────────┐
-│                     Component Layer (73 files)                   │
+│                     Component Layer (81 files)                   │
 │  Common (12) │ Grammar (7) │ Vocabulary (26) │ Conversation (13) │
-│  Dashboard (6) │ Analytics (9) │ Layout (4)                     │
+│  Dashboard (6) │ Analytics (10) │ Learning Path (4) │ Layout (4) │
 └────────────────────┬────────────────────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────────────────────┐
@@ -37,26 +37,28 @@
 
 ```
 frontend/
-├── src/                                 # Source code (126 files, ~20,000 LOC)
+├── src/                                 # Source code (135 files, ~22,000 LOC)
 │   ├── main.tsx                        # Application entry point
-│   ├── App.tsx                         # Root component with routing
+│   ├── App.tsx                         # Root component with routing (30 routes)
 │   ├── index.css                       # Global styles (Tailwind)
 │   │
-│   ├── pages/                          # Page components (23 files)
+│   ├── pages/                          # Page components (26 files)
 │   │   ├── auth/                       # Authentication (2 files)
 │   │   ├── grammar/                    # Grammar practice (5 files)
 │   │   ├── vocabulary/                 # Vocabulary learning (6 files)
 │   │   ├── conversation/               # Conversation practice (4 files)
 │   │   ├── analytics/                  # Progress analytics (5 files)
-│   │   └── DashboardPage.tsx           # Main dashboard (1 file)
+│   │   ├── DashboardPage.tsx           # Main dashboard (1 file)
+│   │   └── LearningPathPage.tsx        # Personalized learning path (1 file)
 │   │
-│   ├── components/                     # Reusable components (73 files)
+│   ├── components/                     # Reusable components (81 files)
 │   │   ├── common/                     # Shared UI (12 files)
 │   │   ├── grammar/                    # Grammar-specific (7 files)
 │   │   ├── vocabulary/                 # Vocabulary-specific (26 files)
 │   │   ├── conversation/               # Conversation-specific (13 files)
 │   │   ├── dashboard/                  # Dashboard widgets (6 files)
-│   │   ├── analytics/                  # Analytics visualizations (9 files)
+│   │   ├── analytics/                  # Analytics visualizations (10 files)
+│   │   ├── learning-path/              # Learning path components (4 files)
 │   │   └── layout/                     # Layout structure (4 files)
 │   │
 │   ├── store/                          # Zustand state management (6 stores)

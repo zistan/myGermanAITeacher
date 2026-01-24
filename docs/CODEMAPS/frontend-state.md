@@ -1,6 +1,6 @@
 # Frontend State Management Codemap
 
-**Last Updated:** 2026-01-22
+**Last Updated:** 2026-01-24
 **Entry Points:** `frontend/src/store/` (6 Zustand stores), `frontend/src/api/client.ts`
 
 ## State Management Architecture

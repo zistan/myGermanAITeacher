@@ -1,7 +1,7 @@
 # Frontend Components Codemap
 
-**Last Updated:** 2026-01-22
-**Entry Points:** `frontend/src/components/` (73 components), `frontend/src/pages/` (23 pages)
+**Last Updated:** 2026-01-24
+**Entry Points:** `frontend/src/components/` (81 components), `frontend/src/pages/` (26 pages)
 
 ## Component Architecture
 
@@ -15,14 +15,15 @@
         ▼                        ▼                        ▼
 ┌───────────────┐      ┌─────────────────┐      ┌──────────────────┐
 │ Common (12)   │      │ Feature-Specific│      │ Page Components  │
-│ Presentational│      │ Components (59) │      │ (23)             │
+│ Presentational│      │ Components (65) │      │ (26)             │
 │               │      │                 │      │                  │
 │ • Button      │      │ Grammar (7)     │      │ Auth (2)         │
 │ • Card        │      │ Vocabulary (26) │      │ Grammar (5)      │
 │ • Badge       │──────│ Conversation (13│──────│ Vocabulary (6)   │
 │ • Modal       │      │ Dashboard (6)   │      │ Conversation (4) │
-│ • Loading     │      │ Analytics (9)   │      │ Analytics (5)    │
-│ • Toast       │      │ Layout (4)      │      │ Dashboard (1)    │
+│ • Loading     │      │ Analytics (10)  │      │ Analytics (5)    │
+│ • Toast       │      │ Learning Path(4)│      │ Learning Path(1) │
+│               │      │ Layout (4)      │      │ Dashboard (1)    │
 └───────────────┘      └─────────────────┘      └──────────────────┘
         │                        │                        │
         └────────────────────────▼────────────────────────┘
@@ -204,21 +205,22 @@
 
 ---
 
-### Analytics Components (9 files)
+### Analytics Components (10 files)
 **Location:** `frontend/src/components/analytics/`
 **Purpose:** Progress visualizations and analytics displays
 
 | Component | Purpose | Visualization |
 |-----------|---------|---------------|
 | **AchievementCard** | Achievement display | Icon, name, tier, progress bar, earned badge |
-| **AchievementGrid** | Achievement list | Filterable grid by category/tier |
+| **AchievementFilters** | Achievement filters | Category, tier, status filters |
+| **ShowcaseToggle** | Showcase star button | Star toggle for earned achievements |
 | **ProgressChart** | Progress over time | Line chart with date range selector |
 | **PieChart** | Category distribution | Recharts pie chart with legend |
-| **BarChart** | Metric comparison | Recharts bar chart (e.g., mastery levels) |
+| **StatCard** | Metric display card | Value, label, trend indicator |
+| **ModuleStatsCard** | Module statistics | Progress bar, 4-stat grid |
 | **HeatmapGrid** | Activity/mastery heatmap | 365-day calendar grid with color intensity |
 | **LeaderboardTable** | Rankings list | Rank, username, score, badges |
 | **ErrorAnalysisCard** | Error patterns | Recurring errors with frequency |
-| **ImprovementTrendCard** | Trend analysis | Week-over-week improvement metrics |
 
 **Charting Library:** Recharts 3.7.0 for responsive, accessible charts
 
@@ -227,10 +229,36 @@
 - Grammar mastery heatmap: Per-topic grid, color based on mastery level (0.0-1.0)
 
 **Achievement Tiers:**
-- **Bronze:** Orange (bg-orange-100, text-orange-800)
-- **Silver:** Gray (bg-gray-100, text-gray-700)
-- **Gold:** Primary yellow (bg-primary-100, text-primary-800)
-- **Platinum:** Light gray (bg-gray-200, text-gray-800)
+- **Bronze:** Slate (border-slate-400, bg-slate-50)
+- **Silver:** Blue (border-blue-400, bg-blue-50)
+- **Gold:** Amber (border-amber-400, bg-amber-50)
+- **Platinum:** Purple (border-purple-400, bg-purple-50)
+
+---
+
+### Learning Path Components (4 files)
+**Location:** `frontend/src/components/learning-path/`
+**Purpose:** Personalized learning recommendations and daily study plans
+
+| Component | Purpose | Key Features |
+|-----------|---------|--------------|
+| **DailyPlan** | Daily study plan | 75-minute timeline breakdown (15 vocab + 30 grammar + 30 conversation), time-of-day emojis (🌅🌙), priority badges, "Start Now" buttons |
+| **FocusArea** | Priority weak areas | 4 priority levels (critical/high/medium/low) with color coding, module badges, "Start Practice" quick actions |
+| **WeeklyGoals** | Weekly targets | Session goals, focus distribution, milestone checklist, gradient background (primary-500 → primary-700) |
+| **RecommendedContext** | Context suggestions | Priority border colors, category icons, stats (difficulty, practice count), "Start Conversation" navigation |
+
+**Priority Color System:**
+- **Critical:** Red (border-red-500, bg-red-50, text-red-700)
+- **High:** Orange (border-orange-500, bg-orange-50, text-orange-700)
+- **Medium:** Yellow (border-yellow-500, bg-yellow-50, text-yellow-700)
+- **Low:** Blue (border-blue-500, bg-blue-50, text-blue-700)
+
+**Module Color Coding:**
+- **Grammar:** Blue (bg-blue-100, text-blue-700)
+- **Vocabulary:** Green (bg-green-100, text-green-700)
+- **Conversation:** Purple (bg-purple-100, text-purple-700)
+
+**Design Pattern:** Card-based layout with border-left-4 accent, responsive grid (1/2/3 columns based on screen size)
 
 ---
 
@@ -360,6 +388,28 @@
 | **HeatmapPage** | `/analytics/heatmaps` | Activity/mastery heatmaps | HeatmapGrid (activity + grammar mastery) |
 | **LeaderboardPage** | `/analytics/leaderboards` | Rankings | LeaderboardTable (overall, grammar, vocabulary, streak) |
 | **ErrorAnalysisPage** | `/analytics/errors` | Error patterns | ErrorAnalysisCard, recurring mistakes |
+
+---
+
+### Learning Path Page (1)
+**Location:** `frontend/src/pages/`
+
+| Page | Route | Purpose | Key Components |
+|------|-------|---------|----------------|
+| **LearningPathPage** | `/learning-path` | Personalized study plan | DailyPlan, FocusArea, WeeklyGoals, RecommendedContext |
+
+**Data Flow:**
+1. Page loads → `integrationService.getLearningPath()` API call
+2. Backend analyzes user progress (grammar/vocabulary/conversation)
+3. Returns: motivation message, daily plan, focus areas, weekly goals, context recommendations
+4. Components render with navigation to practice pages
+
+**Key Features:**
+- AI-generated 75-minute daily breakdown (15 min vocab + 30 min grammar + 30 min conversation)
+- Priority-coded focus areas (critical/high/medium/low)
+- Weekly session goals with module distribution
+- Recommended contexts prioritizing unpracticed scenarios
+- One-click "Start" navigation to all modules
 
 ---
 
