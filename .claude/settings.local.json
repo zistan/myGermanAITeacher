@@ -53,7 +53,13 @@
       "Bash(lsof:*)",
       "Bash(pytest:*)",
       "Bash(npm run type-check:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(while read dir)",
+      "Bash(do if [ -f \"$dir/__init__.py\" ])",
+      "Bash(then echo \"✓ $dir has __init__.py\" else echo \"✗ $dir MISSING __init__.py\" fi done)"
     ],
     "deny": [],
     "ask": []
