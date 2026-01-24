@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import grammarService from '../../api/services/grammarService';
 import type {
@@ -29,15 +29,10 @@ import {
 } from '../../hooks/useKeyboardShortcuts';
 import { useSessionPersistence, useSessionTimer } from '../../hooks/useSessionPersistence';
 
-type SessionState = 'loading' | 'active' | 'feedback' | 'completed' | 'error';
-
 export function PracticeSessionPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const addToast = useNotificationStore((state) => state.addToast);
-
-  // Prevent duplicate session creation (React StrictMode protection)
-  const sessionInitialized = useRef(false);
 
   // Grammar store
   const {
@@ -63,8 +58,7 @@ export function PracticeSessionPage() {
   // Session timer
   const { elapsedFormatted, isPaused } = useSessionTimer();
 
-  // Local session data
-  const [sessionState, setSessionState] = useState<SessionState>('loading');
+  // Local session data (Note: sessionState removed - using storeSessionState directly)
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [sessionInfo, setSessionInfo] = useState<PracticeSessionResponse | null>(null);
   const [currentExercise, setLocalCurrentExercise] = useState<GrammarExercise | null>(null);
@@ -98,28 +92,25 @@ export function PracticeSessionPage() {
 
   // Check for incomplete session on mount
   useEffect(() => {
-    // Prevent duplicate session creation (React StrictMode causes double execution)
-    if (sessionInitialized.current) {
-      return;
-    }
+    // Guard: Only start if store is in clean state
+    const currentSession = useGrammarStore.getState().currentSession;
+    const shouldStartNewSession =
+      storeSessionState === 'idle' && // Not already loading/active/error
+      !currentSession && // No active session in store
+      !hasIncompleteSession && // No session to restore
+      !showRestoreModal; // Modal not showing
 
     if (hasIncompleteSession) {
       setShowRestoreModal(true);
-      // CRITICAL: Set sessionState to 'idle' so modal is visible (not stuck on loading spinner)
-      setSessionState('idle');
-    } else {
-      // Only start session if we haven't checked for incomplete session yet
-      // and modal is not showing
-      if (!showRestoreModal) {
-        sessionInitialized.current = true; // Mark as initialized before API call
-        startSession();
-      }
+      setStoreSessionState('idle'); // Show modal, not loading
+    } else if (shouldStartNewSession) {
+      startSession(); // Will be called on every remount with idle state
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasIncompleteSession]);
+  }, [storeSessionState, hasIncompleteSession, showRestoreModal]);
 
   const loadSessionFromStore = async (restoredSessionId: number) => {
-    setSessionState('loading');
+    setStoreSessionState('loading');
     try {
       // Set the restored session ID
       setSessionId(restoredSessionId);
@@ -161,7 +152,6 @@ export function PracticeSessionPage() {
 
   const handleRestoreSession = async () => {
     setShowRestoreModal(false);
-    sessionInitialized.current = true; // Mark as initialized
     const session = restoreSession();
     if (session) {
       try {
@@ -185,18 +175,17 @@ export function PracticeSessionPage() {
   const handleStartFresh = () => {
     setShowRestoreModal(false);
     clearPersistedSession();
-    sessionInitialized.current = true; // Mark as initialized
     startSession();
   };
 
   const startSession = async () => {
     // Prevent duplicate session creation
-    if (sessionState === 'loading' || sessionState === 'active') {
+    if (storeSessionState === 'loading' || storeSessionState === 'active') {
       console.warn('Session already starting or active, ignoring duplicate call');
       return;
     }
 
-    setSessionState('loading');
+    setStoreSessionState('loading');
 
     // BUG-021: Clear any completed session from store before starting new one
     if (storeSessionState === 'completed') {
@@ -262,7 +251,15 @@ export function PracticeSessionPage() {
       }
 
       addToast('error', 'Failed to start session', apiError.detail);
-      setSessionState('error');
+      setStoreSessionState('error');
+
+      // Auto-reset to idle after 3s to allow retry
+      setTimeout(() => {
+        if (useGrammarStore.getState().sessionState === 'error') {
+          console.log('[Practice] Auto-resetting from error to idle');
+          clearSession(); // Reset to idle
+        }
+      }, 3000);
     }
   };
 
@@ -273,7 +270,6 @@ export function PracticeSessionPage() {
       setCurrentExercise(exercise);
       setUserAnswer('');
       setFeedback(null);
-      setSessionState('active');
       setStoreSessionState('active');
       setExerciseStartTime(Date.now());
 
@@ -285,7 +281,6 @@ export function PracticeSessionPage() {
       setAutoAdvanceCountdown(0);
     } catch (error) {
       // No more exercises - session complete
-      setSessionState('completed');
       setStoreSessionState('completed');
     }
   };
@@ -308,7 +303,6 @@ export function PracticeSessionPage() {
 
       setFeedback(result.feedback);
       setProgress(result.session_progress);
-      setSessionState('feedback');
       setStoreSessionState('feedback');
 
       // Record answer in store
@@ -466,8 +460,8 @@ export function PracticeSessionPage() {
   });
 
   const contexts = [
-    { ...practiceContext, enabled: sessionState === 'active' && storeSessionState === 'active' && !isFocusMode },
-    { ...feedbackContext, enabled: sessionState === 'feedback' && storeSessionState === 'active' && !isFocusMode },
+    { ...practiceContext, enabled: storeSessionState === 'active' && !isFocusMode },
+    { ...feedbackContext, enabled: storeSessionState === 'feedback' && !isFocusMode },
     { ...pausedContext, enabled: storeSessionState === 'paused' },
     { ...focusModeContext, enabled: isFocusMode },
   ];
@@ -485,21 +479,52 @@ export function PracticeSessionPage() {
     };
   }, [autoAdvanceTimer]);
 
+  // Cleanup on unmount: reset to idle if not actively practicing
+  useEffect(() => {
+    return () => {
+      // Preserve active sessions for "back navigation" scenarios
+      if (storeSessionState !== 'active' && storeSessionState !== 'paused') {
+        console.log('[Practice] Cleaning up session on unmount, state:', storeSessionState);
+        clearSession(); // Sets storeSessionState = 'idle' and clears data
+      }
+    };
+  }, [storeSessionState, clearSession]);
+
   // Render loading state
-  if (sessionState === 'loading') {
+  if (storeSessionState === 'loading') {
     return <Loading fullScreen />;
   }
 
   // Render error state
-  if (sessionState === 'error') {
+  if (storeSessionState === 'error') {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Card>
           <div className="text-center py-12">
-            <div className="text-4xl mb-4">!</div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Failed to start session</h2>
-            <p className="text-gray-600 mb-4">Please try again</p>
-            <Button onClick={() => navigate('/grammar')}>Back to Topics</Button>
+            <div className="text-4xl mb-4">⚠️</div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Failed to start session
+            </h2>
+            <p className="text-gray-600 mb-2">
+              Unable to load practice session. Please try again.
+            </p>
+            <p className="text-sm text-gray-500 mb-4">
+              Automatically retrying in a moment...
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Button onClick={() => navigate('/grammar')} variant="secondary">
+                Back to Topics
+              </Button>
+              <Button
+                onClick={() => {
+                  clearSession(); // Manual retry
+                  startSession();
+                }}
+                variant="primary"
+              >
+                Retry Now
+              </Button>
+            </div>
           </div>
         </Card>
       </div>
@@ -507,7 +532,7 @@ export function PracticeSessionPage() {
   }
 
   // Render completed state
-  if (sessionState === 'completed') {
+  if (storeSessionState === 'completed') {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Card>
@@ -564,7 +589,7 @@ export function PracticeSessionPage() {
       </div>
 
       {/* Exercise Content */}
-      {sessionState === 'active' && (
+      {storeSessionState === 'active' && (
         <ExerciseRenderer
           exercise={currentExercise}
           userAnswer={userAnswer}
@@ -575,7 +600,7 @@ export function PracticeSessionPage() {
       )}
 
       {/* Feedback */}
-      {sessionState === 'feedback' && feedback && (
+      {storeSessionState === 'feedback' && feedback && (
         <>
           <FeedbackDisplay
             feedback={feedback}
