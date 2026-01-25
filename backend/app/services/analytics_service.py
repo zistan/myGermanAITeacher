@@ -4,7 +4,7 @@ Tracks user progress across conversation, grammar, and vocabulary modules.
 """
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_, desc, distinct
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 from collections import defaultdict
 
@@ -57,7 +57,7 @@ class AnalyticsService:
         return {
             "user_id": user_id,
             "overall_score": overall_score,
-            "last_updated": datetime.utcnow(),
+            "last_updated": datetime.now(timezone.utc),
             "conversation": conversation_stats,
             "grammar": grammar_stats,
             "vocabulary": vocabulary_stats,
@@ -100,7 +100,7 @@ class AnalyticsService:
         ).count()
 
         # Recent activity (last 7 days)
-        week_ago = datetime.utcnow() - timedelta(days=7)
+        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
         recent_sessions = self.db.query(ConversationSession).filter(
             ConversationSession.user_id == user_id,
             ConversationSession.started_at >= week_ago
@@ -282,7 +282,7 @@ class AnalyticsService:
 
         # Current streak
         current_streak = 0
-        check_date = datetime.utcnow().date()
+        check_date = datetime.now(timezone.utc).date()
         while check_date in all_dates:
             current_streak += 1
             check_date -= timedelta(days=1)
@@ -342,7 +342,7 @@ class AnalyticsService:
 
         review_dates = set(r.reviewed_at.date() for r in reviews)
         current_streak = 0
-        check_date = datetime.utcnow().date()
+        check_date = datetime.now(timezone.utc).date()
 
         while check_date in review_dates:
             current_streak += 1
@@ -352,7 +352,7 @@ class AnalyticsService:
 
     def _get_weekly_goal_progress(self, user_id: int) -> Dict:
         """Get progress toward weekly goals (5+ sessions)."""
-        week_start = datetime.utcnow() - timedelta(days=7)
+        week_start = datetime.now(timezone.utc) - timedelta(days=7)
 
         # Count all session types this week
         conversation_count = self.db.query(ConversationSession).filter(
@@ -387,7 +387,7 @@ class AnalyticsService:
         Returns:
             Dictionary with error pattern analysis
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
 
         # Grammar errors
         grammar_errors = self._analyze_grammar_errors(user_id, cutoff_date)
@@ -551,7 +551,7 @@ class AnalyticsService:
         error_patterns = self.analyze_error_patterns(user_id, days=30)
 
         return {
-            "snapshot_date": datetime.utcnow(),
+            "snapshot_date": datetime.now(timezone.utc),
             "user_id": user_id,
             "overall_progress": overall_progress,
             "error_analysis": error_patterns,
@@ -630,7 +630,7 @@ class AnalyticsService:
         Returns:
             Comparison between current and previous period
         """
-        current_end = datetime.utcnow()
+        current_end = datetime.now(timezone.utc)
         current_start = current_end - timedelta(days=period_days)
         previous_start = current_start - timedelta(days=period_days)
 

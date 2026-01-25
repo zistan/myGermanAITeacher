@@ -4,7 +4,7 @@ Provides cross-module workflows and intelligent recommendations.
 """
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 from collections import defaultdict
 
@@ -267,7 +267,7 @@ class IntegrationService:
 
         return {
             "user_id": user_id,
-            "generated_at": datetime.utcnow(),
+            "generated_at": datetime.now(timezone.utc),
             "focus_areas": focus_areas,
             "daily_plan": daily_plan,
             "weekly_plan": weekly_plan,
@@ -518,7 +518,7 @@ class IntegrationService:
 
         return {
             "user_id": user_id,
-            "last_updated": datetime.utcnow(),
+            "last_updated": datetime.now(timezone.utc),
             "overall_progress": overall_progress,
             "learning_path": learning_path,
             "due_items": due_items,
@@ -529,7 +529,7 @@ class IntegrationService:
 
     def _get_due_items(self, user_id: int) -> Dict:
         """Get items due for review/practice today."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Grammar topics due
         grammar_due = self.db.query(UserGrammarProgress, GrammarTopic).join(
@@ -572,7 +572,7 @@ class IntegrationService:
 
     def _get_recent_activity(self, user_id: int, days: int = 7) -> List[Dict]:
         """Get recent activity across all modules."""
-        cutoff = datetime.utcnow() - timedelta(days=days)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         activities = []
 
         # Conversation sessions
