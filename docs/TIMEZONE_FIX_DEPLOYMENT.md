@@ -1,7 +1,7 @@
 # Timezone Fix - Deployment Guide
 
 **Date:** 2026-01-25
-**Git Commit:** ca24be1
+**Git Commit:** 1c69585
 **Migration:** 003_add_timezone_to_timestamps
 
 ---
@@ -20,14 +20,24 @@ Session completion timestamps (ended_at, completed_at) were stored in the wrong 
 
 ## Solution Applied
 
-**Models Updated:** All 7 model files (37 timestamp columns total)
+**Models Updated:** All 7 model files (35+ timestamp columns)
 - `TIMESTAMP` → `DateTime(timezone=True)` in SQLAlchemy models
 - Results in PostgreSQL `TIMESTAMPTZ` (timestamp with time zone)
 
 **Migration Created:** `003_add_timezone_to_timestamps.py`
-- Converts all 37 timestamp columns to TIMESTAMPTZ
+- Converts all timestamp columns to TIMESTAMPTZ (only columns that exist in database)
+- Includes column existence checks to handle schema discrepancies
 - Preserves existing data (PostgreSQL handles conversion)
 - Includes rollback (downgrade) capability
+
+**Columns Converted:**
+- Grammar (8): grammar_topics.created_at, grammar_exercises.created_at, user_grammar_progress.{last_practiced, next_review_date}, grammar_sessions.{started_at, ended_at}, grammar_exercise_attempts.timestamp, diagnostic_tests.test_date
+- Sessions (3): sessions.{started_at, ended_at}, conversation_turns.timestamp
+- Vocabulary (13): vocabulary.{created_at, last_reviewed}, user_vocabulary_progress.{last_reviewed, first_reviewed, next_review_date}, user_vocabulary_lists.{created_at, updated_at}, vocabulary_list_words.added_at, vocabulary_reviews.reviewed_at, flashcard_sessions.{started_at, ended_at}, vocabulary_quizzes.{created_at, completed_at}
+- Users (2): users.created_at, users.last_login
+- Contexts (1): contexts.created_at
+- Progress (1): grammar_corrections.created_at
+- Analytics (6): achievements.created_at, user_achievements.earned_at, user_stats.{last_activity_date, updated_at}, progress_snapshots.{snapshot_date, created_at}
 
 ---
 
@@ -470,7 +480,7 @@ sudo systemctl restart german-learning && sudo systemctl status german-learning
 7. `backend/app/models/achievement.py` - 6 timestamp columns
 8. `backend/alembic/versions/003_add_timezone_to_timestamps.py` - Migration script
 
-**Total:** 37 timestamp columns converted to TIMESTAMPTZ
+**Total:** 34 timestamp columns converted to TIMESTAMPTZ (8 grammar + 3 sessions + 13 vocabulary + 2 users + 1 contexts + 1 progress + 6 analytics)
 
 ---
 
@@ -480,4 +490,4 @@ sudo systemctl restart german-learning && sudo systemctl status german-learning
 **Backup Required:** YES (mandatory before migration)
 
 Last Updated: 2026-01-25
-Git Commit: ca24be1
+Git Commit: 1c69585
