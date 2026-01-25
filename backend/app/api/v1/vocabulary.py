@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, and_, desc
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import random
 import hashlib
 import json
@@ -241,8 +241,8 @@ def start_flashcard_session(
 
             if not progress or progress.next_review_date is None:
                 priority = 100  # New words get high priority
-            elif progress.next_review_date <= datetime.utcnow():
-                days_overdue = (datetime.utcnow() - progress.next_review_date).days
+            elif progress.next_review_date <= datetime.now(timezone.utc):
+                days_overdue = (datetime.now(timezone.utc) - progress.next_review_date).days
                 priority = 50 + days_overdue * 10  # Overdue words get priority
             else:
                 priority = 1  # Not due yet
@@ -276,7 +276,7 @@ def start_flashcard_session(
 
         card_content = ai_service.generate_flashcard_content(word.word, word_info, card_type)
 
-        card_id = hashlib.md5(f"{word.id}_{card_type}_{datetime.utcnow().timestamp()}".encode()).hexdigest()
+        card_id = hashlib.md5(f"{word.id}_{card_type}_{datetime.now(timezone.utc).timestamp()}".encode()).hexdigest()
 
         # Ensure required fields have default values if AI service fails
         front = card_content.get("front") or f"What does '{word.word}' mean?"
@@ -367,7 +367,7 @@ def submit_flashcard_answer(
         db.add(progress)
 
     progress.times_reviewed += 1
-    progress.last_reviewed = datetime.utcnow()
+    progress.last_reviewed = datetime.now(timezone.utc)
 
     if is_correct:
         progress.times_correct += 1
@@ -389,7 +389,7 @@ def submit_flashcard_answer(
             progress.mastery_level -= 1
         interval_days = 1
 
-    progress.next_review_date = datetime.utcnow() + timedelta(days=interval_days)
+    progress.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval_days)
     # Note: accuracy_rate is calculated dynamically, not stored in the model
 
     # Record review
@@ -476,7 +476,7 @@ def complete_flashcard_session(
         raise HTTPException(status_code=403, detail="Not your session")
 
     # Update ended_at timestamp
-    db_session.ended_at = datetime.utcnow()
+    db_session.ended_at = datetime.now(timezone.utc)
     db.commit()
 
     return {
@@ -653,7 +653,7 @@ def add_word_to_list(
     )
 
     db.add(list_word)
-    vocab_list.updated_at = datetime.utcnow()
+    vocab_list.updated_at = datetime.now(timezone.utc)
     db.commit()
 
     return {"message": "Word added to list"}
@@ -684,7 +684,7 @@ def remove_word_from_list(
         raise HTTPException(status_code=404, detail="Word not in list")
 
     db.delete(list_word)
-    vocab_list.updated_at = datetime.utcnow()
+    vocab_list.updated_at = datetime.now(timezone.utc)
     db.commit()
 
     return {"message": "Word removed from list"}
@@ -847,7 +847,7 @@ def complete_quiz(
         raise HTTPException(status_code=403, detail="Not your quiz")
 
     # Update completed_at timestamp
-    db_quiz.completed_at = datetime.utcnow()
+    db_quiz.completed_at = datetime.now(timezone.utc)
     db.commit()
 
     return {
@@ -902,12 +902,12 @@ def get_vocabulary_progress_summary(
     # Streak (simplified - days with reviews)
     recent_reviews = db.query(VocabularyReview).filter(
         VocabularyReview.user_id == current_user.id,
-        VocabularyReview.reviewed_at >= datetime.utcnow() - timedelta(days=30)
+        VocabularyReview.reviewed_at >= datetime.now(timezone.utc) - timedelta(days=30)
     ).all()
 
     review_dates = set(r.reviewed_at.date() for r in recent_reviews)
     current_streak = 0
-    check_date = datetime.utcnow().date()
+    check_date = datetime.now(timezone.utc).date()
     while check_date in review_dates:
         current_streak += 1
         check_date -= timedelta(days=1)
@@ -915,11 +915,11 @@ def get_vocabulary_progress_summary(
     # Words due today
     words_due_today = db.query(UserVocabularyProgress).filter(
         UserVocabularyProgress.user_id == current_user.id,
-        UserVocabularyProgress.next_review_date <= datetime.utcnow()
+        UserVocabularyProgress.next_review_date <= datetime.now(timezone.utc)
     ).count()
 
     # Words due this week
-    week_end = datetime.utcnow() + timedelta(days=7)
+    week_end = datetime.now(timezone.utc) + timedelta(days=7)
     words_due_week = db.query(UserVocabularyProgress).filter(
         UserVocabularyProgress.user_id == current_user.id,
         UserVocabularyProgress.next_review_date <= week_end
@@ -943,7 +943,7 @@ def get_vocabulary_review_queue(
     current_user: User = Depends(get_current_user)
 ):
     """Get words due for review based on spaced repetition."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Overdue words
     overdue = db.query(UserVocabularyProgress).filter(

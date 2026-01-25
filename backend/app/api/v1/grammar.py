@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import random
 
 from app.database import get_db
@@ -137,7 +137,7 @@ def start_grammar_practice(
 
     if active_session:
         # Auto-cleanup stale sessions (>24 hours old)
-        session_age = datetime.utcnow() - active_session.started_at
+        session_age = datetime.now(timezone.utc) - active_session.started_at
         if session_age > timedelta(hours=24):
             # Log cleanup
             print(f"[Grammar] Auto-cleaning stale session {active_session.id} (age: {session_age})")
@@ -190,7 +190,7 @@ def start_grammar_practice(
         # (This is a simplified version - full implementation would be more sophisticated)
         progress_records = db.query(UserGrammarProgress).filter(
             UserGrammarProgress.user_id == current_user.id,
-            UserGrammarProgress.next_review_date <= datetime.utcnow()
+            UserGrammarProgress.next_review_date <= datetime.now(timezone.utc)
         ).all()
 
         priority_topic_ids = [p.topic_id for p in progress_records]
@@ -430,7 +430,7 @@ def submit_exercise_answer(
         progress.total_exercises_incorrect += 1
         progress.current_streak = 0
 
-    progress.last_practiced = datetime.utcnow()
+    progress.last_practiced = datetime.now(timezone.utc)
 
     # Update next review date (spaced repetition)
     if evaluation["is_correct"]:
@@ -440,7 +440,7 @@ def submit_exercise_answer(
         # Reset to 1 day if incorrect
         days_interval = 1
 
-    progress.next_review_date = datetime.utcnow() + timedelta(days=days_interval)
+    progress.next_review_date = datetime.now(timezone.utc) + timedelta(days=days_interval)
 
     # Update mastery level (float from 0.0 to 1.0 based on accuracy)
     if progress.total_exercises_attempted >= 5:
@@ -567,7 +567,7 @@ def end_grammar_session(
     if session.ended_at:
         raise HTTPException(status_code=400, detail="Session already ended")
 
-    session.ended_at = datetime.utcnow()
+    session.ended_at = datetime.now(timezone.utc)
 
     # Calculate accuracy and completion rates
     if session.total_exercises > 0:
@@ -684,7 +684,7 @@ def get_grammar_progress_summary(
     streak_days = 0
     if recent_sessions:
         last_date = recent_sessions[0].started_at.date()
-        current_date = datetime.utcnow().date()
+        current_date = datetime.now(timezone.utc).date()
 
         if last_date == current_date or last_date == current_date - timedelta(days=1):
             streak_days = 1
@@ -888,7 +888,7 @@ def get_review_queue(
     current_user: User = Depends(get_current_active_user)
 ):
     """Get spaced repetition review queue."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Get all user progress
     progress_records = db.query(UserGrammarProgress).filter(

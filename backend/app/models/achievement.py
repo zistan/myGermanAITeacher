@@ -3,7 +3,7 @@ Achievement and badge models for gamification.
 """
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.database import Base
 
@@ -29,7 +29,7 @@ class Achievement(Base):
     points = Column(Integer, default=0)  # Achievement points awarded
 
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user_achievements = relationship("UserAchievement", back_populates="achievement")
@@ -43,7 +43,7 @@ class UserAchievement(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     achievement_id = Column(Integer, ForeignKey("achievements.id"), nullable=False)
 
-    earned_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    earned_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     progress_value = Column(Integer, default=0)  # Current progress toward achievement
     is_completed = Column(Boolean, default=False)
 
@@ -97,7 +97,7 @@ class UserStats(Base):
     grammar_rank = Column(Integer)
     vocabulary_rank = Column(Integer)
 
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="stats")
@@ -110,7 +110,7 @@ class ProgressSnapshot(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    snapshot_date = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    snapshot_date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     snapshot_type = Column(String(50), default="weekly")  # daily, weekly, monthly
 
     # Snapshot data (JSON)
@@ -126,7 +126,7 @@ class ProgressSnapshot(Base):
     total_sessions = Column(Integer)
     study_time_minutes = Column(Integer)
 
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="progress_snapshots")

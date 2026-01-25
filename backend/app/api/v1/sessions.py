@@ -1,7 +1,7 @@
 """
 Session management API endpoints for conversation practice.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -54,8 +54,8 @@ def start_session(
 
     if active_session:
         # Auto-cleanup stale sessions (>24 hours old)
-        from datetime import timedelta
-        session_age = datetime.utcnow() - active_session.started_at
+        from datetime import timedelta, timezone
+        session_age = datetime.now(timezone.utc) - active_session.started_at
         if session_age > timedelta(hours=24):
             # Log cleanup
             print(f"[Conversation] Auto-cleaning stale session {active_session.id} (age: {session_age})")
@@ -343,7 +343,7 @@ def end_session(
         )
 
     # Calculate duration
-    session.ended_at = datetime.utcnow()
+    session.ended_at = datetime.now(timezone.utc)
     duration = (session.ended_at - session.started_at).total_seconds() / 60
     session.duration_minutes = int(duration)
 

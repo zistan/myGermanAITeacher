@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from app.database import get_db
@@ -300,8 +300,8 @@ def refresh_user_stats(
     stats.vocabulary_reviews_completed = overall_progress["vocabulary"]["total_reviews"]
     stats.average_vocabulary_accuracy = int(overall_progress["vocabulary"]["overall_accuracy_percentage"])
 
-    stats.last_activity_date = datetime.utcnow()
-    stats.updated_at = datetime.utcnow()
+    stats.last_activity_date = datetime.now(timezone.utc)
+    stats.updated_at = datetime.now(timezone.utc)
 
     db.commit()
 
@@ -396,7 +396,7 @@ def get_activity_heatmap(
     """Get activity heatmap for calendar display."""
     analytics = AnalyticsService(db)
 
-    end_date = datetime.utcnow().date()
+    end_date = datetime.now(timezone.utc).date()
     start_date = end_date - timedelta(days=days)
 
     # Get overall progress to access activity
