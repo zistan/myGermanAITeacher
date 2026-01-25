@@ -89,6 +89,7 @@ export function PracticeSessionPage() {
 
   // Request tracking (prevent duplicates)
   const sessionCreationInProgress = useRef(false);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   // Session persistence
   const { hasIncompleteSession, restoreSession, clearSession: clearPersistedSession } =
@@ -195,9 +196,17 @@ export function PracticeSessionPage() {
   };
 
   const handleConfirmStart = async () => {
+    // Double-click protection
+    if (sessionCreationInProgress.current || isCreatingSession) {
+      console.warn('[Grammar] Session creation already in progress, ignoring click');
+      return;
+    }
+
     console.log('[Grammar] User confirmed session start');
+    setIsCreatingSession(true);
     setShowSetupUI(false);
     await startSession();
+    setIsCreatingSession(false);
   };
 
   const handleCleanupConflict = async () => {
@@ -302,7 +311,7 @@ export function PracticeSessionPage() {
           // Set state to idle (no error) - conflict modal will handle UX
           // CRITICAL: No state change that would trigger old useEffect
           setStoreSessionState('idle');
-          sessionCreationInProgress.current = false;
+          // DON'T reset sessionCreationInProgress here - let finally block handle it
           return;
         }
       }
@@ -322,7 +331,7 @@ export function PracticeSessionPage() {
 
           // Retry without difficulty filter
           const retryUrl = `/grammar/practice?topics=${topicsParam}&count=${searchParams.get('count') || 10}`;
-          sessionCreationInProgress.current = false;
+          // DON'T reset sessionCreationInProgress here - let finally block handle it
           navigate(retryUrl, { replace: true });
           return;
         }
@@ -330,12 +339,13 @@ export function PracticeSessionPage() {
 
       addToast('error', 'Failed to start session', apiError.detail?.toString() || 'Unknown error');
       setStoreSessionState('error');
-      sessionCreationInProgress.current = false;
+      // DON'T reset sessionCreationInProgress here - let finally block handle it
 
       // Show setup UI again after error so user can retry manually
       // NO AUTO-RESET - prevents infinite loop
       setShowSetupUI(true);
     } finally {
+      // ALWAYS reset in finally block to ensure it's cleaned up
       sessionCreationInProgress.current = false;
     }
   };
@@ -752,11 +762,20 @@ export function PracticeSessionPage() {
             )}
 
             <div className="flex gap-3 justify-end pt-2">
-              <Button onClick={() => navigate('/grammar/topics')} variant="secondary">
+              <Button
+                onClick={() => navigate('/grammar/topics')}
+                variant="secondary"
+                disabled={isCreatingSession}
+              >
                 Back to Topics
               </Button>
-              <Button onClick={handleConfirmStart} variant="primary" data-testid="confirm-start-button">
-                Start Practice Session
+              <Button
+                onClick={handleConfirmStart}
+                variant="primary"
+                data-testid="confirm-start-button"
+                disabled={isCreatingSession}
+              >
+                {isCreatingSession ? 'Starting Session...' : 'Start Practice Session'}
               </Button>
             </div>
           </div>
