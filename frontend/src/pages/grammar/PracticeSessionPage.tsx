@@ -213,7 +213,10 @@ export function PracticeSessionPage() {
       // Delete the abandoned session
       await grammarService.deleteAbandonedSession(conflictSession.sessionId);
       addToast('success', 'Session cleaned up', 'Old session removed. Starting fresh...');
+
+      // Clear conflict state and store error
       setConflictSession(null);
+      clearSession(); // Reset store to idle with no error
 
       // Retry session creation
       await startSession();
@@ -222,6 +225,13 @@ export function PracticeSessionPage() {
       console.error('[Grammar] Failed to cleanup conflict:', apiError);
       addToast('error', 'Cleanup failed', apiError.detail?.toString() || 'Failed to cleanup abandoned session');
     }
+  };
+
+  const handleCancelConflict = () => {
+    setConflictSession(null);
+    clearSession();
+    addToast('info', 'Session not started', 'You can start a new session from the Grammar page.');
+    navigate('/grammar');
   };
 
   const startSession = async () => {
@@ -294,7 +304,9 @@ export function PracticeSessionPage() {
             startedAt: apiError.detail.started_at as string,
             ageHours: apiError.detail.age_hours as number,
           });
-          setStoreSessionState('error');
+          // Don't set to 'error' - stay in 'idle' to prevent auto-reset loop
+          // The conflict modal will handle the UI
+          setStoreSessionState('idle');
           sessionCreationInProgress.current = false;
           return;
         }
@@ -740,7 +752,7 @@ export function PracticeSessionPage() {
       {conflictSession && (
         <Modal
           isOpen={true}
-          onClose={() => setConflictSession(null)}
+          onClose={handleCancelConflict}
           title="Active Session Detected"
         >
           <div className="space-y-4">
@@ -754,7 +766,7 @@ export function PracticeSessionPage() {
               Would you like to clean up this session and start fresh?
             </p>
             <div className="flex gap-3 justify-end">
-              <Button onClick={() => setConflictSession(null)} variant="secondary">
+              <Button onClick={handleCancelConflict} variant="secondary">
                 Cancel
               </Button>
               <Button onClick={handleCleanupConflict} variant="primary">

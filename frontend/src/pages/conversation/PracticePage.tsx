@@ -217,7 +217,10 @@ export function PracticePage() {
       // Delete the abandoned session
       await conversationService.deleteAbandonedSession(conflictSession.sessionId);
       addToast('success', 'Session cleaned up', 'Old session removed. Starting fresh...');
+
+      // Clear conflict state and store error
       setConflictSession(null);
+      clearSession(); // Reset store to idle with no error
 
       // Retry session creation
       if (contextId) {
@@ -228,6 +231,16 @@ export function PracticePage() {
       console.error('[Conversation] Failed to cleanup conflict:', apiError);
       addToast('error', 'Cleanup failed', apiError.detail?.toString() || 'Failed to cleanup abandoned session');
     }
+  };
+
+  /**
+   * Cancel conflict resolution and navigate away
+   */
+  const handleCancelConflict = () => {
+    setConflictSession(null);
+    clearSession();
+    addToast('info', 'Session not started', 'You can start a new session from the Conversation page.');
+    navigate('/conversation');
   };
 
   /**
@@ -415,7 +428,7 @@ export function PracticePage() {
       {conflictSession && (
         <Modal
           isOpen={true}
-          onClose={() => setConflictSession(null)}
+          onClose={handleCancelConflict}
           title="Active Session Detected"
         >
           <div className="space-y-4">
@@ -430,7 +443,7 @@ export function PracticePage() {
               Would you like to clean up this session and start fresh?
             </p>
             <div className="flex gap-3 justify-end">
-              <Button onClick={() => setConflictSession(null)} variant="secondary">
+              <Button onClick={handleCancelConflict} variant="secondary">
                 Cancel
               </Button>
               <Button onClick={handleCleanupConflict} variant="primary">

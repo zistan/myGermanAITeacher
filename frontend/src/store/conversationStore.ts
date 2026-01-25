@@ -185,7 +185,7 @@ export const useConversationStore = create<ConversationState>()(
               console.error('[Conversation] Active session exists:', existingSession);
               set({
                 error: `Active session already exists (ID: ${existingSession.session_id}). Session was started ${Math.round(existingSession.age_hours)} hours ago.`,
-                sessionState: 'error',
+                sessionState: 'idle', // Set to idle, not error, to prevent auto-reset loop
                 sessionCreationPromise: null,
               });
             } else {
