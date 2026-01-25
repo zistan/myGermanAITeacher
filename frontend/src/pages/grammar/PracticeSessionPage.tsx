@@ -89,6 +89,7 @@ export function PracticeSessionPage() {
   // Request tracking (prevent duplicates)
   const sessionCreationInProgress = useRef(false);
   const sessionStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasConflictRef = useRef(false); // Track conflict immediately to block useEffect
 
   // Session persistence
   const { hasIncompleteSession, restoreSession, clearSession: clearPersistedSession } =
@@ -110,7 +111,8 @@ export function PracticeSessionPage() {
       !currentSession && // No active session in store
       !hasIncompleteSession && // No session to restore
       !showRestoreModal && // Modal not showing
-      !conflictSession; // No conflict modal showing
+      !conflictSession && // No conflict modal showing
+      !hasConflictRef.current; // No conflict detected (immediate ref check)
 
     if (hasIncompleteSession) {
       setShowRestoreModal(true);
@@ -214,7 +216,8 @@ export function PracticeSessionPage() {
       await grammarService.deleteAbandonedSession(conflictSession.sessionId);
       addToast('success', 'Session cleaned up', 'Old session removed. Starting fresh...');
 
-      // Clear conflict state and store error
+      // Clear conflict state and ref
+      hasConflictRef.current = false;
       setConflictSession(null);
       clearSession(); // Reset store to idle with no error
 
@@ -228,6 +231,7 @@ export function PracticeSessionPage() {
   };
 
   const handleCancelConflict = () => {
+    hasConflictRef.current = false;
     setConflictSession(null);
     clearSession();
     addToast('info', 'Session not started', 'You can start a new session from the Grammar page.');
@@ -299,6 +303,9 @@ export function PracticeSessionPage() {
 
         // Extract session info from error response
         if (typeof apiError.detail === 'object' && 'session_id' in apiError.detail) {
+          // Set ref immediately to block useEffect (before React state updates)
+          hasConflictRef.current = true;
+
           setConflictSession({
             sessionId: apiError.detail.session_id as number,
             startedAt: apiError.detail.started_at as string,

@@ -59,6 +59,7 @@ export function PracticePage() {
 
   // Debouncing timeout ref
   const sessionStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasConflictRef = useRef(false); // Track conflict immediately to block useEffect
 
   /**
    * Check for incomplete session on mount
@@ -66,7 +67,7 @@ export function PracticePage() {
   useEffect(() => {
     if (hasIncompleteSession()) {
       setShowRestorePrompt(true);
-    } else if (contextId && !conflictSession) {
+    } else if (contextId && !conflictSession && !hasConflictRef.current) {
       // Clear any existing timeout
       if (sessionStartTimeoutRef.current) {
         clearTimeout(sessionStartTimeoutRef.current);
@@ -94,6 +95,9 @@ export function PracticePage() {
    */
   useEffect(() => {
     if (error && error.includes('Active session already exists')) {
+      // Set ref immediately to block useEffect
+      hasConflictRef.current = true;
+
       // Parse session info from error message
       const match = error.match(/ID: (\d+)/);
       const ageMatch = error.match(/(\d+) hours ago/);
@@ -218,7 +222,8 @@ export function PracticePage() {
       await conversationService.deleteAbandonedSession(conflictSession.sessionId);
       addToast('success', 'Session cleaned up', 'Old session removed. Starting fresh...');
 
-      // Clear conflict state and store error
+      // Clear conflict state and ref
+      hasConflictRef.current = false;
       setConflictSession(null);
       clearSession(); // Reset store to idle with no error
 
@@ -237,6 +242,7 @@ export function PracticePage() {
    * Cancel conflict resolution and navigate away
    */
   const handleCancelConflict = () => {
+    hasConflictRef.current = false;
     setConflictSession(null);
     clearSession();
     addToast('info', 'Session not started', 'You can start a new session from the Conversation page.');
