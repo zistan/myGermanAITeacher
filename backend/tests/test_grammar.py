@@ -1062,3 +1062,127 @@ class TestAIGenerationEndpoints:
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    # ========== SESSION DEDUPLICATION TESTS ==========
+
+    @patch('app.api.v1.grammar.GrammarAIService')
+    def test_start_practice_with_active_session_conflict(self, mock_ai, client, auth_headers, db_session, test_grammar_exercises, test_user):
+        """Test that starting practice fails when active session exists."""
+        # Create an active session
+        first_response = client.post(
+            "/api/grammar/practice/start",
+            headers=auth_headers,
+            json={"difficulty_level": "A2", "use_spaced_repetition": False}
+        )
+        assert first_response.status_code == status.HTTP_201_CREATED
+        first_session_id = first_response.json()["session_id"]
+
+        # Try to create second session - should fail with 409
+        second_response = client.post(
+            "/api/grammar/practice/start",
+            headers=auth_headers,
+            json={"difficulty_level": "A2", "use_spaced_repetition": False}
+        )
+        assert second_response.status_code == status.HTTP_409_CONFLICT
+
+        detail = second_response.json()["detail"]
+        assert detail["message"] == "Active grammar session already exists"
+        assert detail["session_id"] == first_session_id
+        assert "started_at" in detail
+        assert "age_hours" in detail
+
+        # Verify only 1 session exists in DB
+        sessions = db_session.query(GrammarSession).filter(
+            GrammarSession.user_id == test_user.id,
+            GrammarSession.ended_at.is_(None)
+        ).all()
+        assert len(sessions) == 1
+        assert sessions[0].id == first_session_id
+
+    @patch('app.api.v1.grammar.GrammarAIService')
+    def test_cleanup_abandoned_grammar_session(self, mock_ai, client, auth_headers, db_session, test_grammar_exercises, test_user):
+        """Test deletion of abandoned grammar session."""
+        # Create session
+        response = client.post(
+            "/api/grammar/practice/start",
+            headers=auth_headers,
+            json={"difficulty_level": "A2"}
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        session_id = response.json()["session_id"]
+
+        # Delete session
+        delete_response = client.delete(
+            f"/api/grammar/practice/{session_id}",
+            headers=auth_headers
+        )
+        assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify deletion
+        session = db_session.query(GrammarSession).filter(GrammarSession.id == session_id).first()
+        assert session is None
+
+    @patch('app.api.v1.grammar.GrammarAIService')
+    def test_cleanup_completed_session_fails(self, mock_ai, client, auth_headers, db_session, test_grammar_exercises):
+        """Test that cleanup of completed session fails."""
+        # Create and complete session
+        start_response = client.post(
+            "/api/grammar/practice/start",
+            headers=auth_headers,
+            json={"difficulty_level": "A2"}
+        )
+        session_id = start_response.json()["session_id"]
+
+        # End the session
+        client.post(
+            f"/api/grammar/practice/{session_id}/end",
+            headers=auth_headers
+        )
+
+        # Try to delete completed session - should fail
+        delete_response = client.delete(
+            f"/api/grammar/practice/{session_id}",
+            headers=auth_headers
+        )
+        assert delete_response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Cannot delete completed session" in delete_response.json()["detail"]
+
+    @patch('app.api.v1.grammar.GrammarAIService')
+    def test_stale_session_auto_cleanup(self, mock_ai, client, auth_headers, db_session, test_user, test_grammar_exercises):
+        """Test that stale sessions (>24h) are auto-cleaned."""
+        # Create stale session (25 hours old)
+        stale_session = GrammarSession(
+            user_id=test_user.id,
+            session_type="practice",
+            started_at=datetime.utcnow() - timedelta(hours=25),
+            total_exercises=10,
+            grammar_metadata={"exercise_ids": []}
+        )
+        db_session.add(stale_session)
+        db_session.commit()
+        db_session.refresh(stale_session)
+        stale_session_id = stale_session.id
+
+        # Start new session - should auto-cleanup stale one
+        response = client.post(
+            "/api/grammar/practice/start",
+            headers=auth_headers,
+            json={"difficulty_level": "A2"}
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+
+        # Verify stale session was deleted
+        sessions = db_session.query(GrammarSession).filter(
+            GrammarSession.user_id == test_user.id,
+            GrammarSession.ended_at.is_(None)
+        ).all()
+        assert len(sessions) == 1
+        assert sessions[0].id != stale_session_id
+
+    def test_cleanup_nonexistent_session(self, client, auth_headers):
+        """Test cleanup of non-existent session returns 404."""
+        delete_response = client.delete(
+            "/api/grammar/practice/99999",
+            headers=auth_headers
+        )
+        assert delete_response.status_code == status.HTTP_404_NOT_FOUND

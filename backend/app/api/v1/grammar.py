@@ -127,6 +127,35 @@ def start_grammar_practice(
     current_user: User = Depends(get_current_active_user)
 ):
     """Start a new grammar practice session."""
+
+    # Check for existing active session
+    active_session = db.query(GrammarSession).filter(
+        GrammarSession.user_id == current_user.id,
+        GrammarSession.ended_at.is_(None),
+        GrammarSession.session_type == "practice"
+    ).first()
+
+    if active_session:
+        # Auto-cleanup stale sessions (>24 hours old)
+        session_age = datetime.utcnow() - active_session.started_at
+        if session_age > timedelta(hours=24):
+            # Log cleanup
+            print(f"[Grammar] Auto-cleaning stale session {active_session.id} (age: {session_age})")
+            db.delete(active_session)
+            db.commit()
+            # Continue to create new session
+        else:
+            # Return conflict for recent active session
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "message": "Active grammar session already exists",
+                    "session_id": active_session.id,
+                    "started_at": active_session.started_at.isoformat(),
+                    "age_hours": session_age.total_seconds() / 3600
+                }
+            )
+
     # Build query for exercises
     query = db.query(GrammarExercise)
 
@@ -486,6 +515,38 @@ def submit_exercise_answer(
         session_progress=session_progress,
         next_exercise=next_exercise
     )
+
+
+@router.delete("/practice/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+def cleanup_abandoned_grammar_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Delete an abandoned/orphaned grammar session."""
+
+    session = db.query(GrammarSession).filter(
+        GrammarSession.id == session_id,
+        GrammarSession.user_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found"
+        )
+
+    # Only allow deletion of unfinished sessions (ended_at is NULL)
+    if session.ended_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete completed session"
+        )
+
+    db.delete(session)
+    db.commit()
+
+    return None
 
 
 @router.post("/practice/{session_id}/end")

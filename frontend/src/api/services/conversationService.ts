@@ -54,6 +54,14 @@ class ConversationService {
   }
 
   /**
+   * DELETE /api/sessions/{session_id}
+   * Delete an abandoned/orphaned conversation session
+   */
+  async deleteAbandonedSession(sessionId: number): Promise<void> {
+    await apiClient.delete(`/api/sessions/${sessionId}`);
+  }
+
+  /**
    * GET /api/sessions/history
    * Get user's conversation session history with optional filtering
    */

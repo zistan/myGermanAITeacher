@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Clock,
@@ -14,11 +14,16 @@ import {
   GrammarFeedbackPanel,
   SessionSummary,
 } from '../../components/conversation';
+import conversationService from '../../api/services/conversationService';
+import { Modal, Button } from '../../components/common';
+import { useNotificationStore } from '../../store/notificationStore';
+import type { ApiError } from '../../api/types/common.types';
 
 export function PracticePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const contextId = searchParams.get('context');
+  const addToast = useNotificationStore((state) => state.addToast);
 
   const {
     sessionState,
@@ -30,6 +35,7 @@ export function PracticePage() {
     pendingFeedback,
     sessionSummary,
     grammarTopicsToPractice,
+    error,
     startSession,
     sendMessage,
     endSession,
@@ -44,18 +50,62 @@ export function PracticePage() {
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 
+  // Conflict modal state
+  const [conflictSession, setConflictSession] = useState<{
+    sessionId: number;
+    startedAt: string;
+    ageHours: number;
+  } | null>(null);
+
+  // Debouncing timeout ref
+  const sessionStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   /**
    * Check for incomplete session on mount
    */
   useEffect(() => {
     if (hasIncompleteSession()) {
       setShowRestorePrompt(true);
-    } else if (contextId) {
-      handleStartSession(parseInt(contextId, 10));
-    } else {
+    } else if (contextId && !conflictSession) {
+      // Clear any existing timeout
+      if (sessionStartTimeoutRef.current) {
+        clearTimeout(sessionStartTimeoutRef.current);
+      }
+
+      // Debounce session creation by 100ms to prevent React StrictMode double-invoke
+      sessionStartTimeoutRef.current = setTimeout(() => {
+        handleStartSession(parseInt(contextId, 10));
+        sessionStartTimeoutRef.current = null;
+      }, 100);
+    } else if (!contextId) {
       navigate('/conversation');
     }
+
+    return () => {
+      // Cleanup timeout on unmount
+      if (sessionStartTimeoutRef.current) {
+        clearTimeout(sessionStartTimeoutRef.current);
+      }
+    };
   }, []);
+
+  /**
+   * Detect 409 conflict errors from store
+   */
+  useEffect(() => {
+    if (error && error.includes('Active session already exists')) {
+      // Parse session info from error message
+      const match = error.match(/ID: (\d+)/);
+      const ageMatch = error.match(/(\d+) hours ago/);
+      if (match) {
+        setConflictSession({
+          sessionId: parseInt(match[1], 10),
+          startedAt: new Date().toISOString(),
+          ageHours: ageMatch ? parseInt(ageMatch[1], 10) : 0,
+        });
+      }
+    }
+  }, [error]);
 
   /**
    * Session timer
@@ -154,6 +204,29 @@ export function PracticePage() {
       handleStartSession(parseInt(contextId, 10));
     } else {
       navigate('/conversation');
+    }
+  };
+
+  /**
+   * Cleanup conflict session and start fresh
+   */
+  const handleCleanupConflict = async () => {
+    if (!conflictSession) return;
+
+    try {
+      // Delete the abandoned session
+      await conversationService.deleteAbandonedSession(conflictSession.sessionId);
+      addToast('success', 'Session cleaned up', 'Old session removed. Starting fresh...');
+      setConflictSession(null);
+
+      // Retry session creation
+      if (contextId) {
+        await handleStartSession(parseInt(contextId, 10));
+      }
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[Conversation] Failed to cleanup conflict:', apiError);
+      addToast('error', 'Cleanup failed', apiError.detail?.toString() || 'Failed to cleanup abandoned session');
     }
   };
 
@@ -336,6 +409,36 @@ export function PracticePage() {
           onRestore={handleRestoreSession}
           onDiscard={handleDiscardSession}
         />
+      )}
+
+      {/* Session Conflict Modal */}
+      {conflictSession && (
+        <Modal
+          isOpen={true}
+          onClose={() => setConflictSession(null)}
+          title="Active Session Detected"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-700">
+              You have an active conversation session (ID: {conflictSession.sessionId}) that was
+              started{' '}
+              {conflictSession.ageHours < 1
+                ? `${Math.round(conflictSession.ageHours * 60)} minutes ago`
+                : `${Math.round(conflictSession.ageHours)} hours ago`}.
+            </p>
+            <p className="text-gray-700">
+              Would you like to clean up this session and start fresh?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button onClick={() => setConflictSession(null)} variant="secondary">
+                Cancel
+              </Button>
+              <Button onClick={handleCleanupConflict} variant="primary">
+                Clean Up & Start Fresh
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* End Session Confirmation */}

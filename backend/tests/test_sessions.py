@@ -288,3 +288,157 @@ class TestSessionEndpoints:
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    # ========== SESSION DEDUPLICATION TESTS ==========
+
+    @patch('app.api.v1.sessions.ConversationAI')
+    def test_start_session_with_active_session_conflict(self, mock_ai, client, auth_headers, db_session, test_user):
+        """Test that starting session fails when active session exists."""
+        # Mock AI service
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.generate_response.return_value = "Guten Tag!"
+        mock_ai.return_value = mock_ai_instance
+
+        # Create an active session
+        first_response = client.post(
+            "/api/sessions/start",
+            headers=auth_headers,
+            json={"session_type": "conversation"}
+        )
+        assert first_response.status_code == status.HTTP_201_CREATED
+        first_session_id = first_response.json()["id"]
+
+        # Try to create second session - should fail with 409
+        second_response = client.post(
+            "/api/sessions/start",
+            headers=auth_headers,
+            json={"session_type": "conversation"}
+        )
+        assert second_response.status_code == status.HTTP_409_CONFLICT
+
+        detail = second_response.json()["detail"]
+        assert detail["message"] == "Active conversation session already exists"
+        assert detail["session_id"] == first_session_id
+        assert "started_at" in detail
+        assert "age_hours" in detail
+
+        # Verify only 1 session exists in DB
+        from app.models.session import Session as SessionModel
+        sessions = db_session.query(SessionModel).filter(
+            SessionModel.user_id == test_user.id,
+            SessionModel.ended_at.is_(None)
+        ).all()
+        assert len(sessions) == 1
+        assert sessions[0].id == first_session_id
+
+    @patch('app.api.v1.sessions.ConversationAI')
+    def test_cleanup_abandoned_conversation_session(self, mock_ai, client, auth_headers, db_session, test_user):
+        """Test deletion of abandoned conversation session."""
+        # Mock AI service
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.generate_response.return_value = "Guten Tag!"
+        mock_ai.return_value = mock_ai_instance
+
+        # Create session
+        response = client.post(
+            "/api/sessions/start",
+            headers=auth_headers,
+            json={"session_type": "conversation"}
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        session_id = response.json()["id"]
+
+        # Delete session
+        delete_response = client.delete(
+            f"/api/sessions/{session_id}",
+            headers=auth_headers
+        )
+        assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify deletion
+        from app.models.session import Session as SessionModel
+        session = db_session.query(SessionModel).filter(SessionModel.id == session_id).first()
+        assert session is None
+
+        # Verify conversation turns were also deleted
+        turns = db_session.query(ConversationTurn).filter(
+            ConversationTurn.session_id == session_id
+        ).all()
+        assert len(turns) == 0
+
+    @patch('app.api.v1.sessions.ConversationAI')
+    def test_cleanup_completed_conversation_session_fails(self, mock_ai, client, auth_headers):
+        """Test that cleanup of completed session fails."""
+        # Mock AI service
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.generate_response.return_value = "Guten Tag!"
+        mock_ai.return_value = mock_ai_instance
+
+        # Create and complete session
+        start_response = client.post(
+            "/api/sessions/start",
+            headers=auth_headers,
+            json={"session_type": "conversation"}
+        )
+        session_id = start_response.json()["id"]
+
+        # End the session
+        client.post(
+            f"/api/sessions/{session_id}/end",
+            headers=auth_headers
+        )
+
+        # Try to delete completed session - should fail
+        delete_response = client.delete(
+            f"/api/sessions/{session_id}",
+            headers=auth_headers
+        )
+        assert delete_response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Cannot delete completed session" in delete_response.json()["detail"]
+
+    @patch('app.api.v1.sessions.ConversationAI')
+    def test_stale_conversation_session_auto_cleanup(self, mock_ai, client, auth_headers, db_session, test_user):
+        """Test that stale conversation sessions (>24h) are auto-cleaned."""
+        from datetime import datetime, timedelta
+        from app.models.session import Session as SessionModel
+
+        # Create stale session (25 hours old)
+        stale_session = SessionModel(
+            user_id=test_user.id,
+            session_type="conversation",
+            started_at=datetime.utcnow() - timedelta(hours=25),
+            total_turns=5
+        )
+        db_session.add(stale_session)
+        db_session.commit()
+        db_session.refresh(stale_session)
+        stale_session_id = stale_session.id
+
+        # Mock AI service
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.generate_response.return_value = "Guten Tag!"
+        mock_ai.return_value = mock_ai_instance
+
+        # Start new session - should auto-cleanup stale one
+        response = client.post(
+            "/api/sessions/start",
+            headers=auth_headers,
+            json={"session_type": "conversation"}
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+
+        # Verify stale session was deleted
+        sessions = db_session.query(SessionModel).filter(
+            SessionModel.user_id == test_user.id,
+            SessionModel.ended_at.is_(None)
+        ).all()
+        assert len(sessions) == 1
+        assert sessions[0].id != stale_session_id
+
+    def test_cleanup_nonexistent_conversation_session(self, client, auth_headers):
+        """Test cleanup of non-existent session returns 404."""
+        delete_response = client.delete(
+            "/api/sessions/99999",
+            headers=auth_headers
+        )
+        assert delete_response.status_code == status.HTTP_404_NOT_FOUND

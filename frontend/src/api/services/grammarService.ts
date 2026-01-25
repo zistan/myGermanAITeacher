@@ -101,6 +101,14 @@ class GrammarService {
   }
 
   /**
+   * DELETE /api/grammar/practice/{session_id}
+   * Delete an abandoned/orphaned grammar session
+   */
+  async deleteAbandonedSession(sessionId: number): Promise<void> {
+    await apiClient.delete(`/api/grammar/practice/${sessionId}`);
+  }
+
+  /**
    * GET /api/grammar/progress
    * Get overall grammar progress summary
    */

@@ -46,6 +46,37 @@ def start_session(
     Returns:
         SessionWithContext: Created session with context details and initial AI message
     """
+    # Check for existing active session
+    active_session = db.query(SessionModel).filter(
+        SessionModel.user_id == current_user.id,
+        SessionModel.ended_at.is_(None)
+    ).first()
+
+    if active_session:
+        # Auto-cleanup stale sessions (>24 hours old)
+        from datetime import timedelta
+        session_age = datetime.utcnow() - active_session.started_at
+        if session_age > timedelta(hours=24):
+            # Log cleanup
+            print(f"[Conversation] Auto-cleaning stale session {active_session.id} (age: {session_age})")
+            # Delete associated conversation turns first
+            db.query(ConversationTurn).filter(ConversationTurn.session_id == active_session.id).delete()
+            db.delete(active_session)
+            db.commit()
+            # Continue to create new session
+        else:
+            # Return conflict for recent active session
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "message": "Active conversation session already exists",
+                    "session_id": active_session.id,
+                    "context_id": active_session.context_id,
+                    "started_at": active_session.started_at.isoformat(),
+                    "age_hours": session_age.total_seconds() / 3600
+                }
+            )
+
     # Validate context if provided
     context = None
     if session_data.context_id:
@@ -373,6 +404,40 @@ def end_session(
         session_summary=summary,
         grammar_topics_to_practice=grammar_topics_to_practice
     )
+
+
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+def cleanup_abandoned_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Delete an abandoned/orphaned conversation session."""
+
+    session = db.query(SessionModel).filter(
+        SessionModel.id == session_id,
+        SessionModel.user_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found"
+        )
+
+    # Only allow deletion of unfinished sessions
+    if session.ended_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete completed session"
+        )
+
+    # Delete associated conversation turns first (explicit CASCADE)
+    db.query(ConversationTurn).filter(ConversationTurn.session_id == session_id).delete()
+    db.delete(session)
+    db.commit()
+
+    return None
 
 
 @router.get("/history", response_model=List[SessionResponse])

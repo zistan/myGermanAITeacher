@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import grammarService from '../../api/services/grammarService';
 import type {
@@ -75,9 +75,20 @@ export function PracticeSessionPage() {
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<number | null>(null);
   const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState(0);
 
+  // Session conflict state
+  const [conflictSession, setConflictSession] = useState<{
+    sessionId: number;
+    startedAt: string;
+    ageHours: number;
+  } | null>(null);
+
   // Session metrics
   const [exerciseStartTime, setExerciseStartTime] = useState<number>(Date.now());
   const [currentStreak, setCurrentStreak] = useState(0);
+
+  // Request tracking (prevent duplicates)
+  const sessionCreationInProgress = useRef(false);
+  const sessionStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Session persistence
   const { hasIncompleteSession, restoreSession, clearSession: clearPersistedSession } =
@@ -98,16 +109,33 @@ export function PracticeSessionPage() {
       storeSessionState === 'idle' && // Not already loading/active/error
       !currentSession && // No active session in store
       !hasIncompleteSession && // No session to restore
-      !showRestoreModal; // Modal not showing
+      !showRestoreModal && // Modal not showing
+      !conflictSession; // No conflict modal showing
 
     if (hasIncompleteSession) {
       setShowRestoreModal(true);
       setStoreSessionState('idle'); // Show modal, not loading
     } else if (shouldStartNewSession) {
-      startSession(); // Will be called on every remount with idle state
+      // Clear any existing timeout
+      if (sessionStartTimeoutRef.current) {
+        clearTimeout(sessionStartTimeoutRef.current);
+      }
+
+      // Debounce session creation by 100ms to prevent React StrictMode double-invoke
+      sessionStartTimeoutRef.current = setTimeout(() => {
+        startSession();
+        sessionStartTimeoutRef.current = null;
+      }, 100);
     }
+
+    return () => {
+      // Cleanup timeout on unmount
+      if (sessionStartTimeoutRef.current) {
+        clearTimeout(sessionStartTimeoutRef.current);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeSessionState, hasIncompleteSession, showRestoreModal]);
+  }, [storeSessionState, hasIncompleteSession, showRestoreModal, conflictSession]);
 
   const loadSessionFromStore = async (restoredSessionId: number) => {
     setStoreSessionState('loading');
@@ -178,13 +206,38 @@ export function PracticeSessionPage() {
     startSession();
   };
 
+  const handleCleanupConflict = async () => {
+    if (!conflictSession) return;
+
+    try {
+      // Delete the abandoned session
+      await grammarService.deleteAbandonedSession(conflictSession.sessionId);
+      addToast('success', 'Session cleaned up', 'Old session removed. Starting fresh...');
+      setConflictSession(null);
+
+      // Retry session creation
+      await startSession();
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[Grammar] Failed to cleanup conflict:', apiError);
+      addToast('error', 'Cleanup failed', apiError.detail?.toString() || 'Failed to cleanup abandoned session');
+    }
+  };
+
   const startSession = async () => {
-    // Prevent duplicate session creation
-    if (storeSessionState === 'loading' || storeSessionState === 'active') {
-      console.warn('Session already starting or active, ignoring duplicate call');
+    // Prevent duplicate session creation - check in-flight request
+    if (sessionCreationInProgress.current) {
+      console.warn('[Grammar] Session creation already in progress, ignoring duplicate call');
       return;
     }
 
+    // Prevent duplicate session creation - check store state
+    if (storeSessionState === 'loading' || storeSessionState === 'active') {
+      console.warn('[Grammar] Session already starting or active, ignoring duplicate call');
+      return;
+    }
+
+    sessionCreationInProgress.current = true;
     setStoreSessionState('loading');
 
     // BUG-021: Clear any completed session from store before starting new one
@@ -230,8 +283,25 @@ export function PracticeSessionPage() {
     } catch (error) {
       const apiError = error as ApiError;
 
+      // Handle 409 Conflict - active session exists
+      if (apiError.status === 409 && apiError.detail) {
+        console.error('[Grammar] Active session conflict:', apiError.detail);
+
+        // Extract session info from error response
+        if (typeof apiError.detail === 'object' && 'session_id' in apiError.detail) {
+          setConflictSession({
+            sessionId: apiError.detail.session_id as number,
+            startedAt: apiError.detail.started_at as string,
+            ageHours: apiError.detail.age_hours as number,
+          });
+          setStoreSessionState('error');
+          sessionCreationInProgress.current = false;
+          return;
+        }
+      }
+
       // BUG-020: Handle "no exercises found" error with helpful retry
-      if (apiError.detail?.includes('No exercises found')) {
+      if (apiError.detail?.includes?.('No exercises found')) {
         const difficultyParam = searchParams.get('difficulty');
         const topicsParam = searchParams.get('topics');
 
@@ -245,13 +315,15 @@ export function PracticeSessionPage() {
 
           // Retry without difficulty filter
           const retryUrl = `/grammar/practice?topics=${topicsParam}&count=${searchParams.get('count') || 10}`;
+          sessionCreationInProgress.current = false;
           navigate(retryUrl, { replace: true });
           return;
         }
       }
 
-      addToast('error', 'Failed to start session', apiError.detail);
+      addToast('error', 'Failed to start session', apiError.detail?.toString() || 'Unknown error');
       setStoreSessionState('error');
+      sessionCreationInProgress.current = false;
 
       // Auto-reset to idle after 3s to allow retry
       setTimeout(() => {
@@ -260,6 +332,8 @@ export function PracticeSessionPage() {
           clearSession(); // Reset to idle
         }
       }, 3000);
+    } finally {
+      sessionCreationInProgress.current = false;
     }
   };
 
@@ -661,6 +735,35 @@ export function PracticeSessionPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Session Conflict Modal */}
+      {conflictSession && (
+        <Modal
+          isOpen={true}
+          onClose={() => setConflictSession(null)}
+          title="Active Session Detected"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-700">
+              You have an active grammar session (ID: {conflictSession.sessionId}) that was started{' '}
+              {conflictSession.ageHours < 1
+                ? `${Math.round(conflictSession.ageHours * 60)} minutes ago`
+                : `${Math.round(conflictSession.ageHours)} hours ago`}.
+            </p>
+            <p className="text-gray-700">
+              Would you like to clean up this session and start fresh?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button onClick={() => setConflictSession(null)} variant="secondary">
+                Cancel
+              </Button>
+              <Button onClick={handleCleanupConflict} variant="primary">
+                Clean Up & Start Fresh
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Paused Overlay */}
       <PausedOverlay

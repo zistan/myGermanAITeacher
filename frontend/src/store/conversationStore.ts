@@ -24,6 +24,7 @@ interface ConversationState {
   // Session state
   sessionState: SessionState;
   currentSession: ConversationSessionData | null;
+  sessionCreationPromise: Promise<void> | null; // Track in-flight requests
 
   // Messages
   messages: ConversationTurnResponse[];
@@ -112,6 +113,7 @@ export const useConversationStore = create<ConversationState>()(
       // Initial state
       sessionState: 'idle',
       currentSession: null,
+      sessionCreationPromise: null,
       messages: [],
       isTyping: false,
       showGrammarPanel: false,
@@ -132,39 +134,74 @@ export const useConversationStore = create<ConversationState>()(
       setSessionState: (sessionState) => set({ sessionState }),
 
       startSession: async (contextId, proficiencyLevel) => {
-        try {
-          set({ sessionState: 'loading', error: null });
+        const { sessionCreationPromise } = get();
 
-          const response = await conversationService.startSession({
-            context_id: contextId,
-            user_proficiency_level: proficiencyLevel as any,
-          });
-
-          set({
-            sessionState: 'active',
-            currentSession: {
-              sessionId: response.id,
-              contextId: response.context_id,
-              contextName: response.context_name,
-              contextDescription: response.context_description,
-              contextCategory: response.context_category,
-              contextDifficulty: response.context_difficulty,
-              startTime: response.start_time,
-              messageCount: 0,
-              grammarCorrections: 0,
-              vocabularyUsed: 0,
-            },
-            messages: [],
-            pendingFeedback: [],
-            detectedVocabulary: [],
-          });
-        } catch (error: any) {
-          set({
-            sessionState: 'idle',
-            error: error.message || 'Failed to start conversation session',
-          });
-          throw error;
+        // Return existing promise if request already in-flight
+        if (sessionCreationPromise) {
+          console.warn('[Conversation] Session creation already in progress, returning existing promise');
+          return sessionCreationPromise;
         }
+
+        // Guard against active/loading sessions
+        const { sessionState } = get();
+        if (sessionState === 'loading' || sessionState === 'active') {
+          console.warn('[Conversation] Session already active/loading, ignoring duplicate call');
+          return;
+        }
+
+        // Create and store promise
+        const promise = (async () => {
+          try {
+            set({ sessionState: 'loading', error: null });
+
+            const response = await conversationService.startSession({
+              context_id: contextId,
+              user_proficiency_level: proficiencyLevel as any,
+            });
+
+            set({
+              sessionState: 'active',
+              currentSession: {
+                sessionId: response.id,
+                contextId: response.context_id,
+                contextName: response.context_name,
+                contextDescription: response.context_description,
+                contextCategory: response.context_category,
+                contextDifficulty: response.context_difficulty,
+                startTime: response.start_time,
+                messageCount: 0,
+                grammarCorrections: 0,
+                vocabularyUsed: 0,
+              },
+              messages: [],
+              pendingFeedback: [],
+              detectedVocabulary: [],
+              sessionCreationPromise: null,
+            });
+          } catch (error: any) {
+            // Handle 409 Conflict (active session exists)
+            if (error.response?.status === 409) {
+              const existingSession = error.response.data.detail;
+              console.error('[Conversation] Active session exists:', existingSession);
+              set({
+                error: `Active session already exists (ID: ${existingSession.session_id}). Session was started ${Math.round(existingSession.age_hours)} hours ago.`,
+                sessionState: 'error',
+                sessionCreationPromise: null,
+              });
+            } else {
+              console.error('[Conversation] Failed to start session:', error);
+              set({
+                error: error.message || 'Failed to start conversation session',
+                sessionState: 'idle',
+                sessionCreationPromise: null,
+              });
+            }
+            throw error;
+          }
+        })();
+
+        set({ sessionCreationPromise: promise });
+        return promise;
       },
 
       sendMessage: async (message, requestFeedback = false) => {
