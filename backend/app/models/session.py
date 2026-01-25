@@ -1,5 +1,5 @@
 """Session and conversation models for practice sessions."""
-from sqlalchemy import Column, Integer, String, Text, Float, TIMESTAMP, ForeignKey, JSON, Index
+from sqlalchemy import Column, Integer, String, Text, Float, DateTime, ForeignKey, JSON, Index
 from sqlalchemy.sql import func
 from app.database import Base
 
@@ -22,8 +22,8 @@ class Session(Base):
     session_type = Column(String(50), default="conversation", nullable=False)  # conversation, vocab_review, mixed
 
     # Timing
-    started_at = Column(TIMESTAMP, server_default=func.now(), nullable=False, index=True)
-    ended_at = Column(TIMESTAMP, nullable=True)
+    started_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    ended_at = Column(DateTime(timezone=True), nullable=True)
     duration_minutes = Column(Integer, nullable=True)
 
     # Metrics
@@ -63,7 +63,7 @@ class ConversationTurn(Base):
     message_text = Column(Text, nullable=False)
 
     # Timestamp
-    timestamp = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     # Feedback and analysis (stored as JSON)
     grammar_feedback = Column(JSON, nullable=True)  # Array of grammar corrections

@@ -5,7 +5,7 @@ from sqlalchemy import (
     String,
     Text,
     Float,
-    TIMESTAMP,
+    DateTime,
     ForeignKey,
     UniqueConstraint,
     Index
@@ -54,8 +54,8 @@ class Vocabulary(Base):
     is_separable_verb = Column(Integer, default=0, nullable=False)  # Boolean: separable verb
 
     # Tracking
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    last_reviewed = Column(TIMESTAMP, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    last_reviewed = Column(DateTime(timezone=True), nullable=True)
     review_count = Column(Integer, default=0, nullable=False)
 
     def __repr__(self) -> str:
@@ -88,9 +88,9 @@ class UserVocabularyProgress(Base):
     current_streak = Column(Integer, default=0, nullable=False)
 
     # Spaced repetition (SM-2 inspired)
-    last_reviewed = Column(TIMESTAMP, nullable=True)
-    first_reviewed = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    next_review_date = Column(TIMESTAMP, nullable=True, index=True)
+    last_reviewed = Column(DateTime(timezone=True), nullable=True)
+    first_reviewed = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    next_review_date = Column(DateTime(timezone=True), nullable=True, index=True)
     ease_factor = Column(Float, default=2.5, nullable=False)  # SM-2 algorithm ease factor
     interval_days = Column(Integer, default=1, nullable=False)  # Days until next review
 
@@ -120,8 +120,8 @@ class UserVocabularyList(Base):
     color = Column(String(50), nullable=True)  # For UI organization
 
     # Tracking
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     def __repr__(self) -> str:
         return f"<UserVocabularyList(id={self.id}, user_id={self.user_id}, name='{self.name}')>"
@@ -147,7 +147,7 @@ class VocabularyListWord(Base):
     notes = Column(Text, nullable=True)
 
     # Tracking
-    added_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    added_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     def __repr__(self) -> str:
         return f"<VocabularyListWord(list_id={self.list_id}, word_id={self.word_id})>"
@@ -174,7 +174,7 @@ class VocabularyReview(Base):
     time_spent_seconds = Column(Integer, nullable=True)
 
     # Timestamp
-    reviewed_at = Column(TIMESTAMP, server_default=func.now(), nullable=False, index=True)
+    reviewed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
     def __repr__(self) -> str:
         return f"<VocabularyReview(user_id={self.user_id}, word_id={self.word_id}, correct={self.was_correct})>"
@@ -194,8 +194,8 @@ class FlashcardSession(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Session timing
-    started_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    ended_at = Column(TIMESTAMP, nullable=True)
+    started_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    ended_at = Column(DateTime(timezone=True), nullable=True)
 
     # Session configuration
     total_cards = Column(Integer, nullable=False)
@@ -225,8 +225,8 @@ class VocabularyQuiz(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Session timing
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    completed_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
 
     # Quiz configuration
     quiz_type = Column(String(50), nullable=False)  # multiple_choice, fill_blank, matching

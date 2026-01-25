@@ -29,7 +29,7 @@ class Achievement(Base):
     points = Column(Integer, default=0)  # Achievement points awarded
 
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     # Relationships
     user_achievements = relationship("UserAchievement", back_populates="achievement")
@@ -43,7 +43,7 @@ class UserAchievement(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     achievement_id = Column(Integer, ForeignKey("achievements.id"), nullable=False)
 
-    earned_at = Column(DateTime, default=datetime.utcnow)
+    earned_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     progress_value = Column(Integer, default=0)  # Current progress toward achievement
     is_completed = Column(Boolean, default=False)
 
@@ -97,7 +97,7 @@ class UserStats(Base):
     grammar_rank = Column(Integer)
     vocabulary_rank = Column(Integer)
 
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
     user = relationship("User", back_populates="stats")
@@ -110,7 +110,7 @@ class ProgressSnapshot(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    snapshot_date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    snapshot_date = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     snapshot_type = Column(String(50), default="weekly")  # daily, weekly, monthly
 
     # Snapshot data (JSON)
@@ -126,7 +126,7 @@ class ProgressSnapshot(Base):
     total_sessions = Column(Integer)
     study_time_minutes = Column(Integer)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     # Relationships
     user = relationship("User", back_populates="progress_snapshots")

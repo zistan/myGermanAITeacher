@@ -4,7 +4,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    TIMESTAMP,
+    DateTime,
     ForeignKey
 )
 from sqlalchemy.sql import func
@@ -39,7 +39,7 @@ class GrammarCorrection(Base):
     severity = Column(String(20), nullable=True)  # minor, moderate, major
 
     # Timestamp
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     def __repr__(self) -> str:
         return f"<GrammarCorrection(id={self.id}, user_id={self.user_id}, type='{self.error_type}', severity='{self.severity}')>"

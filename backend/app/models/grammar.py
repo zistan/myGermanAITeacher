@@ -6,7 +6,7 @@ from sqlalchemy import (
     Text,
     Float,
     Boolean,
-    TIMESTAMP,
+    DateTime,
     ForeignKey,
     JSON,
     UniqueConstraint,
@@ -42,7 +42,7 @@ class GrammarTopic(Base):
     explanation_de = Column(Text, nullable=True)  # Detailed grammar explanation in German
 
     # Tracking
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     def __repr__(self) -> str:
         return f"<GrammarTopic(id={self.id}, name='{self.name_de}', category='{self.category}')>"
@@ -86,7 +86,7 @@ class GrammarExercise(Base):
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Tracking
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     exercise_metadata = Column("metadata", JSON, default={}, nullable=False)
 
     def __repr__(self) -> str:
@@ -118,8 +118,8 @@ class UserGrammarProgress(Base):
     current_streak = Column(Integer, default=0, nullable=False)
 
     # Spaced repetition
-    last_practiced = Column(TIMESTAMP, nullable=True)
-    next_review_date = Column(TIMESTAMP, nullable=True, index=True)
+    last_practiced = Column(DateTime(timezone=True), nullable=True)
+    next_review_date = Column(DateTime(timezone=True), nullable=True, index=True)
 
     # Weak areas
     weak_subtopics = Column(JSON, nullable=True)  # Array of problematic subtopics
@@ -150,8 +150,8 @@ class GrammarSession(Base):
     session_type = Column(String(50), default="drill", nullable=False)  # drill, diagnostic, review, conversation_triggered
 
     # Timing
-    started_at = Column(TIMESTAMP, server_default=func.now(), nullable=False, index=True)
-    ended_at = Column(TIMESTAMP, nullable=True)
+    started_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    ended_at = Column(DateTime(timezone=True), nullable=True)
 
     # Performance metrics
     total_exercises = Column(Integer, default=0, nullable=False)
@@ -194,7 +194,7 @@ class GrammarExerciseAttempt(Base):
     feedback_given = Column(Text, nullable=True)
 
     # Timestamp
-    timestamp = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     def __repr__(self) -> str:
         return f"<GrammarExerciseAttempt(id={self.id}, exercise_id={self.exercise_id}, correct={self.is_correct})>"
@@ -214,7 +214,7 @@ class DiagnosticTest(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Test date
-    test_date = Column(TIMESTAMP, server_default=func.now(), nullable=False, index=True)
+    test_date = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
     # Overall results
     overall_level = Column(String(10), nullable=True)  # Determined level: B1, B2, C1

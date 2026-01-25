@@ -1,5 +1,5 @@
 """Context model for conversation scenarios."""
-from sqlalchemy import Column, Integer, String, Text, Boolean, TIMESTAMP, JSON, Index
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, JSON, Index
 from sqlalchemy.sql import func
 from app.database import Base
 
@@ -30,7 +30,7 @@ class Context(Base):
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Tracking
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     def __repr__(self) -> str:
         return f"<Context(id={self.id}, name='{self.name}', category='{self.category}')>"

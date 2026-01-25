@@ -1,5 +1,5 @@
 """User model for authentication and user management."""
-from sqlalchemy import Column, Integer, String, TIMESTAMP, JSON
+from sqlalchemy import Column, Integer, String, DateTime, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -24,8 +24,8 @@ class User(Base):
     proficiency_level = Column(String(10), default="B2", nullable=False)  # A1-C2
 
     # Timestamps
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    last_login = Column(TIMESTAMP, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    last_login = Column(DateTime(timezone=True), nullable=True)
 
     # User settings stored as JSON
     settings = Column(JSON, default={}, nullable=False)
