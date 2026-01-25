@@ -72,6 +72,7 @@ export function PracticeSessionPage() {
   // UI state
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [showSetupUI, setShowSetupUI] = useState(false); // NEW: Setup confirmation modal
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<number | null>(null);
   const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState(0);
 
@@ -88,8 +89,6 @@ export function PracticeSessionPage() {
 
   // Request tracking (prevent duplicates)
   const sessionCreationInProgress = useRef(false);
-  const sessionStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hasConflictRef = useRef(false); // Track conflict immediately to block useEffect
 
   // Session persistence
   const { hasIncompleteSession, restoreSession, clearSession: clearPersistedSession } =
@@ -102,42 +101,28 @@ export function PracticeSessionPage() {
       },
     });
 
-  // Check for incomplete session on mount
+  // Check for incomplete session on mount - RUNS ONCE ONLY
   useEffect(() => {
-    // Guard: Only start if store is in clean state
-    const currentSession = useGrammarStore.getState().currentSession;
-    const shouldStartNewSession =
-      storeSessionState === 'idle' && // Not already loading/active/error
-      !currentSession && // No active session in store
-      !hasIncompleteSession && // No session to restore
-      !showRestoreModal && // Modal not showing
-      !conflictSession && // No conflict modal showing
-      !hasConflictRef.current; // No conflict detected (immediate ref check)
+    console.log('[Grammar] Component mounted, checking for incomplete session...');
 
     if (hasIncompleteSession) {
+      // Show restore modal for incomplete session
+      console.log('[Grammar] Incomplete session found, showing restore modal');
       setShowRestoreModal(true);
-      setStoreSessionState('idle'); // Show modal, not loading
-    } else if (shouldStartNewSession) {
-      // Clear any existing timeout
-      if (sessionStartTimeoutRef.current) {
-        clearTimeout(sessionStartTimeoutRef.current);
-      }
-
-      // Debounce session creation by 100ms to prevent React StrictMode double-invoke
-      sessionStartTimeoutRef.current = setTimeout(() => {
-        startSession();
-        sessionStartTimeoutRef.current = null;
-      }, 100);
+      setStoreSessionState('idle');
+    } else {
+      // No incomplete session - show setup UI for user to confirm session start
+      console.log('[Grammar] No incomplete session, showing setup UI');
+      setShowSetupUI(true);
     }
 
+    // Cleanup only on unmount (not on state changes)
     return () => {
-      // Cleanup timeout on unmount
-      if (sessionStartTimeoutRef.current) {
-        clearTimeout(sessionStartTimeoutRef.current);
-      }
+      console.log('[Grammar] Component unmounting');
     };
+    // CRITICAL: Empty dependency array prevents infinite loop
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeSessionState, hasIncompleteSession, showRestoreModal, conflictSession]);
+  }, []);
 
   const loadSessionFromStore = async (restoredSessionId: number) => {
     setStoreSessionState('loading');
@@ -205,7 +190,14 @@ export function PracticeSessionPage() {
   const handleStartFresh = () => {
     setShowRestoreModal(false);
     clearPersistedSession();
-    startSession();
+    // Show setup UI instead of auto-starting
+    setShowSetupUI(true);
+  };
+
+  const handleConfirmStart = async () => {
+    console.log('[Grammar] User confirmed session start');
+    setShowSetupUI(false);
+    await startSession();
   };
 
   const handleCleanupConflict = async () => {
@@ -214,15 +206,14 @@ export function PracticeSessionPage() {
     try {
       // Delete the abandoned session
       await grammarService.deleteAbandonedSession(conflictSession.sessionId);
-      addToast('success', 'Session cleaned up', 'Old session removed. Starting fresh...');
+      addToast('success', 'Session cleaned up', 'Old session removed. You can now start fresh.');
 
-      // Clear conflict state and ref
-      hasConflictRef.current = false;
+      // Clear conflict state
       setConflictSession(null);
       clearSession(); // Reset store to idle with no error
 
-      // Retry session creation
-      await startSession();
+      // Show setup UI again so user can retry (NO AUTOMATIC RETRY)
+      setShowSetupUI(true);
     } catch (error) {
       const apiError = error as ApiError;
       console.error('[Grammar] Failed to cleanup conflict:', apiError);
@@ -231,7 +222,6 @@ export function PracticeSessionPage() {
   };
 
   const handleCancelConflict = () => {
-    hasConflictRef.current = false;
     setConflictSession(null);
     clearSession();
     addToast('info', 'Session not started', 'You can start a new session from the Grammar page.');
@@ -303,16 +293,14 @@ export function PracticeSessionPage() {
 
         // Extract session info from error response
         if (typeof apiError.detail === 'object' && 'session_id' in apiError.detail) {
-          // Set ref immediately to block useEffect (before React state updates)
-          hasConflictRef.current = true;
-
           setConflictSession({
             sessionId: apiError.detail.session_id as number,
             startedAt: apiError.detail.started_at as string,
             ageHours: apiError.detail.age_hours as number,
           });
-          // Don't set to 'error' - stay in 'idle' to prevent auto-reset loop
-          // The conflict modal will handle the UI
+
+          // Set state to idle (no error) - conflict modal will handle UX
+          // CRITICAL: No state change that would trigger old useEffect
           setStoreSessionState('idle');
           sessionCreationInProgress.current = false;
           return;
@@ -344,13 +332,9 @@ export function PracticeSessionPage() {
       setStoreSessionState('error');
       sessionCreationInProgress.current = false;
 
-      // Auto-reset to idle after 3s to allow retry
-      setTimeout(() => {
-        if (useGrammarStore.getState().sessionState === 'error') {
-          console.log('[Practice] Auto-resetting from error to idle');
-          clearSession(); // Reset to idle
-        }
-      }, 3000);
+      // Show setup UI again after error so user can retry manually
+      // NO AUTO-RESET - prevents infinite loop
+      setShowSetupUI(true);
     } finally {
       sessionCreationInProgress.current = false;
     }
@@ -592,7 +576,7 @@ export function PracticeSessionPage() {
   }
 
   // Render error state
-  if (storeSessionState === 'error') {
+  if (storeSessionState === 'error' && !showSetupUI) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Card>
@@ -601,11 +585,8 @@ export function PracticeSessionPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Failed to start session
             </h2>
-            <p className="text-gray-600 mb-2">
-              Unable to load practice session. Please try again.
-            </p>
-            <p className="text-sm text-gray-500 mb-4">
-              Automatically retrying in a moment...
+            <p className="text-gray-600 mb-4">
+              Unable to load practice session. Please check the configuration and try again.
             </p>
             <div className="flex gap-4 justify-center">
               <Button onClick={() => navigate('/grammar')} variant="secondary">
@@ -613,12 +594,12 @@ export function PracticeSessionPage() {
               </Button>
               <Button
                 onClick={() => {
-                  clearSession(); // Manual retry
-                  startSession();
+                  clearSession(); // Clear error state
+                  setShowSetupUI(true); // Show setup modal for retry
                 }}
                 variant="primary"
               >
-                Retry Now
+                Try Again
               </Button>
             </div>
           </div>
@@ -724,8 +705,64 @@ export function PracticeSessionPage() {
     </>
   );
 
+  // Parse URL params for setup UI display
+  const topicsParam = searchParams.get('topics');
+  const difficultyParam = searchParams.get('difficulty');
+  const countParam = searchParams.get('count');
+
   return (
     <>
+      {/* Practice Setup Modal - NEW: User must confirm session start */}
+      {showSetupUI && !currentExercise && (
+        <Modal
+          isOpen={true}
+          onClose={() => navigate('/grammar/topics')}
+          title="Start Grammar Practice"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-700">
+              Ready to practice grammar{difficultyParam ? ` at ${difficultyParam} level` : ''}?
+              {topicsParam && (
+                <span> Selected topics: {topicsParam.split(',').length}</span>
+              )}
+            </p>
+
+            {/* Show current filters */}
+            {(difficultyParam || topicsParam || countParam) && (
+              <div className="text-sm text-gray-600 space-y-1 bg-gray-50 p-3 rounded-lg">
+                <p className="font-medium text-gray-700 mb-2">Session Configuration:</p>
+                {difficultyParam && <p>• Difficulty: {difficultyParam}</p>}
+                {topicsParam && <p>• Topics: {topicsParam.split(',').length} selected</p>}
+                {countParam && <p>• Exercise count: {countParam}</p>}
+                <p>• Spaced Repetition: Enabled</p>
+              </div>
+            )}
+
+            {!difficultyParam && !topicsParam && (
+              <div className="text-sm text-yellow-700 bg-yellow-50 p-3 rounded-lg">
+                ⚠️ No filters selected. You can select topics from the{' '}
+                <button
+                  onClick={() => navigate('/grammar/topics')}
+                  className="underline hover:text-yellow-800"
+                >
+                  Grammar Topics page
+                </button>
+                .
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-end pt-2">
+              <Button onClick={() => navigate('/grammar/topics')} variant="secondary">
+                Back to Topics
+              </Button>
+              <Button onClick={handleConfirmStart} variant="primary" data-testid="confirm-start-button">
+                Start Practice Session
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Session Restore Modal */}
       <Modal
         isOpen={showRestoreModal}

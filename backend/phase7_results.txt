@@ -1,0 +1,1234 @@
+
+================================================================================
+GERMAN LEARNING APPLICATION - COMPREHENSIVE API TESTING
+================================================================================
+Base URL: http://192.168.178.100:8000
+Test Started: 2026-01-18 11:13:49
+================================================================================
+
+================================================================================
+PHASE 1: HEALTH & INFRASTRUCTURE (2 endpoints)
+================================================================================
+
+================================================================================
+TEST REPORT: Root Endpoint
+================================================================================
+Endpoint: GET /
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get root endpoint info - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['app', 'version', 'status', 'message']
+
+OBSERVATIONS:
+- Server is accessible at http://192.168.178.100:8000
+- App name: German Learning App
+================================================================================
+
+
+================================================================================
+TEST REPORT: Health Check
+================================================================================
+Endpoint: GET /api/health
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Health check - verify database and AI service - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['status', 'environment', 'database', 'ai_service']
+
+OBSERVATIONS:
+- Status: healthy
+- Database: connected
+- AI Service: configured
+================================================================================
+
+
+================================================================================
+PHASE 2: AUTHENTICATION (3 endpoints)
+================================================================================
+
+================================================================================
+TEST REPORT: User Registration
+================================================================================
+Endpoint: POST /api/v1/auth/register
+Test Cases: 4
+Passed: 2/4
+Failed: 2/4
+
+DETAILS:
+
+[FAIL] Test 1: Register new user (testuser1) - FAILED
+   Expected: 201
+   Actual: 400
+   Error response: {
+      "detail": "Username already registered"
+}
+
+[PASS] Test 2: Register duplicate username (should fail) - PASSED
+   Expected: 400
+   Actual: 400
+   Response keys: ['detail']
+
+[FAIL] Test 3: Register second user (testuser2) - FAILED
+   Expected: 201
+   Actual: 400
+   Error response: {
+      "detail": "Username already registered"
+}
+
+[PASS] Test 4: Register with missing password (should fail) - PASSED
+   Expected: 422
+   Actual: 422
+   Response keys: ['detail']
+================================================================================
+
+
+================================================================================
+TEST REPORT: User Login
+================================================================================
+Endpoint: POST /api/v1/auth/login
+Test Cases: 4
+Passed: 4/4
+Failed: 0/4
+
+DETAILS:
+
+[PASS] Test 1: Login with valid credentials - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['access_token', 'token_type']
+   Note: Token type: bearer
+   Note: Token length: 119
+
+[PASS] Test 2: Login with invalid password (should fail) - PASSED
+   Expected: 401
+   Actual: 401
+   Response keys: ['detail']
+
+[PASS] Test 3: Login with invalid username (should fail) - PASSED
+   Expected: 401
+   Actual: 401
+   Response keys: ['detail']
+
+[PASS] Test 4: Login with missing credentials (should fail) - PASSED
+   Expected: 422
+   Actual: 422
+   Response keys: ['detail']
+
+OBSERVATIONS:
+- Successfully obtained JWT token
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Current User
+================================================================================
+Endpoint: GET /api/v1/auth/me
+Test Cases: 3
+Passed: 3/3
+Failed: 0/3
+
+DETAILS:
+
+[PASS] Test 1: Get current user with valid token - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['username', 'email', 'native_language', 'target_language', 'proficiency_level']
+   Note: Username: testuser1
+   Note: Email: test1@example.com
+   Note: Target level: None
+
+[PASS] Test 2: Get current user without token (should fail) - PASSED
+   Expected: 401
+   Actual: 401
+   Response keys: ['detail']
+
+[PASS] Test 3: Get current user with invalid token (should fail) - PASSED
+   Expected: 401
+   Actual: 401
+   Response keys: ['detail']
+================================================================================
+
+
+================================================================================
+PHASE 3: CONTEXT MANAGEMENT (5 endpoints)
+================================================================================
+
+================================================================================
+TEST REPORT: List Contexts
+================================================================================
+Endpoint: GET /api/contexts
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get all contexts - PASSED
+   Expected: 200
+   Actual: 200
+   Response items: 12
+   Note: Context count: 12
+
+OBSERVATIONS:
+- Found 12 contexts
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Context Details
+================================================================================
+Endpoint: GET /api/contexts/{id}
+Test Cases: 2
+Passed: 2/2
+Failed: 0/2
+
+DETAILS:
+
+[PASS] Test 1: Get context 4 details - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['name', 'category', 'difficulty_level', 'description', 'id']
+
+[PASS] Test 2: Get invalid context (should fail) - PASSED
+   Expected: 404
+   Actual: 404
+   Response keys: ['detail']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Create Custom Context
+================================================================================
+Endpoint: POST /api/contexts
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Create custom context - PASSED
+   Expected: 201
+   Actual: 201
+   Response keys: ['name', 'category', 'difficulty_level', 'description', 'id']
+
+DATABASE STATE:
+- Created custom context with ID: 43
+================================================================================
+
+
+================================================================================
+TEST REPORT: Update Context
+================================================================================
+Endpoint: PUT /api/contexts/{id}
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Update custom context - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['name', 'category', 'difficulty_level', 'description', 'id']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Deactivate Context
+================================================================================
+Endpoint: DELETE /api/contexts/{id}
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Deactivate custom context - PASSED
+   Expected: 204
+   Actual: 204
+================================================================================
+
+
+================================================================================
+PHASE 4: CONVERSATION SESSIONS (4 endpoints)
+================================================================================
+
+================================================================================
+TEST REPORT: Start Conversation Session
+================================================================================
+Endpoint: POST /api/sessions/start
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Start conversation session - PASSED
+   Expected: 201
+   Actual: 201
+   Response keys: ['id', 'user_id', 'context_id', 'session_type', 'started_at']
+
+DATABASE STATE:
+- Created session ID: 31
+================================================================================
+
+
+================================================================================
+TEST REPORT: Send Message
+================================================================================
+Endpoint: POST /api/sessions/{id}/message
+Test Cases: 2
+Passed: 2/2
+Failed: 0/2
+
+DETAILS:
+
+[PASS] Test 1: Send message to AI - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['turn_id', 'ai_response', 'grammar_feedback', 'vocabulary_detected', 'suggestions']
+
+[PASS] Test 2: Send message with grammar feedback - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['turn_id', 'ai_response', 'grammar_feedback', 'vocabulary_detected', 'suggestions']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Session History
+================================================================================
+Endpoint: GET /api/sessions/history
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get user's session history - PASSED
+   Expected: 200
+   Actual: 200
+   Response items: 20
+================================================================================
+
+
+================================================================================
+TEST REPORT: End Session
+================================================================================
+Endpoint: POST /api/sessions/{id}/end
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: End conversation session - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['session_summary', 'grammar_topics_to_practice']
+
+OBSERVATIONS:
+- Session ended with summary
+================================================================================
+
+
+================================================================================
+PHASE 5: GRAMMAR LEARNING (11 endpoints)
+================================================================================
+
+================================================================================
+TEST REPORT: List Grammar Topics
+================================================================================
+Endpoint: GET /api/grammar/topics
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get all grammar topics - PASSED
+   Expected: 200
+   Actual: 200
+   Response items: 35
+   Note: Topic count: 35
+
+OBSERVATIONS:
+- Found 35 grammar topics
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Topic Details
+================================================================================
+Endpoint: GET /api/grammar/topics/{id}
+Test Cases: 2
+Passed: 2/2
+Failed: 0/2
+
+DETAILS:
+
+[PASS] Test 1: Get topic 1 details with stats - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['name_de', 'name_en', 'category', 'subcategory', 'difficulty_level']
+
+[PASS] Test 2: Get invalid topic (should fail) - PASSED
+   Expected: 404
+   Actual: 404
+   Response keys: ['detail']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Topic Exercises
+================================================================================
+Endpoint: GET /api/grammar/topics/{id}/exercises
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get exercises for topic 1 - PASSED
+   Expected: 200
+   Actual: 200
+   Response items: 20
+   Note: Exercise count: 20
+================================================================================
+
+
+================================================================================
+TEST REPORT: Start Practice Session
+================================================================================
+Endpoint: POST /api/grammar/practice/start
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Start grammar practice session - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['session_id', 'total_exercises', 'current_exercise_number', 'estimated_duration_minutes', 'topics_included']
+
+DATABASE STATE:
+- Created grammar session ID: 24
+================================================================================
+
+
+================================================================================
+TEST REPORT: Submit Exercise Answer
+================================================================================
+Endpoint: POST /api/grammar/practice/{id}/answer
+Test Cases: 2
+Passed: 2/2
+Failed: 0/2
+
+DETAILS:
+
+[PASS] Test 1: Submit exercise answer (exercise 1) - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['feedback', 'session_progress', 'next_exercise']
+
+[PASS] Test 2: Submit second exercise answer (exercise 2) - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['feedback', 'session_progress', 'next_exercise']
+================================================================================
+
+
+================================================================================
+TEST REPORT: End Practice Session
+================================================================================
+Endpoint: POST /api/grammar/practice/{id}/end
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: End grammar practice session - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['session_id', 'summary']
+
+OBSERVATIONS:
+- Practice session ended with summary
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Progress Summary
+================================================================================
+Endpoint: GET /api/grammar/progress/summary
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get overall grammar progress - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['total_exercises_completed', 'total_practice_time_minutes', 'overall_accuracy', 'current_streak_days', 'topics_mastered']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Topic Progress
+================================================================================
+Endpoint: GET /api/grammar/progress/topics/{id}
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get progress for topic 1 - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['topic', 'total_attempts', 'correct_attempts', 'accuracy', 'mastery_level']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Weak Areas
+================================================================================
+Endpoint: GET /api/grammar/progress/weak-areas
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get weak areas analysis - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['weak_topics', 'recommended_practice_plan', 'estimated_time_to_improve']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Review Queue
+================================================================================
+Endpoint: GET /api/grammar/progress/review-queue
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get spaced repetition review queue - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['overdue_count', 'due_today_count', 'upcoming_count', 'overdue_items', 'due_today_items']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Generate AI Exercises
+================================================================================
+Endpoint: POST /api/grammar/generate/exercises
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Generate AI exercises for topic - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['generated_count', 'exercises']
+================================================================================
+
+
+================================================================================
+PHASE 6: VOCABULARY LEARNING (19 endpoints)
+================================================================================
+
+================================================================================
+TEST REPORT: List Vocabulary Words
+================================================================================
+Endpoint: GET /api/v1/vocabulary/words
+Test Cases: 2
+Passed: 2/2
+Failed: 0/2
+
+DETAILS:
+
+[PASS] Test 1: Get all vocabulary words - PASSED
+   Expected: 200
+   Actual: 200
+   Response items: 50
+   Note: Word count: 50
+
+[PASS] Test 2: Filter words by category and difficulty - PASSED
+   Expected: 200
+   Actual: 200
+   Response items: 26
+
+OBSERVATIONS:
+- Found 50 vocabulary words
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Word Details
+================================================================================
+Endpoint: GET /api/v1/vocabulary/words/{id}
+Test Cases: 2
+Passed: 2/2
+Failed: 0/2
+
+DETAILS:
+
+[PASS] Test 1: Get word 1 with progress - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['word', 'translation_it', 'part_of_speech', 'gender', 'plural_form']
+
+[PASS] Test 2: Get invalid word (should fail) - PASSED
+   Expected: 404
+   Actual: 404
+   Response keys: ['detail']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Create Custom Word
+================================================================================
+Endpoint: POST /api/v1/vocabulary/words
+Test Cases: 1
+Passed: 0/1
+Failed: 1/1
+
+DETAILS:
+
+[FAIL] Test 1: Create custom vocabulary word - FAILED
+   Expected: 200
+   Actual: 400
+   Error response: {
+      "detail": "Word already exists"
+}
+================================================================================
+
+
+================================================================================
+TEST REPORT: Start Flashcard Session
+================================================================================
+Endpoint: POST /api/v1/vocabulary/flashcards/start
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Start flashcard session with spaced repetition - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['session_id', 'total_cards', 'current_card_number', 'current_card']
+
+DATABASE STATE:
+- Created flashcard session ID: 3
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Current Flashcard
+================================================================================
+Endpoint: GET /api/v1/vocabulary/flashcards/{session_id}/current
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get current flashcard - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['card_id', 'word_id', 'word', 'card_type', 'front']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Submit Flashcard Answer
+================================================================================
+Endpoint: POST /api/v1/vocabulary/flashcards/{session_id}/answer
+Test Cases: 2
+Passed: 2/2
+Failed: 0/2
+
+DETAILS:
+
+[PASS] Test 1: Submit flashcard answer with high confidence - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['is_correct', 'correct_answer', 'feedback', 'next_review_interval_days', 'next_card']
+
+[PASS] Test 2: Submit flashcard answer with low confidence - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['is_correct', 'correct_answer', 'feedback', 'next_review_interval_days', 'next_card']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Create Vocabulary List
+================================================================================
+Endpoint: POST /api/v1/vocabulary/lists
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Create personal vocabulary list - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['id', 'name', 'description', 'is_public', 'word_count']
+
+DATABASE STATE:
+- Created vocabulary list with ID: 10
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get User's Vocabulary Lists
+================================================================================
+Endpoint: GET /api/v1/vocabulary/lists
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get all user's vocabulary lists - PASSED
+   Expected: 200
+   Actual: 200
+   Response items: 3
+   Note: List count: 3
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get List Details
+================================================================================
+Endpoint: GET /api/v1/vocabulary/lists/{id}
+Test Cases: 2
+Passed: 2/2
+Failed: 0/2
+
+DETAILS:
+
+[PASS] Test 1: Get list 10 with words - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['id', 'name', 'description', 'is_public', 'word_count']
+
+[PASS] Test 2: Get invalid list (should fail) - PASSED
+   Expected: 404
+   Actual: 404
+   Response keys: ['detail']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Add Word to List
+================================================================================
+Endpoint: POST /api/v1/vocabulary/lists/{id}/words
+Test Cases: 2
+Passed: 2/2
+Failed: 0/2
+
+DETAILS:
+
+[PASS] Test 1: Add word 1 to list - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['message']
+
+[PASS] Test 2: Add duplicate word (should fail) - PASSED
+   Expected: 400
+   Actual: 400
+   Response keys: ['detail']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Remove Word from List
+================================================================================
+Endpoint: DELETE /api/v1/vocabulary/lists/{id}/words/{word_id}
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Remove word 1 from list - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['message']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Delete Vocabulary List
+================================================================================
+Endpoint: DELETE /api/v1/vocabulary/lists/{id}
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Delete vocabulary list 10 - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['message']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Generate Vocabulary Quiz
+================================================================================
+Endpoint: POST /api/v1/vocabulary/quiz/generate
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Generate multiple choice quiz - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['quiz_id', 'questions', 'total_questions', 'estimated_duration_minutes']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Submit Quiz Answer
+================================================================================
+Endpoint: POST /api/v1/vocabulary/quiz/{id}/answer
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Submit quiz answer - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['is_correct', 'correct_answer', 'explanation', 'points_earned']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Vocabulary Progress
+================================================================================
+Endpoint: GET /api/v1/vocabulary/progress/summary
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get vocabulary progress summary - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['total_words_learned', 'words_by_level', 'words_by_category', 'mastery_breakdown', 'total_review_time_minutes']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Vocabulary Review Queue
+================================================================================
+Endpoint: GET /api/v1/vocabulary/progress/review-queue
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get vocabulary review queue (spaced repetition) - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['overdue_count', 'due_today_count', 'upcoming_count', 'overdue_words', 'due_today_words']
+================================================================================
+
+
+================================================================================
+TEST REPORT: AI Word Analysis
+================================================================================
+Endpoint: POST /api/v1/vocabulary/analyze
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Analyze word with AI (examples + synonyms) - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['word', 'translation_it', 'part_of_speech', 'gender', 'plural_form']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Detect Vocabulary
+================================================================================
+Endpoint: POST /api/v1/vocabulary/detect
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Detect vocabulary from German text - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['detected_words', 'total_detected']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Word Recommendations
+================================================================================
+Endpoint: POST /api/v1/vocabulary/recommend
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get personalized word recommendations - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['recommended_words', 'reason']
+================================================================================
+
+
+================================================================================
+PHASE 7: ANALYTICS & PROGRESS TRACKING (14 endpoints)
+================================================================================
+
+================================================================================
+TEST REPORT: Get Overall Progress
+================================================================================
+Endpoint: GET /api/v1/analytics/progress
+Test Cases: 1
+Passed: 0/1
+Failed: 1/1
+
+DETAILS:
+
+[FAIL] Test 1: Get overall learning progress - FAILED
+   Expected: 200
+   Actual: 500
+   Error response: Internal Server Error
+================================================================================
+
+
+================================================================================
+TEST REPORT: Compare Progress Periods
+================================================================================
+Endpoint: GET /api/v1/analytics/progress/comparison
+Test Cases: 2
+Passed: 0/2
+Failed: 2/2
+
+DETAILS:
+
+[FAIL] Test 1: Compare weekly progress - FAILED
+   Expected: 200
+   Actual: 500
+   Error response: Internal Server Error
+
+[FAIL] Test 2: Compare monthly progress - FAILED
+   Expected: 200
+   Actual: 500
+   Error response: Internal Server Error
+================================================================================
+
+
+================================================================================
+TEST REPORT: Error Pattern Analysis
+================================================================================
+Endpoint: GET /api/v1/analytics/errors
+Test Cases: 1
+Passed: 0/1
+Failed: 1/1
+
+DETAILS:
+
+[FAIL] Test 1: Get error patterns and recurring mistakes - FAILED
+   Expected: 200
+   Actual: 500
+   Error response: Internal Server Error
+================================================================================
+
+
+================================================================================
+TEST REPORT: Create Progress Snapshot
+================================================================================
+Endpoint: POST /api/v1/analytics/snapshots
+Test Cases: 1
+Passed: 0/1
+Failed: 1/1
+
+DETAILS:
+
+[FAIL] Test 1: Create daily progress snapshot - FAILED
+   Expected: 201
+   Actual: 500
+   Error response: Internal Server Error
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Progress Snapshots
+================================================================================
+Endpoint: GET /api/v1/analytics/snapshots
+Test Cases: 2
+Passed: 2/2
+Failed: 0/2
+
+DETAILS:
+
+[PASS] Test 1: Get all progress snapshots - PASSED
+   Expected: 200
+   Actual: 200
+
+[PASS] Test 2: Filter snapshots by type (daily) - PASSED
+   Expected: 200
+   Actual: 200
+================================================================================
+
+
+================================================================================
+TEST REPORT: List All Achievements
+================================================================================
+Endpoint: GET /api/v1/analytics/achievements
+Test Cases: 3
+Passed: 3/3
+Failed: 0/3
+
+DETAILS:
+
+[PASS] Test 1: Get all available achievements - PASSED
+   Expected: 200
+   Actual: 200
+   Response items: 29
+   Note: Achievement count: 29
+
+[PASS] Test 2: Filter achievements by category (grammar) - PASSED
+   Expected: 200
+   Actual: 200
+   Response items: 6
+
+[PASS] Test 3: Filter achievements by tier (gold) - PASSED
+   Expected: 200
+   Actual: 200
+   Response items: 9
+
+OBSERVATIONS:
+- Found 29 total achievements
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Earned Achievements
+================================================================================
+Endpoint: GET /api/v1/analytics/achievements/earned
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get user's earned achievements - PASSED
+   Expected: 200
+   Actual: 200
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Achievement Progress
+================================================================================
+Endpoint: GET /api/v1/analytics/achievements/progress
+Test Cases: 1
+Passed: 0/1
+Failed: 1/1
+
+DETAILS:
+
+[FAIL] Test 1: Get progress towards all achievements - FAILED
+   Expected: 200
+   Actual: 500
+   Error response: Internal Server Error
+================================================================================
+
+
+================================================================================
+TEST REPORT: Showcase Achievement
+================================================================================
+Endpoint: POST /api/v1/analytics/achievements/{id}/showcase
+Test Cases: 3
+Passed: 1/3
+Failed: 2/3
+
+DETAILS:
+
+[FAIL] Test 1: Showcase achievement 1 - FAILED
+   Expected: 200
+   Actual: 404
+   Error response: {
+      "detail": "Achievement not earned"
+}
+
+[FAIL] Test 2: Toggle showcase off for achievement 1 - FAILED
+   Expected: 200
+   Actual: 404
+   Error response: {
+      "detail": "Achievement not earned"
+}
+
+[PASS] Test 3: Showcase invalid achievement (should fail) - PASSED
+   Expected: 404
+   Actual: 404
+   Response keys: ['detail']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get User Statistics
+================================================================================
+Endpoint: GET /api/v1/analytics/stats
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get aggregated user statistics - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['user_id', 'total_study_time_minutes', 'total_sessions', 'current_streak_days', 'longest_streak_days']
+   Note: Current streak: N/A days
+   Note: Total points: N/A
+================================================================================
+
+
+================================================================================
+TEST REPORT: Refresh User Statistics
+================================================================================
+Endpoint: POST /api/v1/analytics/stats/refresh
+Test Cases: 1
+Passed: 0/1
+Failed: 1/1
+
+DETAILS:
+
+[FAIL] Test 1: Refresh user statistics cache - FAILED
+   Expected: 200
+   Actual: 500
+   Error response: Internal Server Error
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Leaderboard Rankings
+================================================================================
+Endpoint: GET /api/v1/analytics/leaderboard/{type}
+Test Cases: 5
+Passed: 5/5
+Failed: 0/5
+
+DETAILS:
+
+[PASS] Test 1: Get overall leaderboard - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['leaderboard_type', 'period', 'entries', 'user_rank', 'user_entry']
+   Note: Leaderboard entries: 0
+
+[PASS] Test 2: Get grammar leaderboard - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['leaderboard_type', 'period', 'entries', 'user_rank', 'user_entry']
+
+[PASS] Test 3: Get vocabulary leaderboard - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['leaderboard_type', 'period', 'entries', 'user_rank', 'user_entry']
+
+[PASS] Test 4: Get streak leaderboard - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['leaderboard_type', 'period', 'entries', 'user_rank', 'user_entry']
+
+[PASS] Test 5: Get invalid leaderboard type (should fail) - PASSED
+   Expected: 400
+   Actual: 400
+   Response keys: ['detail']
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Activity Heatmap
+================================================================================
+Endpoint: GET /api/v1/analytics/heatmap/activity
+Test Cases: 2
+Passed: 0/2
+Failed: 2/2
+
+DETAILS:
+
+[FAIL] Test 1: Get 365-day activity heatmap - FAILED
+   Expected: 200
+   Actual: 500
+   Error response: Internal Server Error
+
+[FAIL] Test 2: Get 30-day activity heatmap - FAILED
+   Expected: 200
+   Actual: 500
+   Error response: Internal Server Error
+================================================================================
+
+
+================================================================================
+TEST REPORT: Get Grammar Mastery Heatmap
+================================================================================
+Endpoint: GET /api/v1/analytics/heatmap/grammar
+Test Cases: 1
+Passed: 1/1
+Failed: 0/1
+
+DETAILS:
+
+[PASS] Test 1: Get grammar mastery heatmap - PASSED
+   Expected: 200
+   Actual: 200
+   Response keys: ['topics', 'categories', 'overall_mastery']
+   Note: Grammar topics tracked: 0
+
+OBSERVATIONS:
+- Grammar heatmap covers 0 topics
+================================================================================
+
+
+================================================================================
+Test Ended: 2026-01-18 11:15:23
+================================================================================

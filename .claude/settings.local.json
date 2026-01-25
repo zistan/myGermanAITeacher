@@ -59,7 +59,8 @@
       "Bash(scp:*)",
       "Bash(while read dir)",
       "Bash(do if [ -f \"$dir/__init__.py\" ])",
-      "Bash(then echo \"✓ $dir has __init__.py\" else echo \"✗ $dir MISSING __init__.py\" fi done)"
+      "Bash(then echo \"✓ $dir has __init__.py\" else echo \"✗ $dir MISSING __init__.py\" fi done)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
